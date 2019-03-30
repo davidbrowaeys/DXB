@@ -1,0 +1,6 @@
+{
+  "commandDescription": "command to copy metadata dependencies for delta deployment",
+  "nameFlagDescription": "name to print",
+  "forceFlagDescription": "example boolean flag",
+  "errorNoOrgResults": "No results found for the org '%s'."
+}

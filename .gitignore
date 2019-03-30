@@ -6,3 +6,5 @@
 /package-lock.json
 /tmp
 node_modules
+git push -u origin master
+/.sonarlint

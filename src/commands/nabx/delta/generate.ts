@@ -7,6 +7,42 @@ const fs = require("fs-extra");
 const path = require('path');
 const exec = require('child_process').execSync;
 
+function copyFileSync( source: string, target: string ) {
+  var targetFile = target;
+
+  //if target is a directory a new file with the same name will be created
+  if ( fs.existsSync( target ) ) {
+    if ( fs.lstatSync( target ).isDirectory() ) {
+      targetFile = path.join( target, path.basename( source ) );
+    }
+  }
+  console.log(targetFile);
+  fs.writeFileSync(targetFile, fs.readFileSync(source));
+}
+
+function copyFolderRecursiveSync( source: string, target: string ) {
+  var files = [];
+
+  //check if folder needs to be created or integrated
+  var targetFolder = path.join( target, path.basename( source ) );
+  if ( !fs.existsSync( targetFolder ) ) {
+    fs.ensureDirSync( targetFolder );
+  }
+
+  //copy
+  if ( fs.lstatSync( source ).isDirectory() ) {
+    files = fs.readdirSync( source );
+    files.forEach( function ( file ) {
+      var curSource = path.join( source, file );
+      if ( fs.lstatSync( curSource ).isDirectory() ) {
+        copyFolderRecursiveSync( curSource, targetFolder );
+      } else {
+        copyFileSync( curSource, targetFolder );
+      }
+    } );
+  }
+}
+
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
 
@@ -45,42 +81,6 @@ export default class DeltaGenerate extends SfdxCommand {
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
-
-  copyFileSync( source: string, target: string ) {
-		var targetFile = target;
-
-		//if target is a directory a new file with the same name will be created
-		if ( fs.existsSync( target ) ) {
-			if ( fs.lstatSync( target ).isDirectory() ) {
-				targetFile = path.join( target, path.basename( source ) );
-			}
-		}
-		this.ux.log(targetFile);
-		fs.writeFileSync(targetFile, fs.readFileSync(source));
-	}
-
-	copyFolderRecursiveSync( source: string, target: string ) {
-		var files = [];
-
-		//check if folder needs to be created or integrated
-		var targetFolder = path.join( target, path.basename( source ) );
-		if ( !fs.existsSync( targetFolder ) ) {
-			fs.ensureDirSync( targetFolder );
-		}
-
-		//copy
-		if ( fs.lstatSync( source ).isDirectory() ) {
-			files = fs.readdirSync( source );
-			files.forEach( function ( file ) {
-				var curSource = path.join( source, file );
-				if ( fs.lstatSync( curSource ).isDirectory() ) {
-					this.copyFolderRecursiveSync( curSource, targetFolder );
-				} else {
-					this.copyFileSync( curSource, targetFolder );
-				}
-			} );
-		}
-	}
 
   public async run() {
     const commitid = this.flags.commitid ;
@@ -137,21 +137,23 @@ export default class DeltaGenerate extends SfdxCommand {
           fs.readdirSync( file.dir ).forEach( function ( fname ) {
             if (fname.indexOf(file.name+'.') >= 0){
               var fileTocopy = path.join(file.dir,fname);
-              if (fs.existsSync(fileTocopy)) this.copyFileSync(fileTocopy,path.join(targetdir,fileTocopy));		
+              if (fs.existsSync(fileTocopy)) copyFileSync(fileTocopy,path.join(targetdir,fileTocopy));		
             }
           });
         }else if (extensions[foldername] !== undefined && extensions[foldername][fileext] !== undefined){
           var copyExt = extensions[foldername][fileext]; //base on the file extension, find its extension dependnedies, i.e.: if .cl change, it should include .cls-meta.xml
           if (copyExt){	//if an dependant extension exist, then do the  below otherwise end of process, nothing need to be done
             if (copyExt === '..'){	//2 dots (..) means we are looking at copying the parent folder, i.e.: object 
+              console.log('here');
               var parentfolder = path.normalize(path.join(file.dir,'..')); //copy whole folder
-              this.copyFolderRecursiveSync(file.dir,path.join(targetdir,parentfolder));
+              copyFolderRecursiveSync(file.dir,path.join(targetdir,parentfolder));
             }else if (copyExt.indexOf('..') >= 0){ //what if copy file = ../../../object-meta.xml?
+              console.log('foo');
               var parentfolder = path.normalize(path.join(file.dir,'..'));
-              this.copyFolderRecursiveSync(parentfolder,path.join(targetdir,parentfolder,'..'));
+              copyFolderRecursiveSync(parentfolder,path.join(targetdir,parentfolder,'..'));
             }else{
               var fileTocopy = path.join(file.dir,file.name+'.'+copyExt); //copy direct meta file
-              if (fs.existsSync(fileTocopy)) this.copyFileSync(fileTocopy,path.join(targetdir,fileTocopy));
+              if (fs.existsSync(fileTocopy)) copyFileSync(fileTocopy,path.join(targetdir,fileTocopy));
             }
           }
         }

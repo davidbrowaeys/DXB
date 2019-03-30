@@ -144,11 +144,9 @@ export default class DeltaGenerate extends SfdxCommand {
           var copyExt = extensions[foldername][fileext]; //base on the file extension, find its extension dependnedies, i.e.: if .cl change, it should include .cls-meta.xml
           if (copyExt){	//if an dependant extension exist, then do the  below otherwise end of process, nothing need to be done
             if (copyExt === '..'){	//2 dots (..) means we are looking at copying the parent folder, i.e.: object 
-              console.log('here');
               var parentfolder = path.normalize(path.join(file.dir,'..')); //copy whole folder
               copyFolderRecursiveSync(file.dir,path.join(targetdir,parentfolder));
             }else if (copyExt.indexOf('..') >= 0){ //what if copy file = ../../../object-meta.xml?
-              console.log('foo');
               var parentfolder = path.normalize(path.join(file.dir,'..'));
               copyFolderRecursiveSync(parentfolder,path.join(targetdir,parentfolder,'..'));
             }else{

@@ -152,7 +152,12 @@ export default class Org extends SfdxCommand {
     console.log('Installing your (un)managed packages...');
     packages.forEach(elem =>{
       try{
-        exec(`sfdx force:package:install --package ${elem} -u ${orgname} -w 60`);
+        var output = JSON.parse(exec(`sfdx force:package:install --package ${elem} -u ${orgname} -w 60 --json`).toString());
+        if (output && output.result && output.result.Status === 'SUCCESS'){
+          console.log(`Successfully installed package [${elem}]`);
+        }else{
+          throw new SfdxError(`Error while installing package [${elem}]`);
+        }
       }catch(err){
         throw new SfdxError('Unable to install (un)managed packages!');
       }

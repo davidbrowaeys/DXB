@@ -27,7 +27,12 @@
     "nyc": "^13",
     "ts-node": "^8",
     "tslint": "^5",
-    "typescript": "^3.3"
+    "typescript": "^3.3",
+    "cli-table": "0.3.1",
+    "data-seed": "^1.3.1",
+    "xml2js": "^0.4.19",
+    "js2xmlparser": "^3.0.0",
+    "readline-sync": "^1.4.9"
   },
   "engines": {
     "node": ">=8.0.0"

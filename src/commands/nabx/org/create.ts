@@ -5,6 +5,7 @@ import * as permset from '../user/assignPermissionSet.js';
 
 
 const exec = require('child_process').execSync;
+const execAsync = require('child_process').exec;
 const fs = require('fs');
 
 // Initialize Messages with the current plugin directory
@@ -48,20 +49,29 @@ export default class Org extends SfdxCommand {
   protected static requiresProject = false;
 
   async create_scratch_org(orgname: string, defaultorg:string, durationdays:number){
-    this.ux.log(`sfdx force:org:create -f config/project-scratch-def.json -a ${orgname} ${defaultorg} -d \"${durationdays}\"`);
-    this.ux.log(exec(`sfdx force:org:create -f config/project-scratch-def.json -a ${orgname} ${defaultorg} -d \"${durationdays}\"`).toString());
+    try{
+      return new Promise(function (resolve, reject) {
+          execAsync(`sfdx force:org:create -f config/project-scratch-def.json -a ${orgname} ${defaultorg} -d \"${durationdays}\"`, (error, stdout, stderr) => {
+            if (error) {
+              console.warn(error);
+            }
+            resolve(stdout? stdout : stderr);
+          });
+      });
+    }catch(err){
+      throw new SfdxError('Unable to create scratch org!');
+    }
   }
 
   async deploy_legacy_packages(orgname: string, legacy_packages ,type: string){
     this.ux.log(`Installing your ${type} legacy packages...`);
-    legacy_packages.forEach(function(elem) {
-      try{
-        this.ux.log(elem);
-        exec(`sfdx force:mdapi:deploy --deploydir config/legacy-packages/${type}/${elem} -u ${orgname} -w 60 > output.txt`);
-      }catch(err){
-        throw new SfdxError(`Couldn't install ${elem}`);
-      }
-    });
+    try{
+      legacy_packages.forEach( elem => {
+        exec(`sfdx force:mdapi:deploy --deploydir config/legacy-packages/${type}/${elem} -u ${orgname} -w 60`).toString();
+      });
+    }catch(err){
+      throw new SfdxError(`Unable to install your ${type} legacy packages!`);
+    }
   }
 
   async prompt_user_manual_config(orgname, manual_steps){
@@ -124,21 +134,46 @@ export default class Org extends SfdxCommand {
 
   async push_source(orgname){
     this.ux.log('Push source to org...'); 
-    await exec(`sfdx force:source:push -g -f -u ${orgname} > output.txt`);
+    try{
+      return new Promise(async function (resolve, reject) {
+          await execAsync(`sfdx force:source:push -g -f -u ${orgname}`, (error, stdout, stderr) => {
+            if (error) {
+              console.warn(error);
+            }
+            resolve(stdout? stdout : stderr);
+          });
+      });
+    }catch(err){
+      throw new SfdxError('Unable to push source to scratch org!');
+    }
   }
 
   async install_packages(orgname, packages){
     console.log('Installing your (un)managed packages...');
-    packages.forEach(function(elem) {
-      console.log(`sfdx force:package:install --package ${elem} -u ${orgname} --json`);
-      console.log(exec(`sfdx force:package:install --package ${elem} -u ${orgname} -w 60`).toString());
+    packages.forEach(elem =>{
+      try{
+        exec(`sfdx force:package:install --package ${elem} -u ${orgname} -w 60`);
+      }catch(err){
+        throw new SfdxError('Unable to install (un)managed packages!');
+      }
     });
   }
 
   async create_user(orgname, user_alias_prefix,user_def_file){
     const suffix = Math.floor((Math.random() * 20000000) + 1);
     if (!user_alias_prefix) user_alias_prefix = 'usr';
-    await exec(`sfdx force:user:create --setalias ${user_alias_prefix}-${orgname} --definitionfile ${user_def_file} username=user.${suffix}@nab-test.${orgname} -u ${orgname} > output.txt`);
+    try{
+      return new Promise(function (resolve, reject) {
+          execAsync(`sfdx force:user:create --setalias ${user_alias_prefix}-${orgname} --definitionfile ${user_def_file} username=user.${suffix}@nab-test.${orgname} -u ${orgname}`, (error, stdout, stderr) => {
+            if (error) {
+              console.warn(error);
+            }
+            resolve(stdout? stdout : stderr);
+          });
+      });
+    }catch(err){
+      throw new SfdxError('Unable to create user to scratch org!');
+    }
   }
 
   public async run() {
@@ -149,14 +184,15 @@ export default class Org extends SfdxCommand {
     let durationdays = this.flags.durationdays || config.defaultdurationdays;   
     this.ux.log('\x1b[91m%s\x1b[0m', `Welcome to NAB DX! We are now creating your scratch org[${orgname}]...`);
 
-    this.create_scratch_org(orgname, defaultorg, durationdays);
+    var output = await this.create_scratch_org(orgname, defaultorg, durationdays);
+    console.log(output);
 
     //UPDATE WORKFLOWS
     console.log(exec(`sfdx nabx:org:setdefault -u ${orgname}`).toString());
     
     //DEPLOY PRE LEGACY PACKAGES
     if (config.pre_legacy_packages) {
-      this.deploy_legacy_packages(orgname, config.pre_legacy_packages, 'pre');
+      await this.deploy_legacy_packages(orgname, config.pre_legacy_packages, 'pre');
     }
 
     //assign einstein permissionset
@@ -171,23 +207,25 @@ export default class Org extends SfdxCommand {
     }
 
     //ENABLE TERRITORY MANAGEMENT
-		this.manuallyEnableTerritoryManagement(orgname); 
+    this.manuallyEnableTerritoryManagement(orgname); 
 
     //INSTALL PACKAGES
     if (this.flags.includepackages && config.packages) {
-      this.install_packages(orgname, config.packages);
+      await this.install_packages(orgname, config.packages);
     }
 			
     //PUSH DX SOURCE
-    this.push_source(orgname);
+    output = await this.push_source(orgname);
+    console.log(output);
 			
     //DEPLOY POST LEGACY PACKAGES
     if (config.post_legacy_packages) {
-      this.deploy_legacy_packages(orgname, config.post_legacy_packages, 'post');
+      await this.deploy_legacy_packages(orgname, config.post_legacy_packages, 'post');
     }
     //create other user, this also fix FLS being deleted from profile
     if (config.user_def_file){
-      this.create_user(orgname, config.user_alias_prefix, config.user_def_file);
+      output = await this.create_user(orgname, config.user_alias_prefix, config.user_def_file);
+      console.log(output);
     }
     this.ux.log(exec(`sfdx force:org:display -u ${orgname}`).toString());
     this.ux.log('\x1b[91m%s\x1b[0m', `Thank you for your patience! You can now enjoy your scrath org. Happy coding!`);

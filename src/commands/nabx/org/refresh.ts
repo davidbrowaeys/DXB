@@ -30,9 +30,6 @@ async function push_source(orgname){
     try{
       return new Promise(async function (resolve, reject) {
           await execAsync(`sfdx force:source:push -g -f -u ${orgname}`, (error, stdout, stderr) => {
-            if (error) {
-              console.warn(error);
-            }
             resolve(stdout? stdout : stderr);
           });
       });
@@ -64,6 +61,7 @@ export default class OrgRefresh extends SfdxCommand {
     public async run() {
         var username = this.org.getUsername();
         //REFRESH SOURCE
-        refresh_meta(username);
+        var output = refresh_meta(username);
+        console.log(output);
     }
 }

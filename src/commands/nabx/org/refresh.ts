@@ -22,7 +22,7 @@ function remove_dir(path) {
 
 function refresh_meta(username) {
 	console.log(exec(`sfdx nabx:org:setdefault -u ${username}`).toString());
-	push_source(username);
+	return push_source(username);
 }
 
 async function push_source(orgname){

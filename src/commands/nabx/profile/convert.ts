@@ -160,7 +160,8 @@ function convertProfile(profilename){
                         result.Profile.layoutAssignments = [result.Profile.layoutAssignments];
                     }
                     result.Profile.layoutAssignments.forEach(function(elem){
-                        fs.writeFileSync(profilepath+'/layoutAssignments/'+elem.layout+'.json', JSON.stringify(elem, null, 2));
+                        var key = elem.recordType || elem.layout;
+                        fs.writeFileSync(profilepath+'/layoutAssignments/'+key+'.json', JSON.stringify(elem, null, 2));
                     });
                 }
                 //userPermissions

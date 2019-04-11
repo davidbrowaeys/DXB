@@ -70,7 +70,7 @@ export default class DeltaGenerate extends SfdxCommand {
     mode: flags.string({char: 'm',description: 'commitid(default)|tags'}),
     commitid: flags.string({char: 'c', description: 'commit #'}),
     branch:flags.string({char: 'b',description: 'branch name, origin/develop'}),
-    prevtag: flags.string({char: 'p', description: 'tag # to HEAD'})
+    prevTag: flags.string({char: 'p', description: 'tag # to HEAD'})
   };
 
   // Comment this out if your command does not require an org username

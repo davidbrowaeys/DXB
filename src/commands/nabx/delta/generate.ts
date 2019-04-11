@@ -70,7 +70,7 @@ export default class DeltaGenerate extends SfdxCommand {
     mode: flags.string({char: 'm',description: 'commitid(default)|tags'}),
     commitid: flags.string({char: 'c', description: 'commit #'}),
     branch:flags.string({char: 'b',description: 'branch name, origin/develop'}),
-    prevTag: flags.string({char: 'p', description: 'tag # to HEAD'})
+    prevtag: flags.string({char: 'p', description: 'tag # to HEAD'})
   };
 
   // Comment this out if your command does not require an org username
@@ -85,7 +85,7 @@ export default class DeltaGenerate extends SfdxCommand {
   public async run() {
     const commitid = this.flags.commitid ;
     const mode = this.flags.mode || 'commitid';
-    const prevTag = this.flags.prevTag;
+    const prevtag = this.flags.prevtag;
     const branch = this.flags.branch;
     const targetdir = this.flags.targetdir || 'delta';
     
@@ -102,7 +102,7 @@ export default class DeltaGenerate extends SfdxCommand {
     if (mode === 'branch'){
       files = exec(`git diff ${branch} --name-only  | grep force-app | sort | uniq`).toString().split('\n');
     }else if (mode === 'tags'){
-      files = exec(`git diff ${prevTag}..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
+      files = exec(`git diff ${prevtag}..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
     }else{
       files = exec(`git diff-tree --no-commit-id --name-only -r ${commitid} | grep force-app | sort | uniq`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
     }

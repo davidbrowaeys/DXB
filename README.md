@@ -36,7 +36,7 @@ Once installed, checkout proxy setting if you are behind corporate proxy.
     npm install
     ```
 
-3. Link nab-cli plugin to SFDX (non admin), go to nab-cli folder and execute
+3. Link nab-cli plugin to SFDX (non admin), go to dxb-cli folder and execute
 
     ```shell
     sfdx plugins:link

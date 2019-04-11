@@ -102,11 +102,7 @@ export default class DeltaGenerate extends SfdxCommand {
     if (mode === 'branch'){
       files = exec(`git diff ${branch} --name-only  | grep force-app | sort | uniq`).toString().split('\n');
     }else if (mode === 'tags'){
-      if (prevTag) {
-        files = exec(`git diff $(git describe --match ${prevTag}* --abbrev=0 --all)..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
-      }else{
-        files = exec(`git diff $(git describe --tags --abbrev=0 --all)..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
-      }
+      files = exec(`git diff ${prevTag}..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
     }else{
       files = exec(`git diff-tree --no-commit-id --name-only -r ${commitid} | grep force-app | sort | uniq`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
     }

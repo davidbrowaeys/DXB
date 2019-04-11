@@ -1,9 +1,9 @@
 {
-  "name": "nabx",
+  "name": "dxb",
   "description": "nab-cli plugin for sfdx",
   "version": "0.0.1",
   "author": "David Browaeys",
-  "bugs": "https://github.aus.thenational.com/EntCRM/nabx/issues",
+  "bugs": "https://github.com/davidbrowaeys/DXB/issues",
   "dependencies": {
     "@oclif/command": "^1",
     "@oclif/config": "^1",
@@ -43,7 +43,7 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.aus.thenational.com/EntCRM/nabx",
+  "homepage": "https://github.com/davidbrowaeys/DXB",
   "keywords": [
     "sfdx-plugin"
   ],
@@ -52,7 +52,7 @@
     "commands": "./lib/commands",
     "bin": "sfdx",
     "topics": {
-      "nabx": {
+      "dxb": {
         "description": "sfdx plugin for NAB"
       }
     },
@@ -60,7 +60,7 @@
       "@oclif/plugin-help"
     ]
   },
-  "repository": "EntCRM/nabx",
+  "repository": "dxb",
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "tslint -p test -t stylish",

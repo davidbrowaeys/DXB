@@ -85,7 +85,7 @@ export default class DeltaGenerate extends SfdxCommand {
   public async run() {
     const commitid = this.flags.commitid ;
     const mode = this.flags.mode || 'commitid';
-    const prevTag = this.flags.prevTag;
+    const prevtag = this.flags.prevtag;
     const branch = this.flags.branch;
     const targetdir = this.flags.targetdir || 'delta';
     
@@ -102,8 +102,8 @@ export default class DeltaGenerate extends SfdxCommand {
     if (mode === 'branch'){
       files = exec(`git diff ${branch} --name-only  | grep force-app | sort | uniq`).toString().split('\n');
     }else if (mode === 'tags'){
-      if (prevTag) {
-        files = exec(`git diff $(git describe --match ${prevTag}* --abbrev=0 --all)..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
+      if (prevtag) {
+        files = exec(`git diff $(git describe --match ${prevtag}* --abbrev=0 --all)..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
       }else{
         files = exec(`git diff $(git describe --tags --abbrev=0 --all)..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
       }

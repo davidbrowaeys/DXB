@@ -1,0 +1,13 @@
+export FORCE_SHOW_SPINNER=true
+
+alias gpush="git push origin HEAD"
+alias gpull="git pull origin"
+alias sfod="sfdx force:org:delete"
+alias sfod="sfdx force:org:display"
+alias snec="sfdx nab:env:create"
+alias sfoo="sfdx force:org:open"
+alias spush="sfdx force:source:push"
+alias spull="sfdx force:source:pull"
+alias srefresh="sfdx nab:env:refresh"
+alias stest="spush && sfdx force:apex:test:run --resultformat human --outputdir /Users/p774045/workspace/Prospect/.sfdx/tools/testresults/apex --loglevel error"
+alias gclean="git branch -v | grep -E '[0-9a-zA-Z]{7} \[gone\]' | awk '{ print $1}' | xargs git branch -D $1"

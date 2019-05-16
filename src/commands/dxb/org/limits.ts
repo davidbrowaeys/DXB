@@ -18,7 +18,7 @@ export default class MetadataReset extends SfdxCommand {
   public static description = 'retrieve and display org limits';
 
   public static examples = [
-  	`$ sfdx nabx:org:limits --targetusername myOrg@example.com`
+  	`$ sfdx dxb:org:limits -u myOrg@example.com`
   ];
 
   public static args = [{name: 'file'}];
@@ -34,14 +34,72 @@ export default class MetadataReset extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run() {
-			let orgname = this.org.getUsername();
-			let auth = JSON.parse(exec(`sfdx force:org:display -u ${orgname} --json`).toString());
-			let accessToken = auth.result.accessToken;
-			let instanceUrl = auth.result.instanceUrl;
-			console.log('Connecting to ',instanceUrl,'...',accessToken);
+			let accessToken = this.org.getConnection().accessToken;
+			let instanceUrl = this.org.getConnection().instanceUrl;
+      console.log('Connecting to ',instanceUrl,'...\n',accessToken);
 			var output = JSON.parse(exec(`curl \"${instanceUrl}/services/data/v45.0/limits/\" -H \"Authorization: Bearer ${accessToken}\"`).toString());
-			var limitPercentage = output.DataStorageMB.Remaining / output.DataStorageMB.Max * 100;
-			var messageType = limitPercentage < 10 ? '\x1b[91m%s\x1b[0m' : ''; 
-			console.log(messageType,`Data Storage Limits: ${output.DataStorageMB.Remaining}/${output.DataStorageMB.Max}   ---   ${limitPercentage}%`);
+      
+      var Table = require('tty-table');
+      var chalk = require('chalk');
+      var header = [
+        {
+          value : "Item",
+          color : "white", 
+          align : "left",
+          paddingLeft : 5,
+          width : 50
+        },
+        {
+          value : "Remaining",
+          color : "white", 
+          width : 20,
+          paddingLeft : 5,
+          align : "left"
+        },
+        {
+          value : "Max",
+          color : "white", 
+          width : 20,
+          paddingLeft : 5,
+          align : "left"
+        },
+        {
+          value : "Percentage",
+          color : "white", 
+          width : 30,
+          paddingLeft: 5,
+          align: "left",
+          formatter : function(value){
+            var str = value.toFixed(2) + '%';
+            if(value < 10){
+              str = chalk.black.red(str);
+            }else if(value < 30){
+              str = chalk.black.yellow(str);
+            }
+            return str;
+          }
+        }
+      ];
+
+
+      var rows = [];
+      for (var i in output){
+        rows.push([
+            i,
+            output[i].Remaining || 'N/A',
+            output[i].Max || 'N/A',
+            (output[i].Remaining / output[i].Max * 100)
+        ]);
+      }
+      var t1 = Table(header,rows,null,{
+        borderStyle : 1,
+        borderColor : "blue",
+        paddingBottom : 0,
+        headerAlign : "center",
+        align : "center",
+        color : "white",
+        truncate: "..."
+      });
+      console.log(t1.render());
   }
 }

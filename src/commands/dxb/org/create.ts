@@ -20,7 +20,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-  `$ sfdx dxb:org -u myorg -p -s`
+  `$ sfdx dxb:org:create -u myorg -p -s`
   ];
 
   public static args = [{name: 'file'}];

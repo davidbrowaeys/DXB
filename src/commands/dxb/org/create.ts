@@ -20,13 +20,7 @@ export default class Org extends SfdxCommand {
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-  `$ sfdx hello:org --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
-  Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
-  My hub org id is: 00Dxx000000001234
-  `,
-  `$ sfdx hello:org --name myname --targetusername myOrg@example.com
-  Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
-  `
+  `$ sfdx dxb:org -u myorg -p -s`
   ];
 
   public static args = [{name: 'file'}];
@@ -79,7 +73,7 @@ export default class Org extends SfdxCommand {
     manual_steps.forEach(function(elem) {
       console.log(elem);
     });
-    this.ux.log(exec(`sfdx force:org:open -u ${orgname} -p /lightning/setup/ObjectManager/Account/FieldsAndRelationships/setHistoryTracking`).toString());
+    this.ux.log(exec(`sfdx force:org:open -u ${orgname} -p /lightning/setup/SetupOneHome/home`).toString());
   
     var stdin = require('readline-sync');
     while(true) {
@@ -152,7 +146,7 @@ export default class Org extends SfdxCommand {
     console.log('Installing your (un)managed packages...');
     packages.forEach(elem =>{
       try{
-        var output = JSON.parse(exec(`sfdx force:package:install --package ${elem} -u ${orgname} -w 60 --json`).toString());
+        var output = JSON.parse(exec(`sfdx force:package:install --package ${elem} -u ${orgname} -w 60 --json -r`).toString());
         if (output && output.result && output.result.Status === 'SUCCESS'){
           console.log(`Successfully installed package [${elem}]`);
         }else{
@@ -206,13 +200,12 @@ export default class Org extends SfdxCommand {
     //REMOVE FIELDS TRACKING HISTORY
     if (this.flags.includetrackinghistory) {
       this.includetrackinghistory(config.disableFeedTrackingHistory);
-    } else if (config.manual_config_required){
+    } 
+    
+    if (config.manual_config_required){
       //STOP USER FOR MANUAL CONFIG
       this.prompt_user_manual_config(orgname, config.manual_steps);
     }
-
-    //ENABLE TERRITORY MANAGEMENT
-    this.manuallyEnableTerritoryManagement(orgname); 
 
     //INSTALL PACKAGES
     if (this.flags.includepackages && config.packages) {

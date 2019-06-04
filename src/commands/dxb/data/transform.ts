@@ -70,7 +70,7 @@ export default class DataTransform extends SfdxCommand {
         .pipe(csvp())
         .on('data', (row) => 
         {
-            console.log(row["Id"]);
+            //console.log(row["Id"]);
             // var record = [
             //     {id: row["Id"],  phone_country__c: "Australia_61"}
             // ];

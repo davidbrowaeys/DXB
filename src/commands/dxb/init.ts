@@ -35,7 +35,6 @@ export default class DXBInit extends SfdxCommand {
 
   public async run() {
       var init = {
-          "plugins" : {
             "defaultdurationdays" : "30",
             "packages" : [],
             "pre_legacy_packages" : [],
@@ -47,6 +46,9 @@ export default class DXBInit extends SfdxCommand {
             ],
             "data_plan_path" : "./data/sample/data-plan.json"
         }
-    }
+
+        let config = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
+        config["plugins"] = init;
+        fs.writeFileSync('sfdx-project.json', JSON.stringify(config, null, 2));
   }
 }

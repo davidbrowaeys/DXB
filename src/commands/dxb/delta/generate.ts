@@ -110,7 +110,7 @@ export default class DeltaGenerate extends SfdxCommand {
       var f = files[i];
       if (!f || f == '' || f.indexOf('force-app') < 0) continue;
       
-      var basedir = 'force-app/main/default'; //store base folder (force-app) into nab cli config json file so we can easily change it 
+      var basedir = 'force-app/main/default'; //store base folder (force-app) into dxb cli config json file so we can easily change it 
       if (f.indexOf('force-app/test') >= 0){
         basedir = 'force-app/test';
       }

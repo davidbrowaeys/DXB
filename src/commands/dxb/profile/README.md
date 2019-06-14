@@ -4,10 +4,10 @@
 2. push to scratch org new changes
 	sfdx force:source:push -u myorg
 3. convert profiles xml files to json
-	sfdx nab:profile:convert
+	sfdx dxb:profile:convert
 4. make change in scratch org
 	sfdx force:source:pull -u myorg
 5. re-convert profiles xml files to json
-	sfdx nab:profile:convert
+	sfdx dxb:profile:convert
 6. rebuild profile meta xml files from json files
-	sfdx nab:profile:build
+	sfdx dxb:profile:build

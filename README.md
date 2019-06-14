@@ -1,8 +1,6 @@
-![](https://github.aus.thenational.com/raw/EntCRM/nab-cli/master/lib/wiki_banner.png?token=AAAXEQhWOv4F5ylTLKm1gY8TahBX_Z-Pks5a9M3dwA%3D%3D)
-
 # DXB-CLI
 
-A DXB plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands. 
+A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands. 
 
 ## Pre-requisite
 1. Install [SDFX CLI](https://developer.salesforce.com/tools/sfdxcli) 

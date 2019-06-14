@@ -176,7 +176,7 @@ export default class Org extends SfdxCommand {
   }
 
   public async run() {
-    let config = JSON.parse(fs.readFileSync('./config/nab-cli-def.json').toString());
+    let config = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
 
     let orgname = this.flags.orgname;
     let defaultorg = this.flags.defaultorg ? '-s' : '';

@@ -1,8 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
-import { AnyJson } from '@salesforce/ts-types';
-import * as permset from '../user/assignPermissionSet.js';
-
 
 const exec = require('child_process').execSync;
 const execAsync = require('child_process').exec;
@@ -13,14 +10,15 @@ Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('dxb', 'org');
+const messages = Messages.loadMessages('nabx', 'org');
 
 export default class Org extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-  `$ sfdx dxb:org:create -u myorg -p -s`
+  `$ sfdx dxb:org:create --includepackages --defaultorg --orgname myorg`,
+  `$ sfdx dxb:org:create --durationday 10 --defaultorg --orgname myorg`
   ];
 
   public static args = [{name: 'file'}];
@@ -30,14 +28,13 @@ export default class Org extends SfdxCommand {
     includepackages :flags.boolean({char: 'p',description: 'include packages from cli config file'}),
     defaultorg: flags.boolean({char: 's', description: 'mark as default org'}),
     durationday : flags.number({char: 'd', description: 'duration of the scratch org (in days) (default:30, min:1, max:30)'}),
-    includedata : flags.boolean({char: 'f',description: 'indicate if nab data need to be imported'}),
     includetrackinghistory: flags.boolean({char: 't', description: 'remove field tracking history tag from Account, Contact, Lead'})
   };
   // Comment this out if your command does not require an org username
   protected static requiresUsername = false;
 
   // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = true;
+  protected static supportsDevhubUsername = false;
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = false;
@@ -68,28 +65,16 @@ export default class Org extends SfdxCommand {
     }
   }
 
-  async prompt_user_manual_config(orgname, manual_steps){
+  async prompt_user_manual_config(orgname, manual_steps, startURL){
     this.ux.log('Due to some limitations with DX scratch org, you must enable manually the following feature(s) before to proceed:');
     manual_steps.forEach(function(elem) {
       console.log(elem);
     });
-    this.ux.log(exec(`sfdx force:org:open -u ${orgname} -p /lightning/setup/SetupOneHome/home`).toString());
-  
-    var stdin = require('readline-sync');
-    while(true) {
-      var yn = stdin.question("Would you like to continue?(Y/N)");
-      if(yn.toLowerCase() === 'y' ) {
-        break;
-      } else {
-        process.exit();
-      }
+    if (!startURL){
+      startURL = "/lightning/setup/SetupOneHome/home";
     }
-  }
-
-  async manuallyEnableTerritoryManagement(orgname) {
-    console.log('Due to some limitations with scratch orgs in DX, you must manually enable Territory Management:');
+    this.ux.log(exec(`sfdx force:org:open -u ${orgname} -p ${startURL}`).toString());
   
-    console.log(exec(`sfdx force:org:open -u ${orgname} -p /lightning/setup/Territory2Settings/home`).toString());
     var stdin = require('readline-sync');
     while(true) {
       var yn = stdin.question("Would you like to continue?(Y/N)");
@@ -159,6 +144,7 @@ export default class Org extends SfdxCommand {
   }
 
   async create_user(orgname, user_alias_prefix,user_def_file){
+    console.log('Creating testing user...');
     const suffix = Math.floor((Math.random() * 20000000) + 1);
     if (!user_alias_prefix) user_alias_prefix = 'usr';
     try{
@@ -175,13 +161,30 @@ export default class Org extends SfdxCommand {
     }
   }
 
+  async import_data_plan(orgname, dataplan){
+    console.log('Importing podium data plan...');
+    try{
+      return new Promise(function (resolve, reject) {
+          execAsync(`sfdx force:data:tree:import -p ${dataplan} -u ${orgname}`, (error, stdout, stderr) => {
+            if (error) {
+              console.warn(error);
+            }
+            resolve(stdout? stdout : stderr);
+          });
+      });
+    }catch(err){
+      throw new SfdxError('Unable to create user to scratch org!');
+    }
+  }
+
   public async run() {
     let config = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
+    if (config.plugins) config = config.plugins;
 
     let orgname = this.flags.orgname;
     let defaultorg = this.flags.defaultorg ? '-s' : '';
     let durationdays = this.flags.durationdays || config.defaultdurationdays;   
-    this.ux.log('\x1b[91m%s\x1b[0m', `Welcome to NAB DX! We are now creating your scratch org[${orgname}]...`);
+    this.ux.log('\x1b[91m%s\x1b[0m', `Welcome to DXB! We are now creating your scratch org[${orgname}]...`);
 
     var output = await this.create_scratch_org(orgname, defaultorg, durationdays);
     console.log(output);
@@ -194,9 +197,6 @@ export default class Org extends SfdxCommand {
       await this.deploy_legacy_packages(orgname, config.pre_legacy_packages, 'pre');
     }
 
-    //assign einstein permissionset
-    console.log(exec(`sfdx dxb:user:assignPermissionSet -u ${orgname} -p EinsteinAnalyticsAdmin`).toString());
-    
     //REMOVE FIELDS TRACKING HISTORY
     if (this.flags.includetrackinghistory) {
       this.includetrackinghistory(config.disableFeedTrackingHistory);
@@ -204,7 +204,7 @@ export default class Org extends SfdxCommand {
     
     if (config.manual_config_required){
       //STOP USER FOR MANUAL CONFIG
-      this.prompt_user_manual_config(orgname, config.manual_steps);
+      this.prompt_user_manual_config(orgname, config.manual_steps,config.manual_config_start_url);
     }
 
     //INSTALL PACKAGES
@@ -220,6 +220,13 @@ export default class Org extends SfdxCommand {
     if (config.post_legacy_packages) {
       await this.deploy_legacy_packages(orgname, config.post_legacy_packages, 'post');
     }
+
+    //IMPORT DATA
+    if (config.data_plan_path){
+      output = await this.import_data_plan(orgname, config.data_plan_path);
+      console.log(output);
+    }
+
     //create other user, this also fix FLS being deleted from profile
     if (config.user_def_file){
       output = await this.create_user(orgname, config.user_alias_prefix, config.user_def_file);

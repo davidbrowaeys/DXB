@@ -21,7 +21,8 @@ export default class FieldList extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object'})
+        objectname: flags.string({char:'o',description:'Name of custom object'}),
+        filter: flags.string({char:'f',description:'Search filter'})
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
@@ -35,6 +36,7 @@ export default class FieldList extends SfdxCommand {
     public async run() {
         let orgname = this.org.getUsername();
         let sobject = this.flags.objectname;
+        let filter = this.flags.filter;
 
         if (!sobject){
             throw new SfdxError('Must pass a orgname in order to use this command!');
@@ -46,6 +48,16 @@ export default class FieldList extends SfdxCommand {
 
             var Table = require('tty-table');
             var chalk = require('chalk');
+
+            if (filter){
+                var tmp = [];
+                for (var i in objectschema){
+                    if (objectschema[i].name.toLowerCase().indexOf(filter.toLowerCase()) >=0 ){
+                        tmp.push(objectschema[i]);
+                    }
+                }
+                objectschema = tmp;
+            }
 
             var rows = [];
             for (var i = 0; i < objectschema.length; i=i+4){

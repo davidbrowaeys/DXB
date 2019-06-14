@@ -1,11 +1,14 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
-import { AnyJson } from '@salesforce/ts-types';
 import * as extensions from '../../../lib/delta_dependencies.json';
 
 const fs = require("fs-extra");
 const path = require('path');
 const exec = require('child_process').execSync;
+
+function onlyUnique(value, index, self) { 
+  return self.indexOf(value) === index;
+}
 
 function copyFileSync( source: string, target: string ) {
   var targetFile = target;
@@ -60,6 +63,9 @@ export default class DeltaGenerate extends SfdxCommand {
   `,
   `$ sfdx dxb:delta:generate -r delta -m commitid -c 123456
   <list of all files changed for a specific commit>
+  `,
+  `$ sfdx dxb:delta:generate -r delta -m branch -b origin/master
+  <list of all files changed from latest commit to head>
   `
   ];
 
@@ -67,9 +73,9 @@ export default class DeltaGenerate extends SfdxCommand {
 
   protected static flagsConfig = {
     targetdir:flags.string({char: 'r',description: 'delta|acc_delta|...'}),
-    mode: flags.string({char: 'm',description: 'commitid(default)|tags'}),
+    mode: flags.string({char: 'm',description: 'commitid(default)|tags|branch'}),
     commitid: flags.string({char: 'c', description: 'commit #'}),
-    branch:flags.string({char: 'b',description: 'branch name, origin/develop'}),
+    branch:flags.string({char: 'b',description: 'branch name to compare with, origin/develop'}),
     prevtag: flags.string({char: 'p', description: 'tag # to HEAD'})
   };
 
@@ -98,22 +104,26 @@ export default class DeltaGenerate extends SfdxCommand {
     this.ux.log(path.join(targetdir,'.forceignore'));
 
     //git diff-tree --no-commit-id --name-only -r 2d9dc0fd1f5148b9f4dac23215c4aaaae64c1ab1
-    var files;
+    var gitresult;
     if (mode === 'branch'){
-      files = exec(`git diff ${branch} --name-only  | grep force-app | sort | uniq`).toString().split('\n');
+      gitresult = exec(`git diff ${branch} --name-only`).toString().split('\n');
     }else if (mode === 'tags'){
-      files = exec(`git diff ${prevtag}..HEAD --name-only | grep force-app | sort | uniq`).toString().split('\n');
+      if (prevtag) {
+        gitresult = exec(`git diff $(git describe --match ${prevtag}* --abbrev=0 --all)..HEAD --name-only`).toString().split('\n');
+      }else{
+        gitresult = exec(`git diff $(git describe --tags --abbrev=0 --all)..HEAD --name-only`).toString().split('\n');
+      }
     }else{
-      files = exec(`git diff-tree --no-commit-id --name-only -r ${commitid} | grep force-app | sort | uniq`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
+      gitresult = exec(`git diff-tree --no-commit-id --name-only -r ${commitid}`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
     }
+
+    var files = gitresult.filter( onlyUnique );
+
     for(var i in files){
       var f = files[i];
       if (!f || f == '' || f.indexOf('force-app') < 0) continue;
       
       var basedir = 'force-app/main/default'; //store base folder (force-app) into dxb cli config json file so we can easily change it 
-      if (f.indexOf('force-app/test') >= 0){
-        basedir = 'force-app/test';
-      }
       if (fs.existsSync(f) && !fs.existsSync(path.join(targetdir,f))){ 
 
         var file = path.parse(f);

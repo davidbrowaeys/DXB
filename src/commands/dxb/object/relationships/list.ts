@@ -4,18 +4,18 @@ import { Messages, SfdxError } from '@salesforce/core';
 
 const exec = require('child_process').execSync;
 
-function retrievesobjectchildrelationship(orgname, sobject){
-    console.log(`Retrieving ${sobject} child relationships from schema...`); 
+function retrievesobjectfields(orgname, sobject){
+    console.log(`Retrieving ${sobject} fields from schema...`); 
     orgname = orgname ? ('-u '+ orgname) : '';
     return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
 }
 
-export default class ChildRelationshipList extends SfdxCommand {
+export default class FieldList extends SfdxCommand {
 
-    public static description = 'Retrieve list of child relationships of a specified object.';
+    public static description = 'Retrieve list of fields of specified object.';
   
     public static examples = [
-    `$ sfdx dxb:object:relationships:list --targetusername myOrg@example.com --objectname Account`
+    `$ sfdx dxb:object:fields:list --targetusername myOrg@example.com --objectname Account`
     ];
   
     public static args = [{name: 'file'}];
@@ -39,32 +39,33 @@ export default class ChildRelationshipList extends SfdxCommand {
         let filter = this.flags.filter;
 
         if (!sobject){
-            throw new SfdxError('Must pass a sobject in order to use this command!');
+            throw new SfdxError('Must pass a objectname in order to use this command!');
         }
 
         try{
-            var objectschema = retrievesobjectchildrelationship(orgname,sobject);
-            objectschema = JSON.parse(objectschema).result.childRelationships;
+            var objectschema = retrievesobjectfields(orgname,sobject);
+            objectschema = JSON.parse(objectschema).result.fields;
 
             var Table = require('tty-table');
             var chalk = require('chalk');
 
-            var tmp = [];
-            for (var i in objectschema){
-                console.log(objectschema[i].relationshipName);
-                if (objectschema[i].relationshipName && ( !filter || (filter && objectschema[i].relationshipName.toLowerCase().indexOf(filter.toLowerCase()) >=0 ))){
-                    tmp.push(objectschema[i]);
+            if (filter){
+                var tmp = [];
+                for (var i in objectschema){
+                    if (objectschema[i].name.toLowerCase().indexOf(filter.toLowerCase()) >=0 ){
+                        tmp.push(objectschema[i]);
+                    }
                 }
+                objectschema = tmp;
             }
-            objectschema = tmp;
 
             var rows = [];
             for (var i = 0; i < objectschema.length; i=i+4){
                 rows.push([
-                    objectschema[i]   ? objectschema[i].relationshipName   + '(' + objectschema[i].childSObject   + ')' : '',
-                    objectschema[i+1] ? objectschema[i+1].relationshipName + '(' + objectschema[i+1].childSObject + ')' : '',
-                    objectschema[i+2] ? objectschema[i+2].relationshipName + '(' + objectschema[i+2].childSObject + ')' : '',
-                    objectschema[i+3] ? objectschema[i+3].relationshipName + '(' + objectschema[i+3].childSObject + ')' : ''
+                    objectschema[i]   ? objectschema[i].name   + '(' + objectschema[i].type   + ')' : '',
+                    objectschema[i+1] ? objectschema[i+1].name + '(' + objectschema[i+1].type + ')' : '',
+                    objectschema[i+2] ? objectschema[i+2].name + '(' + objectschema[i+2].type + ')' : '',
+                    objectschema[i+3] ? objectschema[i+3].name + '(' + objectschema[i+3].type + ')' : ''
                 ]);
             }
             var t1 = Table([],rows,null,{

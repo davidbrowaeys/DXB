@@ -96,7 +96,7 @@ export default class ObjectCreate extends SfdxCommand {
     public static description = 'Refresh scratch org by deleting local sync file, reset some metadata by target username, and re-push all to scratch org.';
   
     public static examples = [
-    `$ sfdx nabx:object:create --targetusername myOrg@example.com --objectname Invoice`
+    `$ sfdx dxb:object:create --targetusername myOrg@example.com --objectname Invoice`
     ];
   
     public static args = [{name: 'file'}];

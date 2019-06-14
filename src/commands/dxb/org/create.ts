@@ -13,7 +13,7 @@ Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('nabx', 'org');
+const messages = Messages.loadMessages('dxb', 'org');
 
 export default class Org extends SfdxCommand {
 
@@ -187,7 +187,7 @@ export default class Org extends SfdxCommand {
     console.log(output);
 
     //UPDATE WORKFLOWS
-    console.log(exec(`sfdx nabx:org:setdefault -u ${orgname}`).toString());
+    console.log(exec(`sfdx dxb:org:setdefault -u ${orgname}`).toString());
     
     //DEPLOY PRE LEGACY PACKAGES
     if (config.pre_legacy_packages) {
@@ -195,7 +195,7 @@ export default class Org extends SfdxCommand {
     }
 
     //assign einstein permissionset
-    console.log(exec(`sfdx nabx:user:assignPermissionSet -u ${orgname} -p EinsteinAnalyticsAdmin`).toString());
+    console.log(exec(`sfdx dxb:user:assignPermissionSet -u ${orgname} -p EinsteinAnalyticsAdmin`).toString());
     
     //REMOVE FIELDS TRACKING HISTORY
     if (this.flags.includetrackinghistory) {

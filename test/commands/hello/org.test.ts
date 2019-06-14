@@ -1,7 +1,7 @@
 import { expect, test } from '@salesforce/command/lib/test';
 import { ensureJsonMap, ensureString } from '@salesforce/ts-types';
 
-describe('nabx:org', () => {
+describe('dxb:org', () => {
   test
     .withOrg({ username: 'test@org.com' }, true)
     .withConnectionRequest(request => {
@@ -12,8 +12,8 @@ describe('nabx:org', () => {
       return Promise.resolve({ records: [] });
     })
     .stdout()
-    .command(['nabx:org', '--targetusername', 'test@org.com'])
-    .it('runs nabx:org --targetusername test@org.com', ctx => {
+    .command(['dxb:org', '--targetusername', 'test@org.com'])
+    .it('runs dxb:org --targetusername test@org.com', ctx => {
       expect(ctx.stdout).to.contain('Hello world! This is org: Super Awesome Org and I will be around until Tue Mar 20 2018!');
     });
 });

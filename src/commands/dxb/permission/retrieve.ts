@@ -9,7 +9,7 @@ export default class FieldSetCreate extends SfdxCommand {
     public static description = 'Create fieldset for specified object and push to scratch org.';
   
     public static examples = [
-    `$ sfdx nabx:object:create --targetusername myOrg@example.com --objectname Invoice`
+    `$ sfdx dxb:object:create --targetusername myOrg@example.com --objectname Invoice`
     ];
   
     public static args = [{name: 'file'}];

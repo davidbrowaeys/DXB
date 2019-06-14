@@ -21,7 +21,7 @@ function remove_dir(path) {
 }
 
 function refresh_meta(username) {
-	console.log(exec(`sfdx nabx:org:setdefault -u ${username}`).toString());
+	console.log(exec(`sfdx dxb:org:setdefault -u ${username}`).toString());
 	return push_source(username);
 }
 
@@ -43,7 +43,7 @@ export default class OrgRefresh extends SfdxCommand {
     public static description = 'Refresh scratch org by deleting local sync file, reset some metadata by target username, and re-push all to scratch org.';
   
     public static examples = [
-    `$ sfdx nabx:org:refresh --targetusername myOrg@example.com`
+    `$ sfdx dxb:org:refresh --targetusername myOrg@example.com`
     ];
   
     public static args = [{name: 'file'}];

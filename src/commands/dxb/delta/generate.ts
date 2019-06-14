@@ -48,17 +48,17 @@ Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = Messages.loadMessages('nabx', 'generate');
+const messages = Messages.loadMessages('dxb', 'generate');
 
 export default class DeltaGenerate extends SfdxCommand {
 
   public static description = messages.getMessage('commandDescription');
 
   public static examples = [
-  `$ sfdx nabx:delta:generate -r delta -m tags
+  `$ sfdx dxb:delta:generate -r delta -m tags
   <list of all files changed from latest commit to head>
   `,
-  `$ sfdx nabx:delta:generate -r delta -m commitid -c 123456
+  `$ sfdx dxb:delta:generate -r delta -m commitid -c 123456
   <list of all files changed for a specific commit>
   `
   ];

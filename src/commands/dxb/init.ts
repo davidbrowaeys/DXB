@@ -1,17 +1,7 @@
 
-import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
+import { SfdxCommand } from '@salesforce/command';
 
-const path = require('path');
-const fse = require('fs-extra');
 const fs = require('fs');
-const execAsync = require('child_process').exec;
-
-var content = '<?xml version="1.0" encoding="UTF-8"?>'+
-              '<StaticResource xmlns="http://soap.sforce.com/2006/04/metadata">'+
-              '<contentType>{{content_type}}</contentType>'+
-              '<description>{{description}}</description>'+
-              '</StaticResource>';
 
 export default class DXBInit extends SfdxCommand {
 

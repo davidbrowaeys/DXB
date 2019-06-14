@@ -10,12 +10,12 @@ function retrievesobjectchildrelationship(orgname, sobject){
     return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
 }
 
-export default class FieldList extends SfdxCommand {
+export default class ChildRelationshipList extends SfdxCommand {
 
-    public static description = 'Retrieve list of fields of specified object.';
+    public static description = 'Retrieve list of child relationships of a specified object.';
   
     public static examples = [
-    `$ sfdx dxb:object:fields:list --targetusername myOrg@example.com --objectname Account`
+    `$ sfdx dxb:object:relationships:list --targetusername myOrg@example.com --objectname Account`
     ];
   
     public static args = [{name: 'file'}];
@@ -39,7 +39,7 @@ export default class FieldList extends SfdxCommand {
         let filter = this.flags.filter;
 
         if (!sobject){
-            throw new SfdxError('Must pass a orgname in order to use this command!');
+            throw new SfdxError('Must pass a sobject in order to use this command!');
         }
 
         try{

@@ -6,6 +6,7 @@ const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
 const execAsync = require('child_process').exec;
+var stdin = require('readline-sync');
 
 var content = '<?xml version="1.0" encoding="UTF-8"?>'+
               '<StaticResource xmlns="http://soap.sforce.com/2006/04/metadata">'+
@@ -13,8 +14,9 @@ var content = '<?xml version="1.0" encoding="UTF-8"?>'+
               '<description>{{description}}</description>'+
               '</StaticResource>';
 
-function updateContent(varName, varValue) {
-  content = content.replace(new RegExp(`{{${varName}}}`,'g'), varValue);
+function updateContent(varName, question, res) {
+    if (!res) res = stdin.question(question);
+    content = content.replace(new RegExp(`{{${varName}}}`, 'g'), res);
 }
 
 async function push_source(orgname){
@@ -216,9 +218,7 @@ export default class StaticResourceCreation extends SfdxCommand {
 
   protected static flagsConfig = {
       name: flags.string({char:'n',description:'static resource name'}),
-      description: flags.string({char:'d',description:'static resource description'}),
       file: flags.string({char:'f',description:'static resource local file path'}),
-      cachecontrol:flags.string({char:'c',description:'public or private static resource'}),
       push:flags.boolean({char:'p',description:'push to scratch org'})
   };
   // Comment this out if your command does not require an org username
@@ -234,8 +234,6 @@ export default class StaticResourceCreation extends SfdxCommand {
     let orgname = this.org.getUsername();
     let name = this.flags.name;
     let file = this.flags.file;
-    let description = this.flags.description;
-    var cachecontrol = this.flags.description ? this.flags.description : 'Public';
 
     if (!file){
       throw new SfdxError('Must specify file path in order to use this command.');
@@ -259,9 +257,9 @@ export default class StaticResourceCreation extends SfdxCommand {
 
     const filesCreated = [];
     //meta
-    updateContent('description',description);
-    updateContent('content_type',contenttype);
-    updateContent('cache_control',cachecontrol);
+    updateContent('description','Description: ',null);
+    updateContent('content_type','Content Type: ',contenttype);
+    updateContent('cache_control','Cache Control(Public|Private): ',null);
 
     var outmetapath = `${staticpath}/${name}.resource-meta.xml`;
     fse.ensureDirSync(staticpath);

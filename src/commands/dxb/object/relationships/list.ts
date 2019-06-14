@@ -49,15 +49,14 @@ export default class FieldList extends SfdxCommand {
             var Table = require('tty-table');
             var chalk = require('chalk');
 
-            if (filter){
-                var tmp = [];
-                for (var i in objectschema){
-                    if (objectschema[i].relationshipName && objectschema[i].relationshipName.toLowerCase().indexOf(filter.toLowerCase()) >=0 ){
-                        tmp.push(objectschema[i]);
-                    }
+            var tmp = [];
+            for (var i in objectschema){
+                console.log(objectschema[i].relationshipName);
+                if (objectschema[i].relationshipName && ( !filter || (filter && objectschema[i].relationshipName.toLowerCase().indexOf(filter.toLowerCase()) >=0 ))){
+                    tmp.push(objectschema[i]);
                 }
-                objectschema = tmp;
             }
+            objectschema = tmp;
 
             var rows = [];
             for (var i = 0; i < objectschema.length; i=i+4){

@@ -39,7 +39,7 @@ export default class FieldList extends SfdxCommand {
         let filter = this.flags.filter;
 
         if (!sobject){
-            throw new SfdxError('Must pass a orgname in order to use this command!');
+            throw new SfdxError('Must pass a objectname in order to use this command!');
         }
 
         try{
@@ -78,14 +78,6 @@ export default class FieldList extends SfdxCommand {
                 truncate: "..."
             });
             console.log(t1.render());
-
-            // if (objectschema.result.queryable){
-            //     var fields = "Name";
-            //     objectschema.result.fields.forEach(function(f){
-            //         if(!f.deprecatedAndHidden && f.name !== 'Name') fields = fields +","+ f.name;
-            //     });
-            // }
-            // console.log('\n=== Available Object Fields \n'+fields+'\n');
         }catch(err){
             console.log(err);
         }

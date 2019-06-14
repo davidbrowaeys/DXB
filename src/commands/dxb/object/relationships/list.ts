@@ -77,14 +77,6 @@ export default class FieldList extends SfdxCommand {
                 truncate: "..."
             });
             console.log(t1.render());
-
-            // if (objectschema.result.queryable){
-            //     var fields = "Name";
-            //     objectschema.result.fields.forEach(function(f){
-            //         if(!f.deprecatedAndHidden && f.name !== 'Name') fields = fields +","+ f.name;
-            //     });
-            // }
-            // console.log('\n=== Available Object Fields \n'+fields+'\n');
         }catch(err){
             console.log(err);
         }

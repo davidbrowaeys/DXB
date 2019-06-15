@@ -12,7 +12,7 @@ Messages.importMessagesDirectory(__dirname);
 // or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('dxb', 'org');
 
-export default class MetadataReset extends SfdxCommand {
+export default class OrgLimits extends SfdxCommand {
 
   public static description = 'retrieve and display org limits';
 

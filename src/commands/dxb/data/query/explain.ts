@@ -80,12 +80,20 @@ export default class QueryExplain extends SfdxCommand {
     protected static requiresProject = false;
   
     public async run() {
-
-        let orgname = this.org.getUsername();
         let query = this.flags.query;
+        if (!query){
+          throw new SfdxError('Must specify query in order to use this command.');
+        }
 
-			  let accessToken = this.org.getConnection().accessToken;
+			  console.log('Connecting to org...');
+        let accessToken = this.org.getConnection().accessToken;
         let instanceUrl = this.org.getConnection().instanceUrl;
+        
+        if (!accessToken || !instanceUrl){
+          throw new SfdxError(`Connection not valid.`);
+        }
+
+        console.log('Connected to ',instanceUrl,'...\n',accessToken);
 
         queryPlan(query, accessToken, instanceUrl);
     }

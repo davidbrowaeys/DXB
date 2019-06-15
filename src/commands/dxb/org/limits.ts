@@ -5,7 +5,7 @@ const request = require('request');
 
 export default class OrgLimits extends SfdxCommand {
 
-  public static description = 'retrieve and display org limits';
+  public static description = 'Retrieve and display org limits';
 
   public static examples = [
   	`$ sfdx dxb:org:limits -u myOrg@example.com`

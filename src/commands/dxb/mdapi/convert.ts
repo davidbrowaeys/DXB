@@ -29,7 +29,7 @@ export default class MDAPIConvert extends SfdxCommand {
 
   public async run() {
     var rootdir = this.flags.rootdir;
-    var outputdir = this.flags.outputdir ? '-d ' + this.flags.outputdir + '';
+    var outputdir = this.flags.outputdir ? '-d ' + this.flags.outputdir : '';
 
     if (!rootdir){
       throw new SfdxError('Missing required flag:\n-r, --rootdir ROOTDIR  the root directory containing the Metadata API–formatted metadata');

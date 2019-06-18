@@ -1,6 +1,6 @@
 
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
+import { SfdxError } from '@salesforce/core';
 
 const exec = require('child_process').execSync;
 const request = require('request');
@@ -32,7 +32,7 @@ async function retrievesglobalschema(accessToken, instanceUrl){
             });
         });
     }catch(err){
-    throw new SfdxError('Unable to push source to scratch org!');
+        throw new SfdxError(`Unable to access ${instanceUrl}`);
     }
 }
 
@@ -54,7 +54,7 @@ export default class SObjectPrefix extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object'}),
+        objectname: flags.string({char:'o',description:'API Name of custom object'}),
         prefix: flags.string({char:'p', description: 'prefix of the object'})
     };
     // Comment this out if your command does not require an org username
@@ -67,12 +67,18 @@ export default class SObjectPrefix extends SfdxCommand {
     protected static requiresProject = false;
   
     public async run() {
-        let orgname = this.org.getUsername();
         let sobject = this.flags.objectname;
         let prefix = this.flags.prefix;
-        
+        if (!sobject && !prefix){
+            throw new SfdxError('You must specify either objectname or prefix.');
+        }
+
+        if (sobject && prefix){
+            throw new SfdxError('You can only specify either objectname or prefix.');
+        }
         try{
             if (sobject){
+                let orgname = this.org.getUsername();
                 var objectschema = retrievesobjectfields(orgname,sobject);
                 objectschema = JSON.parse(objectschema).result.keyPrefix;
                 this.ux.log('==== Object Prefix:    ',objectschema);

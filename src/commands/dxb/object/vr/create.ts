@@ -41,7 +41,7 @@ export default class ValidationRuleCreate extends SfdxCommand {
   public static description = 'This command create a validation rule against specified object.';
 
   public static examples = [
-  `$ sfdx dxb:vr:create`
+  `$ sfdx dxb:object:vr:create`
   ];
 
   public static args = [{name: 'file'}];

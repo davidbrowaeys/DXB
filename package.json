@@ -58,7 +58,31 @@
     "bin": "sfdx",
     "topics": {
       "dxb": {
-        "description": "sfdx plugin for NAB"
+        "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands."
+      },
+      "dxb:object" : {
+        "description": "A set of commands in regards to salesforce objects."
+      },
+      "dxb:object:fields" : {
+        "description": "A set of commands in regards to salesforce fields."
+      },
+      "dxb:mdapi" : {
+        "description": "A set of commands that extends dx mdapi topic."
+      },
+      "dxb:data" : {
+        "description": "A set of commands that allows to manipulate and optimize data."
+      },
+      "dxb:delta" : {
+        "description": "A set of commands in regards to delta package generator."
+      },
+      "dxb:profile" : {
+        "description": "A set of commands that allow to manipuilate and faciliate salesforce profiles."
+      },
+      "dxb:object:vr" : {
+        "description": "A set of commands in regards to validation rule"
+      },
+      "dxb:static" : {
+        "description": "A set of commands in regards to static resource"
       }
     },
     "devPlugins": [

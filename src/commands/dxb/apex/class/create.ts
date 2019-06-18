@@ -34,7 +34,7 @@ export default class ApexClassCreate extends SfdxCommand {
     }),
     template :flags.string({
         char: 't',
-        default: 'Constructor',
+        default: 'ApexClass',
         description: 'apex class template, choose one of the following available templates:\nApexClass.cls\nApexClassNoConstructor.cls\nBDDUnitTestApexClass.cls\nBatchApexClass.cls\nControllerExtension.cls\nExceptionApexClass.cls\nHttpCalloutMock.cls\nSchedulableApexClass.cls\nSelectorClass.cls\nServiceClass.cls\nUnitTestApexClass.cls\nUrlRewriterApexClass.cls\nWebServiceMock.cls\nWebserviceClass.cls'
     }),
     apiversion : flags.string({

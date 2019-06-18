@@ -24,11 +24,28 @@ export default class Org extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-    orgname :flags.string({char: 'u',description: 'alias of scratch org'}),
-    includepackages :flags.boolean({char: 'p',description: 'include packages from cli config file'}),
-    defaultorg: flags.boolean({char: 's', description: 'mark as default org'}),
-    durationday : flags.number({char: 'd', description: 'duration of the scratch org (in days) (default:30, min:1, max:30)'}),
-    includetrackinghistory: flags.boolean({char: 't', description: 'remove field tracking history tag from Account, Contact, Lead'})
+    orgname :flags.string({
+      char: 'u',
+      required: true,
+      description: 'alias of scratch org'
+    }),
+    includepackages :flags.boolean({
+      char: 'p',
+      description: 'include packages from cli config file'
+    }),
+    defaultorg: flags.boolean({
+      char: 's', 
+      description: 'mark as default org'
+    }),
+    durationday : flags.number({
+      char: 'd', 
+      default: 30,
+      description: 'duration of the scratch org (in days) (default:30, min:1, max:30)'
+    }),
+    includetrackinghistory: flags.boolean({
+      char: 't', 
+      description: 'remove field tracking history tag from Account, Contact, Lead'
+    })
   };
   // Comment this out if your command does not require an org username
   protected static requiresUsername = false;

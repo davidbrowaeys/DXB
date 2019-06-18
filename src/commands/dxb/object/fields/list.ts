@@ -21,7 +21,7 @@ export default class FieldList extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object'}),
+        objectname: flags.string({char:'o',description:'Name of custom object',required:true}),
         filter: flags.string({char:'f',description:'Search filter'})
     };
     // Comment this out if your command does not require an org username
@@ -37,11 +37,7 @@ export default class FieldList extends SfdxCommand {
         let orgname = this.org.getUsername();
         let sobject = this.flags.objectname;
         let filter = this.flags.filter;
-
-        if (!sobject){
-            throw new SfdxError('Must pass a objectname in order to use this command!');
-        }
-
+        
         try{
             var objectschema = retrievesobjectfields(orgname,sobject);
             objectschema = JSON.parse(objectschema).result.fields;

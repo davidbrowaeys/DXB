@@ -15,8 +15,15 @@ export default class MDAPIConvert extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-    outputdir :flags.string({char: 'd',description: 'the output directory to store the source–formatted files'}),
-    rootdir :flags.boolean({char: 'r',description: '(required) the root directory containing the Metadata API–formatted metadata'})
+    outputdir :flags.string({
+      char: 'd',
+      description: 'the output directory to store the source–formatted files'
+    }),
+    rootdir :flags.boolean({
+      char: 'r',
+      required:true,
+      description: '(required) the root directory containing the Metadata API–formatted metadata'
+    })
   };
   // Comment this out if your command does not require an org username
   protected static requiresUsername = true;
@@ -31,9 +38,6 @@ export default class MDAPIConvert extends SfdxCommand {
     var rootdir = this.flags.rootdir;
     var outputdir = this.flags.outputdir ? '-d ' + this.flags.outputdir : '';
 
-    if (!rootdir){
-      throw new SfdxError('Missing required flag:\n-r, --rootdir ROOTDIR  the root directory containing the Metadata API–formatted metadata');
-    }
     var output = JSON.parse(exec(`sfdx force:mdapi:convert -r ${rootdir} ${outputdir} --json`).toString());
     output.result.forEach(elem => {
         if (elem.filePath.indexOf('.dup') >= 0){

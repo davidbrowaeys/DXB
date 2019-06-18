@@ -20,7 +20,7 @@ export default class DataTransform extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        query: flags.string({char:'q',description:'query'}),
+        query: flags.string({char:'q',description:'query',required:true}),
         objectname: flags.string({char: 'o',description: 'Object Name'}),
         transform: flags.string({char: 't',description: 'transforming mapping, i.e.: "{\"Phone_Country__pc\":\"Australia_61\",\"Mobile_Country__pc\":\"Australia_61\",\"Home_Phone_Country__pc\":\"Australia_61\"}"'})
         //retrievefields: flags.boolean({char: 'f',description: 'retrieve and display sobject fields in terminal'})
@@ -35,7 +35,6 @@ export default class DataTransform extends SfdxCommand {
     protected static requiresProject = false;
   
     public async run() {
-
         let orgname = this.org.getUsername();
         let sobject = this.flags.objectname;
         let transform = this.flags.transform;

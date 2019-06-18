@@ -18,7 +18,10 @@ export default class ApexClassCreate extends SfdxCommand {
   public static description = 'Create apex classes'
 
   public static examples = [
-  `$ sfdx dxb:apex:class:create`,
+  `$ sfdx dxb:apex:class:create -n MySuperBatch -t BatchApexClass
+    force-app/main/default/classes/MySuperBatch.cls
+    force-app/main/default/classes/MySuperBatch.cls-meta.xml
+  `,
   ];
 
   public static args = [{name: 'file'}];

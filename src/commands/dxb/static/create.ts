@@ -217,8 +217,8 @@ export default class StaticResourceCreation extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-      name: flags.string({char:'n',description:'static resource name'}),
-      file: flags.string({char:'f',description:'static resource local file path'}),
+      name: flags.string({char:'n',description:'static resource name',required:true}),
+      file: flags.string({char:'f',description:'static resource local file path',required:true}),
       push:flags.boolean({char:'p',description:'push to scratch org'})
   };
   // Comment this out if your command does not require an org username
@@ -235,13 +235,10 @@ export default class StaticResourceCreation extends SfdxCommand {
     let name = this.flags.name;
     let file = this.flags.file;
 
-    if (!file){
-      throw new SfdxError('Must specify file path in order to use this command.');
-    }
-
     if (file.endsWith('/')){
       file = file.substring(0,file.length() - 1 );
     }
+
     var ext = path.extname(file).substring(1); 
     var staticpath = `./force-app/main/default/staticresources`;
     if (!fs.existsSync(staticpath)){

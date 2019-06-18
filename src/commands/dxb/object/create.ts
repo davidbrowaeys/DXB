@@ -102,7 +102,7 @@ export default class ObjectCreate extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object'})
+        objectname: flags.string({char:'o',description:'Name of custom object',required:true})
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
@@ -116,10 +116,6 @@ export default class ObjectCreate extends SfdxCommand {
     public async run() {
         let orgname = this.org.getUsername();
         let name = this.flags.objectname;
-
-        if (!name){
-            throw new SfdxError('Missing required attributes: objectname');
-        }
 
         let apiname = name.replace(new RegExp(`[^A-Z0-9]`,'gi'), '_') + '__c';
         var objectpath = `./force-app/main/default/objects/${apiname}`;

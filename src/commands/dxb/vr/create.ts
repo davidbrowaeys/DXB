@@ -47,8 +47,8 @@ export default class ValidationRuleCreate extends SfdxCommand {
   public static args = [{name: 'file'}];
 
   protected static flagsConfig = {
-    name: flags.string({char:'n',description:'validation rule name'}),
-    objectname: flags.string({char:'o',description:'object name'}),
+    name: flags.string({char:'n',description:'validation rule name',required:true}),
+    objectname: flags.string({char:'o',description:'object name',required:true}),
     push:flags.boolean({char:'p',description:'push to scratch org'})
   };
   // Comment this out if your command does not require an org username
@@ -64,14 +64,6 @@ export default class ValidationRuleCreate extends SfdxCommand {
     let orgname = this.flags.orgname;
     let sobject = this.flags.objectname;
     let name = this.flags.name;
-
-    if (!sobject){
-        throw new SfdxError("Must specify 'objectname' in order to use this command!");
-    }
-
-    if (!name){
-        throw new SfdxError("Must specify 'name' in order to use this command!");
-    }
 
     var vrpath = `./force-app/main/default/objects/${sobject}/validationRules`;
     if (!fs.existsSync(vrpath)) {

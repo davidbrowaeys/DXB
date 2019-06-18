@@ -61,8 +61,8 @@ export default class FieldSetCreate extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object'}),
-        fieldsetname: flags.string({char: 'n',description: 'Fieldset name'}),
+        objectname: flags.string({char:'o',description:'Name of custom object',required:true}),
+        fieldsetname: flags.string({char: 'n',description: 'Fieldset name',required:true}),
         retrievefields: flags.boolean({char: 'f',description: 'retrieve and display sobject fields in terminal'})
     };
     // Comment this out if your command does not require an org username
@@ -78,13 +78,6 @@ export default class FieldSetCreate extends SfdxCommand {
         let orgname = this.org.getUsername();
         let sobject = this.flags.objectname;
         let name = this.flags.fieldsetname;
-
-        if (!sobject){
-            throw new SfdxError('Missing required attributes: objectname');
-        }
-        if (!name){
-            throw new SfdxError('Missing required attributes: fieldsetname');
-        }
 
         var vrpath = `./force-app/main/default/objects/${sobject}/fieldSets`;
         if (!fs.existsSync(vrpath)) {

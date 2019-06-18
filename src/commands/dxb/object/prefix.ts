@@ -46,7 +46,7 @@ export default class SObjectPrefix extends SfdxCommand {
     ==== Object Prefix:      001
     `,
     `$ sfdx dxb:object:prefix -p 001
-    Retrieving Account schema...
+    Retrieving global schema...
     ==== Object Name:      Account
     `,
     ];
@@ -83,8 +83,6 @@ export default class SObjectPrefix extends SfdxCommand {
                 if (!accessToken || !instanceUrl){
                     throw new SfdxError(`Connection not valid.`);
                 }
-        
-                this.ux.log('Connected to ',instanceUrl);
 
                 var objectName;
                 var globalschema = await retrievesglobalschema(accessToken,instanceUrl);

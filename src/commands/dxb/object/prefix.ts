@@ -15,7 +15,6 @@ async function retrievesglobalschema(accessToken, instanceUrl){
     console.log(`Retrieving global schema...`); 
     try{
         return new Promise(async function (resolve, reject) {
-            console.log(instanceUrl+'/services/data/45.0/sobjects/');
             const options = {
                 method  : 'GET',
                 headers : {

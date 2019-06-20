@@ -14,6 +14,7 @@
     "csv-parser": "^2.3.0",
     "csv-writer": "^1.3.0",
     "fast-csv": "^3.0.1",
+    "request-promise": "^4.2.4",
     "source-map-loader": "^0.2.4",
     "tslib": "^1",
     "tty-table": "^2.7.0"
@@ -60,28 +61,28 @@
       "dxb": {
         "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands."
       },
-      "dxb:object" : {
+      "dxb:object": {
         "description": "A set of commands in regards to salesforce objects."
       },
-      "dxb:object:fields" : {
+      "dxb:object:fields": {
         "description": "A set of commands in regards to salesforce fields."
       },
-      "dxb:mdapi" : {
+      "dxb:mdapi": {
         "description": "A set of commands that extends dx mdapi topic."
       },
-      "dxb:data" : {
+      "dxb:data": {
         "description": "A set of commands that allows to manipulate and optimize data."
       },
-      "dxb:delta" : {
+      "dxb:delta": {
         "description": "A set of commands in regards to delta package generator."
       },
-      "dxb:profile" : {
+      "dxb:profile": {
         "description": "A set of commands that allow to manipuilate and faciliate salesforce profiles."
       },
-      "dxb:object:vr" : {
+      "dxb:object:vr": {
         "description": "A set of commands in regards to validation rule"
       },
-      "dxb:static" : {
+      "dxb:static": {
         "description": "A set of commands in regards to static resource"
       }
     },

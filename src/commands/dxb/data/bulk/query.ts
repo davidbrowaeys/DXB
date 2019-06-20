@@ -18,7 +18,7 @@ var outputdir;
 
 export default class BulkExport extends SfdxCommand {
 
-    public static description = 'Retrieve key prefix of specified sobject.';
+    public static description = 'Export salesforce data using bulk api';
   
     public static examples = [
     `$ sfdx dxb:data:bulk:query -q "select id from Account" -u dev2`,

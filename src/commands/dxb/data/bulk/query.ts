@@ -7,14 +7,7 @@ const fs = require('fs');
 var xml2js = require('xml2js');
 var parser = new xml2js.Parser( {"explicitArray":false,"ignoreAttrs":true, "xmlns":true,"trim":true});
 
-var timestamp;
-var jobId;
-var query;
-var objectname;
-var connection;
-var interval;
-var frequency;
-var outputdir;
+var timestamp, jobId, query, objectname, connection, interval, frequency, outputdir, filename;
 
 export default class BulkExport extends SfdxCommand {
 
@@ -29,6 +22,7 @@ export default class BulkExport extends SfdxCommand {
     protected static flagsConfig = {
         query: flags.string({char:'q', description: 'soql query', required:true}),
         outputdir: flags.string({char:'d', description: 'bulk data output directory', default : 'bulk_output'}),
+        filename: flags.string({char:'f', description: 'name of the csv file generated. if not specified, it will default to "<objeectname>_<timestamp>.csv"'}),
         pollinginterval: flags.number({char: 'i', description: 'polling interval for job status check',default:6000})
     };
     // Comment this out if your command does not require an org username
@@ -45,10 +39,12 @@ export default class BulkExport extends SfdxCommand {
         frequency = this.flags.pollinginterval;
         outputdir = this.flags.outputdir;
         objectname = query.replace(/\([\s\S]+\)/g, '').match(/FROM\s+(\w+)/i)[1];
+        
         if (!objectname) {
           throw new SfdxError("No sobject type found in query, maybe caused by invalid SOQL.");
         }
         timestamp = Date.now();
+        filename = this.flags.filename ? this.flags.filename : `${objectname}_${timestamp}`;
         try{
           connection = this.org.getConnection();
 
@@ -188,11 +184,11 @@ function getResultData(batchId, resultId){
     if (!fs.existsSync(outputdir)){
       fs.mkdirSync(outputdir);
     }
-    if (!fs.existsSync(`${outputdir}/${objectname}_${timestamp}.csv`)){
-      fs.writeFileSync(`${outputdir}/${objectname}_${timestamp}.csv`,response);
+    if (!fs.existsSync(`${outputdir}/${filename}.csv`)){
+      fs.writeFileSync(`${outputdir}/${filename}.csv`,response);
     }else{
       response = response.substring(response.indexOf('\n')+1); //removing header, +1 to remove the first line-break
-      fs.appendFileSync(`${outputdir}/${objectname}_${timestamp}.csv`,response);
+      fs.appendFileSync(`${outputdir}/${filename}.csv`,response);
     }
   })
   .catch(console.log);

@@ -61,6 +61,9 @@
       "dxb": {
         "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands."
       },
+      "dxb:apex": {
+        "description": "A set of commands that allow to manilpulate apex."
+      },
       "dxb:object": {
         "description": "A set of commands in regards to salesforce objects."
       },
@@ -73,17 +76,23 @@
       "dxb:data": {
         "description": "A set of commands that allows to manipulate and optimize data."
       },
+      "dxb:data:bulk": {
+        "description": "A set of commands that extends bulk api(i.e.: query)."
+      },
       "dxb:delta": {
-        "description": "A set of commands in regards to delta package generator."
+        "description": "A set of commands that generate delta package for faster deployment."
       },
       "dxb:profile": {
         "description": "A set of commands that allow to manipuilate and faciliate salesforce profiles."
       },
       "dxb:object:vr": {
-        "description": "A set of commands in regards to validation rule"
+        "description": "A set of commands regarding validation rule"
       },
       "dxb:static": {
-        "description": "A set of commands in regards to static resource"
+        "description": "A set of commands regarding static resource"
+      },
+      "dxb:org": {
+        "description": "A set of commands for scratch org and sandbox"
       }
     },
     "devPlugins": [

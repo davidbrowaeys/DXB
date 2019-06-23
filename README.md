@@ -39,3 +39,18 @@ Once installed, checkout proxy setting if you are behind corporate proxy.
     ```shell
     sfdx plugins:link
     ```
+
+## Topics
+```shell
+  dxb:apex        A set of commands that allow to manilpulate apex.
+  dxb:community   Publish community(network) using connect api.
+  dxb:data        A set of commands that allows to manipulate and optimize data.
+  dxb:delta       A set of commands that generate delta package for faster deployment.
+  dxb:mdapi       A set of commands that extends dx mdapi topic.
+  dxb:object      A set of commands in regards to salesforce objects.
+  dxb:org         A set of commands for scratch org and sandbox
+  dxb:permission  Create fieldset for specified object and push to scratch org.
+  dxb:profile     A set of commands that allow to manipuilate and faciliate salesforce profiles.
+  dxb:static      A set of commands regarding static resource
+  dxb:user        set defaut username and org wide email in metadata such as workflow based on target scratch org
+```

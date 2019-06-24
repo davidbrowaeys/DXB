@@ -39,9 +39,8 @@ export default class DXBInit extends SfdxCommand {
         }
 
         let config = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
-        config["plugins"] = {
-          "dxb" : init
-        };
+        if (!config.plugins) config["plugins"] = {};
+        config["plugins"]["dxb"] = init;
         fs.writeFileSync('sfdx-project.json', JSON.stringify(config, null, 2));
   }
 }

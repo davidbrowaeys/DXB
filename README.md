@@ -41,7 +41,7 @@ Once installed, checkout proxy setting if you are behind corporate proxy.
     ```
 
 ## Topics
-```shell
+```
   dxb:apex        A set of commands that allow to manilpulate apex.
   dxb:community   Publish community(network) using connect api.
   dxb:data        A set of commands that allows to manipulate and optimize data.

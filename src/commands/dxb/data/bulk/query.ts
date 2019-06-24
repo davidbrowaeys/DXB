@@ -60,7 +60,6 @@ export default class BulkExport extends SfdxCommand {
         if (!connection || !connection.accessToken || !connection.instanceUrl){
             throw new SfdxError(`No configuration found for this org.`, "Invalid Connection");
         }
-        ux.log(connection.accessToken,connection.instanceUrl);
         execute();
     }
 }

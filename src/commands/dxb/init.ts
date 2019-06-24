@@ -34,11 +34,12 @@ export default class DXBInit extends SfdxCommand {
             "manual_steps" : [
                 "- Sample: Chatter Settings > Enable Unlisted Groups"
             ],
-            "data_plan_path" : "./data/sample/data-plan.json"
+            "data_plan_path" : "./data/sample/data-plan.json",
+            "apextemplatepath" : null
         }
 
         let config = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
-        config["plugins"] = init;
+        config["plugins"]["dxb"] = init;
         fs.writeFileSync('sfdx-project.json', JSON.stringify(config, null, 2));
   }
 }

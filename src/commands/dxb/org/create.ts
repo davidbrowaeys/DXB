@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
+import { SfdxProject, Messages, SfdxError } from '@salesforce/core';
 
 const exec = require('child_process').execSync;
 const execAsync = require('child_process').exec;
@@ -195,8 +195,12 @@ export default class Org extends SfdxCommand {
   }
 
   public async run() {
-    let config = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
-    if (config.plugins) config = config.plugins;
+    const project = await SfdxProject.resolve();
+    const config = await project.resolveProjectConfig();
+    if (!config.plugins || !config.plugins.dxb){
+      throw new SfdxError('DXB plugin not defined in sfdx-project.json, make sure to setup plugin.');
+    }
+    config = config.plugins.dxb;
 
     let orgname = this.flags.orgname;
     let defaultorg = this.flags.defaultorg ? '-s' : '';

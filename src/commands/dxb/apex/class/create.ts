@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
+import { SfdxProject, SfdxError } from '@salesforce/core';
 
 const fs = require('fs');
 const path = require('path');
@@ -57,7 +57,13 @@ export default class ApexClassCreate extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run() {
-      let config = JSON.parse(fs.readFileSync('./sfdx-project.json').toString());
+      const project = await SfdxProject.resolve();
+      const config = await project.resolveProjectConfig();
+      if (!config.plugins || !config.plugins.dxb){
+        throw new SfdxError('DXB plugin not defined in sfdx-project.json, make sure to setup plugin.');
+      }
+      config = config.plugins.dxb;
+
       let apiname = this.flags.apiname;
       let apiversion = this.flags.apiversion ? this.flags.apiversion : config.sourceApiVersion;
       let template = this.flags.template;

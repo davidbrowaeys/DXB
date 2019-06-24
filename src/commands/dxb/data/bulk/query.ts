@@ -7,7 +7,16 @@ const fs = require('fs');
 var xml2js = require('xml2js');
 var parser = new xml2js.Parser( {"explicitArray":false,"ignoreAttrs":true, "xmlns":true,"trim":true});
 
-var timestamp, jobId, query, objectname, connection, interval, frequency, outputdir, filename;
+var timestamp;
+var jobId;
+var query;
+var objectname;
+var connection;
+var interval;
+var frequency;
+var outputdir;
+var filename;
+var ux;
 
 export default class BulkExport extends SfdxCommand {
 
@@ -15,6 +24,7 @@ export default class BulkExport extends SfdxCommand {
   
     public static examples = [
     `$ sfdx dxb:data:bulk:query -q "select id from Account" -u dev2`,
+    `$ sfdx dxb:data:bulk:query -q "select id from Account" -u dev2 -d ./dataoutputdir -i 10000`,
     ];
   
     public static args = [{name: 'file'}];
@@ -41,22 +51,22 @@ export default class BulkExport extends SfdxCommand {
         objectname = query.replace(/\([\s\S]+\)/g, '').match(/FROM\s+(\w+)/i)[1];
         
         if (!objectname) {
-          throw new SfdxError("No sobject type found in query, maybe caused by invalid SOQL.");
+          throw new SfdxError("No sobject type found in query, maybe caused by invalid SOQL.", "Invalid SOQL");
         }
         timestamp = Date.now();
         filename = this.flags.filename ? this.flags.filename : `${objectname}_${timestamp}`;
-        try{
-          connection = this.org.getConnection();
-
-          if (!connection || !connection.accessToken || !connection.instanceUrl){
-              throw new SfdxError(`Connection not valid.`);
-          }
-          execute();
-        }catch(err){
-            this.ux.error(err);
-        }   
+        ux = this.ux;
+        connection = this.org.getConnection();
+        if (!connection || !connection.accessToken || !connection.instanceUrl){
+            throw new SfdxError(`No configuration found for this org.`, "Invalid Connection");
+        }
+        ux.log(connection.accessToken,connection.instanceUrl);
+        execute();
     }
 }
+/**
+ * @description create bulk job
+ */
 function execute(){
   const options = {
     method  : 'POST',
@@ -76,11 +86,19 @@ function execute(){
     }
   };
   request(options)
-      .then(addBatch)
-      .catch(console.log);
+      .then(addBatch);
 }
+/**
+ * @description Add query to batch job
+ */
 function addBatch(response){
   jobId = response.id;
+  
+  ux.log('======','Status');
+  ux.log('Job ID:  ',jobId);
+  ux.log('Status:  ','Open');
+  ux.log('Query:  ',query,'\n');
+
   const options = {
       method  : 'POST',
       uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}/batch`,
@@ -95,11 +113,10 @@ function addBatch(response){
       .then(checkJobStatus)
       .catch(console.log);
 }
+/**
+ * @description Check for job status
+ */
 function checkJobStatus(response){
-  console.log('======','Status');
-  console.log('Job ID:  ',jobId);
-  console.log('Status:  ','Open');
-
   const options = {
       method  : 'GET',
       uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}`,
@@ -109,19 +126,47 @@ function checkJobStatus(response){
         'Content-type' : 'application/json; charset=UTF-8'
       }
   };
-  console.log('\n\nProcessing...');
+  ux.startSpinner('Processing...');
   interval = setInterval(function(options) {
     request(options)
       .then(response => {
         response = JSON.parse(response);
         if (response.numberBatchesTotal === ( response.numberBatchesFailed + response.numberBatchesCompleted)){
-          getJobBatches(response);
+          //getJobBatches(response);
+          closeJob(response);
         }
       })
       .catch(console.log);
   }, frequency, options); 
 }
-function getJobBatches(job_status){
+
+function closeJob(job_status){
+
+  clearInterval(interval);
+  ux.stopSpinner();
+  ux.log('\n\n======','Job Results');
+  ux.log('Number Batches Failed:',job_status.numberBatchesFailed);
+  ux.log('Number Batches Completed:',job_status.numberBatchesCompleted);
+  ux.log('Number Batches Total:',job_status.numberBatchesTotal,'\n');
+
+  var options = {
+      method: 'POST',
+      uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}`,
+      headers: {
+        'Authorization' : 'Bearer ' + connection.accessToken,
+        'X-SFDC-Session': connection.accessToken,
+        'Content-Type': 'text/csv; charset=UTF-8'
+      },
+      body: '<?xml version="1.0" encoding="UTF-8"?>'+
+      '<jobInfo xmlns="http://www.force.com/2009/06/asyncapi/dataload">'+
+      '  <state>Closed</state>'+
+      '</jobInfo>'
+  };
+  request(options).then( response => {
+    getJobBatches();
+  }).catch(console.log);
+}
+function getJobBatches(){
   const options = {
       method  : 'GET',
       uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}/batch`,
@@ -131,24 +176,19 @@ function getJobBatches(job_status){
         'Content-type' : 'application/json; charset=UTF-8'
       }
   };
-  clearInterval(interval);
-  console.log('\n\n======','Result');
-  console.log('Number Batches Failed:',job_status.numberBatchesFailed);
-  console.log('Number Batches Completed:',job_status.numberBatchesCompleted);
-  console.log('Number Batches Total:',job_status.numberBatchesTotal);
+  ux.startSpinner('Extracting...');
   request(options)
     .then( response => {
       parser.parseString(response,function (err, result) {
-        console.log('\n\n======','Extracting batches');
+        ux.log('\n\n======','Batch Results');
         result.batchInfoList.batchInfo.forEach(elem => {
-          console.log('Batch ID:',elem.id._,' - Status:',elem.state._);
+          ux.log('Batch ID:',elem.id._,' - Status:',elem.state._);
           if (elem.state._ === 'Completed'){
             getResult(elem.id._);
           }
         });
       });
-    })
-    .catch(console.log);
+    }).catch(console.log);
 }
 function getResult(batchId){
   const options = {

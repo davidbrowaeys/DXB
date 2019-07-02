@@ -196,7 +196,7 @@ export default class Org extends SfdxCommand {
 
   public async run() {
     const project = await SfdxProject.resolve();
-    const config = await project.resolveProjectConfig();
+    var config = await project.resolveProjectConfig();
     if (!config.plugins || !config.plugins.dxb){
       throw new SfdxError('DXB plugin not defined in sfdx-project.json, make sure to setup plugin.');
     }

@@ -4,6 +4,9 @@
   "version": "0.0.1",
   "author": "David Browaeys",
   "bugs": "https://github.com/davidbrowaeys/DXB/issues",
+  "bin": {
+    "DXB": "bin/run"
+  },
   "dependencies": {
     "@oclif/command": "^1",
     "@oclif/config": "^1",
@@ -44,6 +47,7 @@
     "node": ">=8.0.0"
   },
   "files": [
+    "/bin",
     "/lib",
     "/messages",
     "/npm-shrinkwrap.json",
@@ -51,12 +55,14 @@
   ],
   "homepage": "https://github.com/davidbrowaeys/DXB",
   "keywords": [
+    "salesforce",
+    "sfdx",
     "sfdx-plugin"
   ],
   "license": "MIT",
   "oclif": {
     "commands": "./lib/commands",
-    "bin": "sfdx",
+    "bin": "dxb",
     "topics": {
       "dxb": {
         "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands."
@@ -99,7 +105,7 @@
       "@oclif/plugin-help"
     ]
   },
-  "repository": "dxb",
+  "repository": "davidbrowaeys/DXB",
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "tslint -p test -t stylish",

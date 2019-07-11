@@ -22,8 +22,9 @@ Once installed, checkout proxy setting if you are behind corporate proxy.
     cd deloitteforce-cli
     sudo npm install -g .
     ```
-    
-3.  Some of the commands required some configuration. So in order to fully utilize DeloitteForce-CLI, you must run the following command. This will update sfdx-project.json and set DeloitteForce-CLI definition json.
+
+## Setup SFDX Project for DeloitteForce-CLI
+Some of the commands required some configuration. So in order to fully utilize DeloitteForce-CLI, you must run the following command. This will update sfdx-project.json and set DeloitteForce-CLI definition json.
     ```shell
     deloitte force:install
     ``` 

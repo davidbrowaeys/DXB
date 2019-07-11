@@ -1,0 +1,47 @@
+{
+	"classes": {
+		"cls" : "cls-meta.xml",
+		"cls-meta.xml" : "cls"
+	},
+	"triggers": {
+		"trigger" : "trigger-meta.xml",
+		"trigger-meta.xml" : "trigger"
+	},
+	"pages": {
+		"page" : "page-meta.xml",
+		"page-meta.xml" : "page"
+	},
+	"objects": {
+		"field-meta.xml" : "../..",
+		"fieldSet-meta.xml" : "../..",
+		"listView-meta.xml" : "../..",
+		"recordType-meta.xml" : "../..",
+		"validationRule-meta.xml" : "../..",
+		"compactLayout-meta.xml" : "../.."
+	},
+	"objectTranslations": {
+		"fieldTranslation-meta.xml" : ".."
+	},
+	"contentassets": {
+		"asset" : "asset-meta.xml",
+		"asset-meta.xml" : "asset"
+	},
+	"ltng" : {
+		"app" : "..",
+		"app-meta.xml" : "..",
+		"cmp" : "..",
+		"cmp-meta.xml" : "..",
+		"js" : "..",
+		"css" : "..",
+		"evt" : "..",
+		"evt-meta.xml" : ".."
+	},
+	"email" : {
+		"email" : "email-meta.xml",
+		"email-meta.xml" : "email"
+	},
+	"staticresources" : {
+		"any" : "resource-meta.xml",
+		"resource-meta.xml" : "any"
+	}
+}

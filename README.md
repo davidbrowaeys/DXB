@@ -12,22 +12,24 @@ Once installed, checkout proxy setting if you are behind corporate proxy.
 
 1. go to your local workspace and clone DeloitteForce-CLI repository:
 
-    ```shell
-    git clone ssh://git@dvcs.deloittedigital.com.au:22/dforcecli/deloitteforce-cli.git
-    ``` 
+  ```shell
+  git clone ssh://git@dvcs.deloittedigital.com.au:22/dforcecli/deloitteforce-cli.git
+  ``` 
+
 
 2. Go to DeloitteForce-CLI folder and install it globally using npm: 
 
-    ```shell
-    cd deloitteforce-cli
-    sudo npm install -g .
-    ```
+  ```shell
+  cd deloitteforce-cli
+  sudo npm install -g .
+  ```
 
 ## Setup SFDX Project for DeloitteForce-CLI
 Some of the commands required some configuration. So in order to fully utilize DeloitteForce-CLI, you must run the following command. This will update sfdx-project.json and set DeloitteForce-CLI definition json.
-    ```shell
-    deloitte force:install
-    ``` 
+
+  ```
+  deloitte force:install
+  ``` 
 
 ### Sample Definition Output
   ```json

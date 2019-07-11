@@ -8,29 +8,18 @@ A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of 
 2. Install [node.js. + npm](https://nodejs.org/en/). 
 Once installed, checkout proxy setting if you are behind corporate proxy.
 
-## Proxy Settings
-If you are behind firewall and corporate proxy. Please follow those instructions. 
-1. Open terminal
-
-    ```shell
-    npm config set https-proxy http://address:port
-    npm config set proxy http://address:port
-    npm config set sslVerify false
-    npm config set strict-ssl false
-    ```
-
 ## Install DeloitteForce-CLI
 
 1. go to your local workspace and clone DeloitteForce-CLI repository:
 
     ```shell
-    git clone https://github.com/davidbrowaeys/DeloitteForce-CLI.git
+    git clone ssh://git@dvcs.deloittedigital.com.au:22/dforcecli/deloitteforce-cli.git
     ``` 
 
 2. Go to DeloitteForce-CLI folder and install it globally using npm: 
 
     ```shell
-    cd DeloitteForce-CLI
+    cd deloitteforce-cli
     sudo npm install -g .
     ```
 

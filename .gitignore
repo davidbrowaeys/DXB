@@ -8,5 +8,4 @@
 node_modules
 git push -u origin master
 /.sonarlint
-src/commands/force/rdm/
 /messages

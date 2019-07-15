@@ -29,9 +29,9 @@ export default class TeamCerts extends SfdxCommand {
     
     public async run() {
         if (!process.env.CERTIFICATEFILEPATH || !process.env.CERTFICATEDB){
-            throw new SfdxError('\nYou must add 2 env. variables in your .bash_profile in order to use this commands ,example : ' + 
-            'export CERTIFICATEFILEPATH=~/Downloads/CertificationsCSV.csv\n' + 
-            'export CERTFICATEDB=~/Documents/aunz_certs.json' 
+            throw new SfdxError('\nYou must add 2 env. variables in your .bash_profile in order to use this commands ,examples : \n' + 
+            '> export CERTIFICATEFILEPATH=~/Downloads/CertificationsCSV.csv\n' + 
+            '> export CERTFICATEDB=~/Documents/aunz_certs.json' 
             );
         }
         this.ux.log('Login to partner community and download certifications. Apply filter by Region to get only ANZ then click on Export to CSV.');

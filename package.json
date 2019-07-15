@@ -67,9 +67,6 @@
       "force": {
         "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands."
       },
-      "force:apex": {
-        "description": "A set of commands that allow to manilpulate apex."
-      },
       "force:object": {
         "description": "A set of commands in regards to salesforce objects."
       },

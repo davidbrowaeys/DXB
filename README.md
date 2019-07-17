@@ -13,7 +13,7 @@ Once installed, checkout proxy setting if you are behind corporate proxy.
 1. go to your local workspace and clone DeloitteForce-CLI repository:
 
   ```shell
-  git clone ssh://git@dvcs.deloittedigital.com.au:22/dforcecli/deloitteforce-cli.git
+  git clone ssh://git@dvcs.deloittedigital.com.au:22/dforce/deloitteforce-cli.git
   ``` 
 
 

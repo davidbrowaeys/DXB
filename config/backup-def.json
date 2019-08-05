@@ -1,0 +1,23 @@
+{
+  "david.browaeys@gmail.com.dev": {
+    "full": {
+      "cycle": 1,
+      "objects": [
+        "Account",
+        "Contact",
+        "Opportunity"
+      ],
+      "backupTime": "2019-08-05T00:50:49.340Z"
+    },
+    "delta": {
+      "mode": "since_last_delta",
+      "cycle": 1,
+      "objects": [
+        "Account",
+        "Contact",
+        "Opportunity"
+      ],
+      "backupTime": "2019-08-05T00:52:12.823Z"
+    }
+  }
+}

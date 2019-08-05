@@ -1,0 +1,26 @@
+{
+    "Account" : {
+        "Name"              : "name",
+        "BillingStreet"     : "street",
+        "BillingPostalCode" : "num_str::4",
+        "Phone"             : "phone"
+    },
+    "PersonAccount" : {
+        "FirstName"         : "name",
+        "LastName"          : "name",
+        "BillingStreet"     : "street",
+        "BillingPostalCode" : "num_str::4"
+    },
+    "Contact" : {
+        "FirstName"    : "name",
+        "LastName"     : "name",
+        "Email"        : "email",
+        "Home_Email__c": "email",
+        "MailingStreet": "street",
+        "OtherStreet"  : "street",
+        "Phone"        : null,
+        "HomePhone"    : null,
+        "MobilePhone"  : null,
+        "OtherPhone"   : null
+    }
+}

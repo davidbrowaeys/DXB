@@ -1,22 +1,8 @@
 
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError} from '@salesforce/core';
-
-const request = require('request-promise');
-const fs = require('fs');
-var xml2js = require('xml2js');
-var parser = new xml2js.Parser( {"explicitArray":false,"ignoreAttrs":true, "xmlns":true,"trim":true});
-
-var timestamp;
-var jobId;
-var query;
-var objectname;
-var connection;
-var interval;
-var frequency;
-var outputdir;
-var filename;
-var ux;
+import { SfdxError,Connection} from '@salesforce/core';
+import * as fs from 'fs';
+import { resolve } from 'url';
 
 export default class BulkExport extends SfdxCommand {
 
@@ -30,10 +16,11 @@ export default class BulkExport extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        query: flags.string({char:'q', description: 'soql query', required:true}),
+        objectname: flags.string({char:'o', description: 'object name'}),  
+        query: flags.string({char:'q', description: 'soql query'}),
+        allfields: flags.boolean({default:false, description: 'retrieve all fields from specified object.'}),  
         outputdir: flags.string({char:'d', description: 'bulk data output directory', default : 'bulk_output'}),
-        filename: flags.string({char:'f', description: 'name of the csv file generated. if not specified, it will default to "<objeectname>_<timestamp>.csv"'}),
-        pollinginterval: flags.number({char: 'i', description: 'polling interval for job status check',default:6000})
+        filename: flags.string({char:'f', description: 'name of the csv file generated. if not specified, it will default to "<objeectname>_<timestamp>.csv"'})
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
@@ -43,192 +30,92 @@ export default class BulkExport extends SfdxCommand {
   
     // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
     protected static requiresProject = false;
+
+    protected fields:string[] = [];
+    protected query:string;
+    protected objectname:string;
+    protected connection:Connection;
+    protected outputdir:string;
   
-    public run() {
-        query = this.flags.query;
-        frequency = this.flags.pollinginterval;
-        outputdir = this.flags.outputdir;
-        objectname = query.replace(/\([\s\S]+\)/g, '').match(/FROM\s+(\w+)/i)[1];
-        
-        if (!objectname) {
-          throw new SfdxError("No sobject type found in query, maybe caused by invalid SOQL.", "Invalid SOQL");
-        }
-        timestamp = Date.now();
-        filename = this.flags.filename ? this.flags.filename : `${objectname}_${timestamp}`;
-        ux = this.ux;
-        connection = this.org.getConnection();
-        if (!connection || !connection.accessToken || !connection.instanceUrl){
+    public async run() {
+        this.outputdir   = this.flags.outputdir;
+        this.query  = this.flags.query;
+        this.objectname  = this.flags.objectname;
+        //do we have a proper connections ? 
+        this.connection = this.org.getConnection();
+        if (!this.connection || !this.connection.accessToken || !this.connection.instanceUrl){
             throw new SfdxError(`No configuration found for this org.`, "Invalid Connection");
         }
-        execute();
-    }
-}
-/**
- * @description create bulk job
- */
-function execute(){
-  const options = {
-    method  : 'POST',
-    uri     : connection.instanceUrl+'/services/async/46.0/job',
-    headers : {
-      'Authorization' : 'Bearer ' + connection.accessToken,
-      'X-SFDC-Session' : connection.accessToken,
-      'Content-type' : 'application/json; charset=UTF-8',
-      'Sforce-Enable-PKChunking': 'true'
-    },
-    json: true,
-    body: {
-      "operation": "query",
-      "object": objectname,
-      "concurrencyMode": "Parallel",
-      "contentType": "CSV"
-    }
-  };
-  request(options)
-      .then(addBatch);
-}
-/**
- * @description Add query to batch job
- */
-function addBatch(response){
-  jobId = response.id;
-  
-  ux.log('======','Status');
-  ux.log('Job ID:  ',jobId);
-  ux.log('Status:  ','Open');
-  ux.log('Query:  ',query,'\n');
-
-  const options = {
-      method  : 'POST',
-      uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}/batch`,
-      headers : {
-        'Authorization' : 'Bearer ' + connection.accessToken,
-        'X-SFDC-Session': connection.accessToken,
-        'Content-type' : 'text/csv; charset=UTF-8'
-      },
-      body: query
-  };
-  request(options)
-      .then(checkJobStatus)
-      .catch(console.log);
-}
-/**
- * @description Check for job status
- */
-function checkJobStatus(response){
-  const options = {
-      method  : 'GET',
-      uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}`,
-      headers: {
-        'Authorization' : 'Bearer ' + connection.accessToken,
-        'X-SFDC-Session': connection.accessToken,
-        'Content-type' : 'application/json; charset=UTF-8'
-      }
-  };
-  ux.startSpinner('Processing...');
-  interval = setInterval(function(options) {
-    request(options)
-      .then(response => {
-        response = JSON.parse(response);
-        if (response.numberBatchesTotal === ( response.numberBatchesFailed + response.numberBatchesCompleted)){
-          //getJobBatches(response);
-          closeJob(response);
-        }
-      })
-      .catch(console.log);
-  }, frequency, options); 
-}
-
-function closeJob(job_status){
-
-  clearInterval(interval);
-  ux.stopSpinner();
-  ux.log('\n\n======','Job Results');
-  ux.log('Number Batches Failed:',job_status.numberBatchesFailed);
-  ux.log('Number Batches Completed:',job_status.numberBatchesCompleted);
-  ux.log('Number Batches Total:',job_status.numberBatchesTotal,'\n');
-
-  var options = {
-      method: 'POST',
-      uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}`,
-      headers: {
-        'Authorization' : 'Bearer ' + connection.accessToken,
-        'X-SFDC-Session': connection.accessToken,
-        'Content-Type': 'text/csv; charset=UTF-8'
-      },
-      body: '<?xml version="1.0" encoding="UTF-8"?>'+
-      '<jobInfo xmlns="http://www.force.com/2009/06/asyncapi/dataload">'+
-      '  <state>Closed</state>'+
-      '</jobInfo>'
-  };
-  request(options).then( response => {
-    getJobBatches();
-  }).catch(console.log);
-}
-function getJobBatches(){
-  const options = {
-      method  : 'GET',
-      uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}/batch`,
-      headers: {
-        'Authorization' : 'Bearer ' + connection.accessToken,
-        'X-SFDC-Session': connection.accessToken,
-        'Content-type' : 'application/json; charset=UTF-8'
-      }
-  };
-  ux.startSpinner('Extracting...');
-  request(options)
-    .then( response => {
-      parser.parseString(response,function (err, result) {
-        ux.log('\n\n======','Batch Results');
-        result.batchInfoList.batchInfo.forEach(elem => {
-          ux.log('Batch ID:',elem.id._,' - Status:',elem.state._);
-          if (elem.state._ === 'Completed'){
-            getResult(elem.id._);
+        //handle query
+        if (!this.query && !this.objectname){ //invalid arguments
+          throw new SfdxError("You must use either --query or --objectname.", "Invalid Flags");
+        }else if (this.query){ 
+          this.objectname = this.query.toUpperCase().replace(/\([\s\S]+\)/g, '').match(/FROM\s+(\w+)/i)[1];
+          if (!this.objectname) {
+            throw new SfdxError("No sobject type found in query, maybe caused by invalid SOQL.", "Invalid SOQL");
           }
+          const fieldSelector = this.query.replace(/\([\s\S]+\)/g, '').match(/SELECT(.*?)FROM/i)[1].trim();
+          if (fieldSelector === '*'){
+            this.fields = await this.getObjectFields();
+            this.query = this.query.replace('*',this.fields.join(','));
+          }
+        }else if (this.objectname){
+          this.query = await this.generateQuery(this.org.getConnection(), this.flags.allfields);
+        }
+
+        let filename = this.flags.filename || (this.objectname + '.csv');
+        var outputFile = `${this.outputdir}/${filename}`;
+
+        this.ux.startSpinner('Processing...');
+        var result = await this.execute(outputFile);
+        this.ux.stopSpinner('Done');
+        console.log(result);
+        return { outputFile};
+    }
+    /**
+     * @description Build soql query for selected object
+     */
+    private async generateQuery(connection, allfields){
+        let soql = ['SELECT'];
+        if (allfields){
+          this.fields = await this.getObjectFields();
+        }else{
+          this.fields.push('Id');
+        }
+        soql.push(this.fields.join(","));
+        soql.push('FROM');
+        soql.push(this.objectname);
+        return soql.join(" ");
+    }
+    /**
+     * @description Create bulk job
+     */
+    private async execute(outputFile):Promise<string>{
+      return new Promise((resolve, reject) => {
+        var csvFileOut = fs.createWriteStream(outputFile);
+        this.connection.bulk.query(this.query)
+        .stream() // Convert to Node.js's usual readable stream.
+        .pipe(csvFileOut)
+        .on('end',() => {
+          resolve('success');
         });
       });
-    }).catch(console.log);
-}
-function getResult(batchId){
-  const options = {
-      method  : 'GET',
-      uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}/batch/${batchId}/result`,
-      headers: {
-        'Authorization' : 'Bearer ' + connection.accessToken,
-        'X-SFDC-Session': connection.accessToken,
-        'Content-type' : 'application/json; charset=UTF-8'
-      }
-  };
-  request(options)
-    .then(response => {
-      parser.parseString(response,function (err, result) {
-        var resultId = result["result-list"].result._;
-        getResultData(batchId, resultId);
+    }
+    /**
+     * @description Retrieve Object fields 
+     */
+    private async getObjectFields():Promise<string[]>{
+      return new Promise((resolve, reject) => {
+        this.connection.sobject(this.objectname).describe(function(err, meta) {
+          if (err) { reject(err); }
+          let t:string[] = [];
+          meta.fields.forEach( (f) => {
+            if (f.type !== 'address' && !f.calculated){
+              t.push(f.name);
+            }
+          });
+          resolve(t);
+        });
       });
-    })
-    .catch(console.log);
-}
-function getResultData(batchId, resultId){
-  const options = {
-      method  : 'GET',
-      uri : `${connection.instanceUrl}/services/async/46.0/job/${jobId}/batch/${batchId}/result/${resultId}`,
-      headers: {
-        'Authorization' : 'Bearer ' + connection.accessToken,
-        'X-SFDC-Session': connection.accessToken,
-        'Content-type' : 'application/json; charset=UTF-8'
-      }
-  };
-  request(options)
-  .then(response => {
-    if (!fs.existsSync(outputdir)){
-      fs.mkdirSync(outputdir);
     }
-    if (!fs.existsSync(`${outputdir}/${filename}.csv`)){
-      fs.writeFileSync(`${outputdir}/${filename}.csv`,response);
-    }else{
-      response = response.substring(response.indexOf('\n')+1); //removing header, +1 to remove the first line-break
-      fs.appendFileSync(`${outputdir}/${filename}.csv`,response);
-    }
-  })
-  .catch(console.log);
 }

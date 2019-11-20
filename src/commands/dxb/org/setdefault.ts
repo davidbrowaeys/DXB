@@ -74,7 +74,6 @@ export default class MetadataReset extends SfdxCommand {
 			this.ux.log('Replacing unspported metadata within workflow(s), i.e.: field update on specific user, send email from org wide email...');
 			var orginfo = JSON.parse(exec(`sfdx force:org:display -u ${orgname} --json`).toString());
 			var currentuser = orginfo.result.username;
-			console.log(orgname+'***orgname');
 			var dirpath = './force-app/main/default/workflows';
 			if (fs.existsSync(dirpath)){
 				fs.readdirSync(dirpath).forEach(file => {
@@ -90,7 +89,7 @@ export default class MetadataReset extends SfdxCommand {
 					update_dashboards(dirpath+'/'+file);
 				});
 			}
-			this.ux.log('Replacing unspported metadata within caseSettings(s), i.e.: defaultCase OWner and case user...');
+			this.ux.log('Replacing defaultCaseOwner and defaultCaseUser metadata within caseSettings(s), i.e.: defaultCase Owner is being set as '+ currentuser);
 			dirpath = './force-app/main/default/settings';
 			if (fs.existsSync(dirpath)){
 				fs.readdirSync(dirpath).forEach(file => {

@@ -28,7 +28,14 @@ function delete_emails(username){
 	exec(`sfdx force:data:bulk:delete -u ${username} -w 99 -s EmailTemplate -f emailtemplates.csv`);
 	fs.unlinkSync('emailtemplates.csv');
 }
-
+function updateCaseSetings(dirfile,username){
+	let content = fs.readFileSync(dirfile).toString();
+	console.log(`Updating defaultCaseUser...`);
+	content = content.replace(new RegExp(`<defaultCaseUser>.+</defaultCaseUser>(\s+|)`,'g'), '<defaultCaseUser>'+username+'</defaultCaseUser>');
+	console.log(`Updating defaultCaseOwner...`);
+	content = content.replace(new RegExp(`<defaultCaseOwner>.+</defaultCaseOwner>(\s+|)`,'g'), '<defaultCaseOwner>'+username+'</defaultCaseOwner>');
+	fs.writeFileSync(dirfile, content);
+}
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
 
@@ -63,10 +70,11 @@ export default class MetadataReset extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run() {
-      let orgname = this.org.getUsername();
+	  let orgname = this.org.getUsername();
 			this.ux.log('Replacing unspported metadata within workflow(s), i.e.: field update on specific user, send email from org wide email...');
 			var orginfo = JSON.parse(exec(`sfdx force:org:display -u ${orgname} --json`).toString());
 			var currentuser = orginfo.result.username;
+			console.log(orgname+'***orgname');
 			var dirpath = './force-app/main/default/workflows';
 			if (fs.existsSync(dirpath)){
 				fs.readdirSync(dirpath).forEach(file => {
@@ -80,6 +88,14 @@ export default class MetadataReset extends SfdxCommand {
 				fs.readdirSync(dirpath).forEach(file => {
 					console.log(`Updating ${file}...`);
 					update_dashboards(dirpath+'/'+file);
+				});
+			}
+			this.ux.log('Replacing unspported metadata within caseSettings(s), i.e.: defaultCase OWner and case user...');
+			dirpath = './force-app/main/default/settings';
+			if (fs.existsSync(dirpath)){
+				fs.readdirSync(dirpath).forEach(file => {
+					console.log(`Updating ${file}...`);
+					updateCaseSetings(dirpath+'/'+file,currentuser);
 				});
 			}
   }

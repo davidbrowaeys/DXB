@@ -45,7 +45,55 @@ Some of the commands required some configuration. So in order to fully utilize D
           "- Sample: Chatter Settings > Enable Unlisted Groups"
         ],
         "data_plan_path": "./data/sample/data-plan.json",
-        "apextemplatepath": null
+        "apextemplatepath": null,
+        "orgdefault_config" : [
+        {
+          "folder" : "workflow",
+          "rules" : [{
+              "regex" : "<lookupValue>.+</lookupValue>",
+              "replaceby" : "<lookupValue>{{mergevalue}}</lookupValue>",
+              "mergefield" : "username"
+            },{
+              "regex" : "<senderType>.+</senderType>",
+              "replaceby" : "<senderType>CurrentUser</senderType>"
+          }]
+        },
+        {
+          "folder" : "emailservices",
+          "rules" : [{
+              "regex" : "<runAsUser>.+</runAsUser>",
+              "replaceby" : "<runAsUser>{{mergevalue}}</runAsUser>",
+              "mergefield" : "username"
+          }]
+        },
+        {
+          "folder" : "autoResponseRules",
+          "rules" : [{
+              "regex" : "<senderEmail>.+</senderEmail>",
+              "replaceby" : "<senderEmail>{{mergevalue}}</senderEmail>",
+              "mergefield" : "username"
+            },{
+              "regex" : "<senderEmail>.+</senderEmail>",
+              "replaceby" : "<senderEmail>{{mergevalue}}</senderEmail>",
+              "mergefield" : "username"
+          }]
+        },
+        {
+          "folder" : "dashboards",
+          "rules" : [{
+              "regex" : "<dashboardType>LoggedInUser</dashboardType>",
+              "replaceby" : "<dashboardType>SpecifiedUser</dashboardType>"
+          }]
+        },
+        {
+          "folder" : "approvalProcesses",
+          "rules" : [{
+              "regex" : "<name>.+</name><!--username-->",
+              "replaceby" : "<name>{{mergevalue}}</name>",
+              "mergefield" : "username"
+          }]
+        }
+      ]
       }
     }
   }

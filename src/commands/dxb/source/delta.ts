@@ -1,7 +1,7 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import {execSync as exec} from 'fs-extra';
+import {execSync as exec} from 'child_process';
 
 let basedir: string;
 export default class extends SfdxCommand {

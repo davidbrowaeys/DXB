@@ -1,10 +1,8 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
-//import { Messages, SfdxError } from '@salesforce/core';
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import {execSync as exec} from 'fs-extra';
 
-const fs = require("fs-extra");
-const path = require('path');
-const exec = require('child_process').execSync;
 let basedir: string;
 export default class extends SfdxCommand {
 

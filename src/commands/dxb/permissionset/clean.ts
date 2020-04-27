@@ -100,7 +100,7 @@ export default class PermSetClean extends SfdxCommand {
     public static description = 'This command remove fls and object where all access are set to false';
   
     public static examples = [
-    `sfdx dforce:permissionset:clean -p Customer_Community_My_Application -r src/permissionsets`,
+    `sfdx dxb:permissionset:clean -p Customer_Community_My_Application -r src/permissionsets`,
     ];
   
     public static args = [{name: 'file'}];

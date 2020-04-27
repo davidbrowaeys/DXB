@@ -10,9 +10,9 @@ export default class UserFindAccess extends SfdxCommand {
   public static description = 'Find why a specified user have access to a field or object';
 
   public static examples = [
-    `$ sfdx dforce:user:access:why -o Product2`,
-    `$ sfdx dforce:user:access:why -o Product2 -f External_ID__c`,
-    `$ sfdx dforce:user:access:why -o Product2 -f External_ID__c -i johndoe@abc.com.au`,
+    `$ sfdx dxb:user:access:why -o Product2`,
+    `$ sfdx dxb:user:access:why -o Product2 -f External_ID__c`,
+    `$ sfdx dxb:user:access:why -o Product2 -f External_ID__c -i johndoe@abc.com.au`,
   ];
 
   public static args = [{name: 'file'}];

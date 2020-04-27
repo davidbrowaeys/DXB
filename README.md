@@ -8,10 +8,16 @@ A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of 
 2. Install [node.js. + npm](https://nodejs.org/en/). 
 Once installed, checkout proxy setting if you are behind corporate proxy.
 
+## Install DXB-CLI 
+
+```shell
+sfdx plugins:install dxb@latest
+```
+
 ## Setup SFDX Project for DXB-CLI
 Some of the commands required some configuration. So in order to fully utilize DXB-CLI, you must run the following command. This will update sfdx-project.json and set DXB-CLI definition json.
 
-  ```
+  ```shell
   sfdx dxb:install
   ``` 
 

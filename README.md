@@ -1,4 +1,4 @@
-# DeloitteForce-CLI
+# DXB-CLI
 
 A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands. 
 
@@ -8,27 +8,11 @@ A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of 
 2. Install [node.js. + npm](https://nodejs.org/en/). 
 Once installed, checkout proxy setting if you are behind corporate proxy.
 
-## Install DeloitteForce-CLI
-
-1. go to your local workspace and clone DeloitteForce-CLI repository:
-
-  ```shell
-  git clone ssh://git@dvcs.deloittedigital.com.au:22/dforce/deloitteforce-cli.git
-  ``` 
-
-
-2. Go to DeloitteForce-CLI folder and install it globally using npm: 
-
-  ```shell
-  cd deloitteforce-cli
-  sudo npm install -g .
-  ```
-
-## Setup SFDX Project for DeloitteForce-CLI
-Some of the commands required some configuration. So in order to fully utilize DeloitteForce-CLI, you must run the following command. This will update sfdx-project.json and set DeloitteForce-CLI definition json.
+## Setup SFDX Project for DXB-CLI
+Some of the commands required some configuration. So in order to fully utilize DXB-CLI, you must run the following command. This will update sfdx-project.json and set DXB-CLI definition json.
 
   ```
-  deloitte force:install
+  sfdx dxb:install
   ``` 
 
 ### Sample Definition Output
@@ -44,7 +28,7 @@ Some of the commands required some configuration. So in order to fully utilize D
     "sfdcLoginUrl": "https://test.salesforce.com",
     "sourceApiVersion": "45.0",
     "plugins": {
-      "deloitteforce": {
+      "dxb": {
         "defaultdurationdays": "30",
         "packages": [],
         "pre_legacy_packages": [],
@@ -63,38 +47,15 @@ Some of the commands required some configuration. So in order to fully utilize D
 
 ## Topics
   ```shell
-    deloitte force:apex        A set of commands that allow to manilpulate apex.
-    deloitte force:community   Publish community(network) using connect api.
-    deloitte force:data        A set of commands that allows to manipulate and optimize data.
-    deloitte force:delta       A set of commands that generate delta package for faster deployment.
-    deloitte force:mdapi       A set of commands that extends dx mdapi topic.
-    deloitte force:object      A set of commands in regards to salesforce objects.
-    deloitte force:org         A set of commands for scratch org and sandbox
-    deloitte force:permission  Create fieldset for specified object and push to scratch org.
-    deloitte force:profile     A set of commands that allow to manipuilate and faciliate salesforce profiles.
-    deloitte force:static      A set of commands regarding static resource
-    deloitte force:user        set defaut username and org wide email in metadata such as workflow based on target scratch org
-  ```
-
-## Popular Commands
-
-### Delta Deployment
-
-  ```shell
-  deloitte force:source:delta -r delta -m tags -p mytag
-  deloitte force:source:delta -r delta -m commitid -k 123456
-  deloitte force:source:delta -r delta -m branch -k origin/master
-  ```
-Here is an example of how to use the deloitte delta command in a pipeline JenkinsFile
-  ```groovy
-  def jsonSlurper = new JsonSlurper();
-  bat "deloitte force:source:delta -m branch -k master --json -r > delta.json";
-  stdout = readFile("delta.json").trim();
-  def delta = jsonSlurper.parseText(stdout);
-  def options = "";
-  if (delta.testClasses != null && delta.testClasses.isEmpty() == false){
-      options = "-l RunSpecifiedTest -r "+ delta.testClasses.join(',');
-  }
-  def cmd = "sfdx force:source:deploy -p "+delta.deltaMeta.join(',')+" -u prod -w 600 "+options;
-  bat cmd;
+    sfdx dxb:apex        A set of commands that allow to manilpulate apex.
+    sfdx dxb:community   Publish community(network) using connect api.
+    sfdx dxb:data        A set of commands that allows to manipulate and optimize data.
+    sfdx dxb:delta       A set of commands that generate delta package for faster deployment.
+    sfdx dxb:mdapi       A set of commands that extends dx mdapi topic.
+    sfdx dxb:object      A set of commands in regards to salesforce objects.
+    sfdx dxb:org         A set of commands for scratch org and sandbox
+    sfdx dxb:permission  Create fieldset for specified object and push to scratch org.
+    sfdx dxb:profile     A set of commands that allow to manipuilate and faciliate salesforce profiles.
+    sfdx dxb:static      A set of commands regarding static resource
+    sfdx dxb:user        set defaut username and org wide email in metadata such as workflow based on target scratch org
   ```

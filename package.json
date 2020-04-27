@@ -1,7 +1,7 @@
 {
   "name": "dxb",
   "description": "A set of utility for sfdx",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": "David Browaeys",
   "bugs": "https://github.com/davidbrowaeys/DXB/issues",
   "bin": {
@@ -66,34 +66,34 @@
     "commands": "./lib/commands",
     "bin": "dxb",
     "topics": {
-      "force": {
+      "dxb": {
         "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands."
       },
-      "force:object": {
+      "dxb:object": {
         "description": "A set of commands in regards to salesforce objects."
       },
-      "force:object:fields": {
+      "dxb:object:fields": {
         "description": "A set of commands in regards to salesforce fields."
       },
-      "force:mdapi": {
+      "dxb:mdapi": {
         "description": "A set of commands that extends dx mdapi topic."
       },
-      "force:data": {
+      "dxb:data": {
         "description": "A set of commands that allows to manipulate and optimize data."
       },
-      "force:data:bulk": {
+      "dxb:data:bulk": {
         "description": "A set of commands that extends bulk api(i.e.: query)."
       },
-      "force:profile": {
+      "dxb:profile": {
         "description": "A set of commands that allow to manipuilate and faciliate salesforce profiles."
       },
-      "force:object:vr": {
+      "dxb:object:vr": {
         "description": "A set of commands regarding validation rule"
       },
-      "force:static": {
+      "dxb:static": {
         "description": "A set of commands regarding static resource"
       },
-      "force:org": {
+      "dxb:org": {
         "description": "A set of commands for scratch org and sandbox"
       }
     },
@@ -108,5 +108,6 @@
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "echo NO TESTS",
     "version": "oclif-dev readme && git add README.md"
-  }
+  },
+  "types": "lib/index.d.ts"
 }

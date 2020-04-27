@@ -236,9 +236,11 @@ export default class Org extends SfdxCommand {
     }
 
     //IMPORT DATA
-    if (config.data_plan_path){
+    if (config.data_plan_path && fs.existsSync(config.data_plan_path)){
       output = await this.import_data_plan(orgname, config.data_plan_path);
       console.log(output);
+    }else{
+      console.log('No setup data...');
     }
 
     //create other user, this also fix FLS being deleted from profile

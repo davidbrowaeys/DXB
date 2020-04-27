@@ -1,11 +1,11 @@
 {
-  "name": "deloitteforce-cli",
+  "name": "dxb",
   "description": "A set of utility for sfdx",
   "version": "0.0.1",
   "author": "David Browaeys",
   "bugs": "https://github.com/davidbrowaeys/DXB/issues",
   "bin": {
-    "deloitte": "bin/run"
+    "dxb": "bin/run"
   },
   "dependencies": {
     "@oclif/command": "^1",
@@ -62,7 +62,7 @@
   "license": "MIT",
   "oclif": {
     "commands": "./lib/commands",
-    "bin": "deloitte",
+    "bin": "dxb",
     "topics": {
       "force": {
         "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands."
@@ -81,9 +81,6 @@
       },
       "force:data:bulk": {
         "description": "A set of commands that extends bulk api(i.e.: query)."
-      },
-      "force:delta": {
-        "description": "A set of commands that generate delta package for faster deployment."
       },
       "force:profile": {
         "description": "A set of commands that allow to manipuilate and faciliate salesforce profiles."

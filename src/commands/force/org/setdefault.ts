@@ -12,35 +12,32 @@ function displayOutput(){
 }
 function update_workflows(dirfile,username){
 	let content = fs.readFileSync(dirfile).toString();
-	content = content.replace(new RegExp(`<lookupValue>.+</lookupValue>(\s+|)<!--username-->`,'g'), '<lookupValue>'+username+'</lookupValue><!--username-->');
-	content = content.replace(new RegExp(`<senderType>.+</senderType>(\s+|)<!--orgwideemail-->`,'g'), '<senderType>CurrentUser</senderType><!--orgwideemail-->');
+	content = content.replace(new RegExp(`<lookupValue>.+</lookupValue>(\s+|)`,'g'), '<lookupValue>'+username+'</lookupValue>');
+	content = content.replace(new RegExp(`<senderType>.+</senderType>(\s+|)`,'g'), '<senderType>CurrentUser</senderType>');
 	fs.writeFileSync(dirfile, content);
 }
-
-function update_dashboards(dirfile){
+function update_emailservice(dirfile,username){
+	let content = fs.readFileSync(dirfile).toString();
+	content = content.replace(new RegExp(`<runAsUser>.+</runAsUser>(\s+|)`,'g'), '<runAsUser>'+username+'</runAsUser>');
+	fs.writeFileSync(dirfile, content);
+}
+function update_autoresponserule(dirfile,username){
+	let content = fs.readFileSync(dirfile).toString();
+	content = content.replace(new RegExp(`<senderEmail>.+</senderEmail>(\s+|)`,'g'), '<senderEmail>'+username+'</senderEmail>');
+	content = content.replace(new RegExp(`<replyToEmail>.+</replyToEmail>(\s+|)`,'g'), '<replyToEmail>'+username+'</replyToEmail>');
+	fs.writeFileSync(dirfile, content);
+}
+function update_dashboards(dirfile){	
 	let content = fs.readFileSync(dirfile).toString();
 	content = content.replace(new RegExp(`<dashboardType>LoggedInUser</dashboardType>`,'g'), '<dashboardType>SpecifiedUser</dashboardType>');
 	fs.writeFileSync(dirfile, content);
 }
-
-function delete_emails(username){
-	exec(`sfdx force:data:soql:query -u ${username} -q "select id, Name from EmailTemplate WHERE UIType='SFX'" -r csv > emailtemplates.csv`);
-	exec(`sfdx force:data:bulk:delete -u ${username} -w 99 -s EmailTemplate -f emailtemplates.csv`);
-	fs.unlinkSync('emailtemplates.csv');
-}
-
 export default class MetadataReset extends SfdxCommand {
 
   public static description = 'set defaut username and org wide email in metadata such as workflow based on target scratch org';
 
   public static examples = [
-  `$ sfdx hello:org --targetusername myOrg@example.com --targetdevhubusername devhub@org.com
-  Hello world! This is org: MyOrg and I will be around until Tue Mar 20 2018!
-  My hub org id is: 00Dxx000000001234
-  `,
-  `$ sfdx hello:org --name myname --targetusername myOrg@example.com
-  Hello myname! This is org: MyOrg and I will be around until Tue Mar 20 2018!
-  `
+  `$ deloitte force:org:setdefault --targetusername myOrg@example.com`
   ];
 
   public static args = [{name: 'file'}];
@@ -50,30 +47,39 @@ export default class MetadataReset extends SfdxCommand {
   protected static requiresUsername = true;
 
   // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = true;
+  protected static supportsDevhubUsername = false;
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
+  protected static requiresProject = true;
 
   public async run() {
-      let orgname = this.org.getUsername();
-			this.ux.log('Replacing unspported metadata within workflow(s), i.e.: field update on specific user, send email from org wide email...');
-			var orginfo = JSON.parse(exec(`sfdx force:org:display -u ${orgname} --json`).toString());
-			var currentuser = orginfo.result.username;
-			var dirpath = './force-app/main/default/workflows';
-			if (fs.existsSync(dirpath)){
-				fs.readdirSync(dirpath).forEach(file => {
-					console.log(`Updating ${file}...`);
-					update_workflows(dirpath+'/'+file,currentuser);
-				});
-			}
-			
-			dirpath = './force-app/main/default/dashboards/NAB_Dashboards';
-			if (fs.existsSync(dirpath)){
-				fs.readdirSync(dirpath).forEach(file => {
-					console.log(`Updating ${file}...`);
-					update_dashboards(dirpath+'/'+file);
-				});
-			}
+		let orgname = this.org.getUsername();
+		this.ux.log('Replacing unspported metadata within workflow(s), i.e.: field update on specific user, send email from org wide email...');
+		var dirpath = './force-app/main/default/workflows';
+		if (fs.existsSync(dirpath)){
+			console.log('Processing workflows :');
+			fs.readdirSync(dirpath).forEach(file => {
+				console.log(`>    ${file}...`);
+				update_workflows(dirpath+'/'+file,orgname);
+			});
+		}
+
+		dirpath = './force-app/main/default/emailservices';
+		if (fs.existsSync(dirpath)){
+			console.log('Processing emailservices :');
+			fs.readdirSync(dirpath).forEach(file => {
+				console.log(`>    ${file}...`);
+				update_emailservice(dirpath+'/'+file,orgname);
+			});
+		}
+
+		dirpath = './force-app/main/default/autoResponseRules';
+		if (fs.existsSync(dirpath)){
+			console.log('Processing autoResponseRules :');
+			fs.readdirSync(dirpath).forEach(file => {
+				console.log(`>    ${file}...`);
+				update_autoresponserule(dirpath+'/'+file,orgname);
+			});
+		}
   }
 }

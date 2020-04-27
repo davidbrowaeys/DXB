@@ -5,10 +5,10 @@ const fs = require('fs');
 
 export default class ProjectSetup extends SfdxCommand {
 
-  public static description = 'This command initialize your sfdx project to supoport deloitteforce cli. ';
+  public static description = 'This command initialize your sfdx project to supoport DXB cli. ';
 
   public static examples = [
-  `$ deloitte force:install`
+  `$ sfdx dxb:install`
   ];
 
   public static args = [{name: 'file'}];
@@ -24,7 +24,6 @@ export default class ProjectSetup extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run() {
-      this.ux.log('\x1b[92m%s\x1b[0m',fs.readFileSync(__dirname+'/../../lib/deloitteforce_logo.txt').toString(),'\n');
       this.ux.startSpinner('Setting up your project');
       var init = {
             "defaultdurationdays" : "30",
@@ -42,9 +41,9 @@ export default class ProjectSetup extends SfdxCommand {
 
         let config = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
         if (!config.plugins) config["plugins"] = {};
-        config["plugins"]["deloitteforce"] = init;
+        config["plugins"]["dxb"] = init;
         fs.writeFileSync('sfdx-project.json', JSON.stringify(config, null, 2));
-        this.ux.stopSpinner(`\n\nProject setup completed successfully. Welcome to DeloitteForce CLI 1.0!`);
+        this.ux.stopSpinner(`\n\nProject setup completed successfully. Welcome to DXB CLI 1.0!`);
         return {init};
   }
 }

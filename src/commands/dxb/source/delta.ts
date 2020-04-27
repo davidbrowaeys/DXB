@@ -52,7 +52,6 @@ export default class extends SfdxCommand {
       //go through delta changes
       deltaMeta.forEach((file: any) => {
         file = path.parse(file);
-        console.log(JSON.stringify(file));
         metatypes.forEach((type: string) => {
           if (file.dir.endsWith(type)) {
             if ((type === 'classes' && file.base.endsWith('cls')) || type === 'workflows' || (type === 'objects' && file.base.endsWith('object-meta.xml'))) {

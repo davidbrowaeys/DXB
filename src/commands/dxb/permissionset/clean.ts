@@ -1,10 +1,7 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, SfdxError } from '@salesforce/core';
 
 const path = require('path');
-const fse = require('fs-extra');
 const fs = require('fs');
-const os = require('os');
 var xml2js = require('xml2js');
 var js2xmlparser = require('js2xmlparser');
 

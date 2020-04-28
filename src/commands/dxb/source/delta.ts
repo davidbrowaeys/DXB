@@ -9,9 +9,9 @@ export default class extends SfdxCommand {
   public static description = 'This command generate delta package by doing git diff.';
 
   public static examples = [
-    `$ sfdx dxb:source:delta -r -m tags -k mytag`,
-    `$ sfdx dxb:source:delta -r -m branch -k origin/master -l RunSpecifiedTests`,
-    `$ sfdx dxb:source:delta -r -m commitid -k 123456 -l RunSpecifiedTests -t objects,classes,workflows`,
+    `$ sfdx dxb:source:delta -m tags -k mytag`,
+    `$ sfdx dxb:source:delta -m branch -k origin/master -l RunSpecifiedTests`,
+    `$ sfdx dxb:source:delta -m commitid -k 123456 -l RunSpecifiedTests -t objects,classes,workflows`,
   ];
 
   public static args = [{ name: 'file' }];

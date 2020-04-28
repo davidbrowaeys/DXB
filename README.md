@@ -169,3 +169,57 @@ The idea of this command is to delete those unnecessary false access from files 
 ```shell
 sfdx dxb:permissionset:clean -p Customer_Community_My_Application -r src/permissionsets
 ```
+
+### Delta Deployment
+
+```shell
+sfdx dxb:source:delta -m tags -k mytag
+sfdx dxb:source:delta -m branch -k origin/master -l RunSpecifiedTests
+sfdx dxb:source:delta -m commitid -k 123456 -l RunSpecifiedTests -t objects,classes,workflows
+```
+
+The output of this command will give you the parameters in order to use the sfdx force:source:deploy command and perform the actual deployments. 
+```shell
+-p force-app/main/default/classes/EmailMessageService.cls,force-app/main/default/classes/EmailMessageService.cls-meta.xml -r "EmailMessageServiceTest"
+```
+
+You can also get json output by adding --json into the command, it will give you something like the following : 
+```json
+{
+  "status": 0,
+  "result": {
+    "deltaMeta": [
+      "force-app/main/default/classes/EmailMessageService.cls",
+      "force-app/main/default/classes/EmailMessageService.cls-meta.xml"
+    ],
+    "testClasses": [
+      "EmailMessageServiceTest"
+    ]
+  }
+}
+```
+
+The below will show you a coyple of example how to use this in your pipelines, assuming you have git checkout ```develop``` branch for example. 
+
+Azure Pipelines : 
+```yaml
+- script: |
+    delta_option=$(sfdx dxb:source:delta -m branch -k origin/master -l RunSpecifiedTests
+    sfdx force:source:deploy $delta_option -u targetEnv -l RunSpecifiedTests
+  condition: succeeded()
+  displayName: "Deploy to targetEnv"
+```
+
+Groovy pipeline
+```groovy
+def jsonSlurper = new JsonSlurper();
+bat "sfdx dxb:source:delta -m branch -k origin/master --json -r > delta.json";
+stdout = readFile("delta.json").trim();
+def delta = jsonSlurper.parseText(stdout);
+def options = "";
+if (delta.testClasses != null && delta.testClasses.isEmpty() == false){
+    options = "-l RunSpecifiedTest -r "+ delta.testClasses.join(',');
+}
+def cmd = "sfdx force:source:deploy -p "+delta.deltaMeta.join(',')+" -u prod -w 600 "+options;
+bat cmd;
+```

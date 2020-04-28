@@ -10,8 +10,8 @@ export default class extends SfdxCommand {
 
   public static examples = [
     `$ sfdx dxb:source:delta -r -m tags -k mytag`,
-    `$ sfdx dxb:source:delta -r -m commitid -k 123456`,
-    `$ sfdx dxb:source:delta -r -m branch -k origin/master`
+    `$ sfdx dxb:source:delta -r -m branch -k origin/master -l RunSpecifiedTests`,
+    `$ sfdx dxb:source:delta -r -m commitid -k 123456 -l RunSpecifiedTests -t objects,classes,workflows`,
   ];
 
   public static args = [{ name: 'file' }];

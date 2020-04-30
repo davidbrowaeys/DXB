@@ -104,13 +104,12 @@ Some of the commands required some configuration. So in order to fully utilize D
     sfdx dxb:apex        A set of commands that allow to manilpulate apex.
     sfdx dxb:community   Publish community(network) using connect api.
     sfdx dxb:data        A set of commands that allows to manipulate and optimize data.
-    sfdx dxb:delta       A set of commands that generate delta package for faster deployment.
     sfdx dxb:mdapi       A set of commands that extends dx mdapi topic.
     sfdx dxb:object      A set of commands in regards to salesforce objects.
     sfdx dxb:org         A set of commands for scratch org and sandbox
-    sfdx dxb:permission  Create fieldset for specified object and push to scratch org.
+    sfdx dxb:permission  Find out why a user has access to a object or field.
     sfdx dxb:profile     A set of commands that allow to manipuilate and faciliate salesforce profiles.
-    sfdx dxb:static      A set of commands regarding static resource
+    sfdx dxb:static      Create static resource locally
     sfdx dxb:user        set defaut username and org wide email in metadata such as workflow based on target scratch org
   ```
 

@@ -1,7 +1,7 @@
 {
   "name": "dxb",
   "description": "A set of utility for sfdx",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "author": "David Browaeys",
   "bugs": "https://github.com/davidbrowaeys/DXB/issues",
   "bin": {

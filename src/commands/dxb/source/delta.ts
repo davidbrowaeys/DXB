@@ -21,7 +21,8 @@ export default class extends SfdxCommand {
     deltakey: flags.string({ char: 'k', description: 'commit id, tags prefix or name, branch name' }),
     metatype: flags.string({ char: 't', description: 'metatype comma separated, i.e.: objects,classes,workflows', default: 'objects,classes,workflows' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
-    testlevel: flags.string({ char: 'l', description: 'if set to "RunSpecifiedTests", command will try to calculate test classes dependencies.', default: 'NoTestRun' })
+    testlevel: flags.string({ char: 'l', description: 'if set to "RunSpecifiedTests", command will try to calculate test classes dependencies.', default: 'NoTestRun' }),
+    testclassRegex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
   };
 
   // Comment this out if your command does not require an org username
@@ -36,11 +37,12 @@ export default class extends SfdxCommand {
   protected testClasses: string[] = [];
   protected allClasses: string[] = [];
   protected processedClasses: string[] = [];
-
+  protected regex;
   public async run() {
     let mode = this.flags.mode;
     let deltakey = this.flags.deltakey;
     let testlevel = this.flags.testlevel;
+    this.regex = this.flags.testclassRegex;
     let metatypes = this.flags.metatype.split(',');
     basedir = this.flags.basedir;
 
@@ -83,7 +85,7 @@ export default class extends SfdxCommand {
   }
   private getTestClasses(classpath: string, type: string, element: string) {
     //check if the element is a test classes
-    if (type === 'classes' && !this.testClasses.includes(element) && element.indexOf('Test') >= 0) {
+    if (type === 'classes' && !this.testClasses.includes(element) && element.search(this.regex) >= 0) {
       this.testClasses.push(element);
       return;
     }

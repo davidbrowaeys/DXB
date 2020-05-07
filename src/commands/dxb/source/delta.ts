@@ -22,7 +22,7 @@ export default class extends SfdxCommand {
     metatype: flags.string({ char: 't', description: 'metatype comma separated, i.e.: objects,classes,workflows', default: 'objects,classes,workflows' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
     testlevel: flags.string({ char: 'l', description: 'if set to "RunSpecifiedTests", command will try to calculate test classes dependencies.', default: 'NoTestRun' }),
-    testclassRegex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
+    testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
   };
 
   // Comment this out if your command does not require an org username
@@ -42,7 +42,7 @@ export default class extends SfdxCommand {
     let mode = this.flags.mode;
     let deltakey = this.flags.deltakey;
     let testlevel = this.flags.testlevel;
-    this.regex = this.flags.testclassRegex;
+    this.regex = this.flags.testclsnameregex;
     let metatypes = this.flags.metatype.split(',');
     basedir = this.flags.basedir;
 

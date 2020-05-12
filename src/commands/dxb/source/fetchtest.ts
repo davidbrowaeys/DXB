@@ -6,7 +6,7 @@ import {execSync as exec} from 'child_process';
 let basedir: string;
 export default class extends SfdxCommand {
 
-  public static description = 'This command generate delta package by doing git diff.';
+  public static description = 'This command calculated specified test classes base on source path.';
 
   public static examples = [
     `$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml`
@@ -17,7 +17,8 @@ export default class extends SfdxCommand {
   protected static flagsConfig = {
     sourcepath: flags.string({ char: 'p', description: 'source path'}),
     metatype: flags.string({ char: 't', description: 'metatype comma separated, i.e.: objects,classes,workflows', default: 'objects,classes,workflows' }),
-    basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' })
+    basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
+    testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
   };
 
   // Comment this out if your command does not require an org username
@@ -36,6 +37,7 @@ export default class extends SfdxCommand {
   public async run() {
     let sourcepath = this.flags.sourcepath;
     let metatypes = this.flags.metatype.split(',');
+    this.regex = this.flags.testclsnameregex;
     basedir = this.flags.basedir;
 
     let deltaMeta = sourcepath.split(',');

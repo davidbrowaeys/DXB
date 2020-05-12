@@ -1,6 +1,4 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import {execSync as exec} from 'child_process';
 
 let basedir: string;
@@ -10,8 +8,8 @@ export default class extends SfdxCommand {
 
   public static examples = [
     `$ sfdx dxb:source:delta -m tags -k mytag`,
-    `$ sfdx dxb:source:delta -m branch -k origin/master -l RunSpecifiedTests`,
-    `$ sfdx dxb:source:delta -m commitid -k 123456 -l RunSpecifiedTests -t objects,classes,workflows`,
+    `$ sfdx dxb:source:delta -m branch -k origin/master`,
+    `$ sfdx dxb:source:delta -m commitid -k 123456`,
   ];
 
   public static args = [{ name: 'file' }];
@@ -19,9 +17,7 @@ export default class extends SfdxCommand {
   protected static flagsConfig = {
     mode: flags.string({ char: 'm', description: 'commitid|tags|branch', default: "commitid" }),
     deltakey: flags.string({ char: 'k', description: 'commit id, tags prefix or name, branch name' }),
-    metatype: flags.string({ char: 't', description: 'metatype comma separated, i.e.: objects,classes,workflows', default: 'objects,classes,workflows' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
-    testlevel: flags.string({ char: 'l', description: 'if set to "RunSpecifiedTests", command will try to calculate test classes dependencies.', default: 'NoTestRun' }),
     testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
   };
 
@@ -41,65 +37,21 @@ export default class extends SfdxCommand {
   public async run() {
     let mode = this.flags.mode;
     let deltakey = this.flags.deltakey;
-    let testlevel = this.flags.testlevel;
     this.regex = this.flags.testclsnameregex;
-    let metatypes = this.flags.metatype.split(',');
     basedir = this.flags.basedir;
 
     let deltaMeta = this.getDeltaChanges(mode, deltakey);
-    //find dependent test classes
-    if (testlevel === 'RunSpecifiedTests') {
-      //retrieve all classes
-      this.getAllClasses(basedir);
-      //go through delta changes
-      deltaMeta.forEach((file: any) => {
-        file = path.parse(file);
-        metatypes.forEach((type: string) => {
-          if (file.dir.endsWith(type)) {
-            if ((type === 'classes' && file.base.endsWith('cls')) || type === 'workflows' || (type === 'objects' && file.base.endsWith('object-meta.xml'))) {
-              this.getTestClasses(path.join(basedir, 'classes'), type, file.name);
-            } else if (type === 'objects' && (file.base.endsWith('field-meta.xml') || file.base.endsWith('validationRule-meta.xml'))) {
-              var parentfolder = path.normalize(path.join(file.dir, '..'));
-              this.getTestClasses(path.join(basedir, 'classes'), type, path.parse(parentfolder).name);
-            }
-          }
-        });
-      });
-    }
     let deployOutput = '';
     if (deltaMeta && deltaMeta.length > 0) {
-      deployOutput += `-p \"${deltaMeta.join(',')}\"`;
+      deployOutput += `${deltaMeta.join(',')}`;
     } else {
-      deployOutput += `-p ${basedir}`;
-    }
-    if (testlevel === 'RunSpecifiedTests') {
-      if (this.testClasses && this.testClasses.length > 0) {
-        deployOutput += ` -r "${this.testClasses.join(',')}"`;
-      }
+      deployOutput += `${basedir}`;
     }
     this.ux.log(deployOutput);
-    return { deltaMeta, testClasses: this.testClasses }
+    return { deltaMeta }
   }
   private onlyUnique(value: any, index: any, self: any) {
     return self.indexOf(value) === index && value.startsWith(basedir);
-  }
-  private getTestClasses(classpath: string, type: string, element: string) {
-    //check if the element is a test classes
-    if (type === 'classes' && !this.testClasses.includes(element) && element.search(this.regex) >= 0) {
-      this.testClasses.push(element);
-      return;
-    }
-    //go through each classes and check if element is referenced in the file content (case senstive ?!)
-    this.allClasses.forEach(f => {
-      let file: any = path.parse(f);
-      if (!this.testClasses.includes(file.name)) {
-        var content = fs.readFileSync(f).toString();
-        if (content.indexOf(element) >= 0 && !this.processedClasses.includes(file.name)) { //make sure we don't re-process a class already processed
-          this.processedClasses.push(file.name);
-          this.getTestClasses(classpath, 'classes', file.name);
-        }
-      }
-    });
   }
   public getDeltaChanges(mode: any, deltakey: any): any {
     var gitresult;
@@ -117,21 +69,5 @@ export default class extends SfdxCommand {
     //filter unnecessary files
     var files = gitresult.filter(this.onlyUnique);
     return files;
-  }
-
-  public getAllClasses(directory: string) {
-    var currentDirectorypath = path.join(directory);
-
-    var currentDirectory = fs.readdirSync(currentDirectorypath, 'utf8');
-
-    currentDirectory.forEach((file: string) => {
-      var pathOfCurrentItem: string = path.join(directory + '/' + file);
-      if (fs.statSync(pathOfCurrentItem).isFile() && file.endsWith('.cls')) {
-        this.allClasses.push(pathOfCurrentItem);
-      } else if (!fs.statSync(pathOfCurrentItem).isFile()){
-        var directorypath = path.join(directory + '/' + file);
-        this.getAllClasses(directorypath);
-      }
-    });
   }
 }

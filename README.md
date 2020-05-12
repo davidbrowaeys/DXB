@@ -203,8 +203,9 @@ The below will show you a coyple of example how to use this in your pipelines, a
 Azure Pipelines : 
 ```yaml
 - script: |
-    delta_option=$(sfdx dxb:source:delta -m branch -k origin/master -l RunSpecifiedTests
-    sfdx force:source:deploy $delta_option -u targetEnv -l RunSpecifiedTests
+    delta=$(sfdx dxb:source:delta -m branch -k origin/master)
+    testClass=$(sfdx dxb:source:fetchtest -p "$delta")
+    sfdx force:source:deploy -p "$delta" -u targetEnv -l RunSpecifiedTests $testClass
   condition: succeeded()
   displayName: "Deploy to targetEnv"
 ```

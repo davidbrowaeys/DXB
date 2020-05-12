@@ -8,7 +8,9 @@ export default class extends SfdxCommand {
   public static description = 'This command calculated specified test classes base on source path.';
 
   public static examples = [
-    `$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml`
+    `$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml`,
+    `$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml" -t classes`,
+    `$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml" -n ".*Test"`
   ];
 
   public static args = [{ name: 'file' }];

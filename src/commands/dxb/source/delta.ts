@@ -54,7 +54,7 @@ export default class extends SfdxCommand {
   public getDeltaChanges(mode: any, deltakey: any): any {
     var gitresult;
     if (mode === 'branch') {
-      gitresult = exec(`git diff ${deltakey} --name-only`).toString().split('\n');
+      gitresult = exec(`git diff ${deltakey} --name-only --diff-filter=AMR`).toString().split('\n');
     } else if (mode === 'tags') {
       if (deltakey) {
         gitresult = exec(`git diff $(git describe --match ${deltakey}* --abbrev=0 --all)..HEAD --name-only`).toString().split('\n');

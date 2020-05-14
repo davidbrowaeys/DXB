@@ -44,8 +44,6 @@ export default class extends SfdxCommand {
     let deployOutput = '';
     if (deltaMeta && deltaMeta.length > 0) {
       deployOutput += `${deltaMeta.join(',')}`;
-    } else {
-      deployOutput += `${basedir}`;
     } 
     this.ux.log(deployOutput);
     return { deltaMeta }

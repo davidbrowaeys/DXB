@@ -57,12 +57,12 @@ export default class extends SfdxCommand {
       gitresult = exec(`git diff ${deltakey} --name-only --diff-filter=AMR`).toString().split('\n');
     } else if (mode === 'tags') {
       if (deltakey) {
-        gitresult = exec(`git diff $(git describe --match ${deltakey}* --abbrev=0 --all)..HEAD --name-only`).toString().split('\n');
+        gitresult = exec(`git diff $(git describe --match ${deltakey}* --abbrev=0 --all)..HEAD --name-only --diff-filter=AMR`).toString().split('\n');
       } else {
-        gitresult = exec(`git diff $(git describe --tags --abbrev=0 --all)..HEAD --name-only`).toString().split('\n');
+        gitresult = exec(`git diff $(git describe --tags --abbrev=0 --all)..HEAD --name-only --diff-filter=AMR`).toString().split('\n');
       }
     } else {
-      gitresult = exec(`git diff-tree --no-commit-id --name-only -r ${deltakey}`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
+      gitresult = exec(`git diff-tree --no-commit-id --name-only -r ${deltakey} --diff-filter=AMR`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
     }
     //filter unnecessary files
     var files = gitresult.filter(this.onlyUnique);

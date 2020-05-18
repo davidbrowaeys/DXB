@@ -9,3 +9,4 @@ node_modules
 git push -u origin master
 /.sonarlint
 /messages
+.vscode/*

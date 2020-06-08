@@ -169,6 +169,65 @@ The idea of this command is to delete those unnecessary false access from files 
 sfdx dxb:permissionset:clean -p Customer_Community_My_Application -r src/permissionsets
 ```
 
+### Data Transfer (Export & Import)
+Data transfer allows you to setup and automate transfer of data within your pipeline. This is very handy for sync reference data between your environment such as data driven solution (custom settings, reference objects, ...). You can either use "export and import" in the event you have a dedicated env as a source of truth for your all reference data. Or you can just use the import if you manage your export locally and push all your data into your repository. This command is using jsforce bulk api in order to handle large volume, and store the data in CSV file format which means it can go way beyond 2000 records per objects which is one of the limitation of the sfdx data plan and one of the reason I build this. 
+
+Important note, you will need 2 main things : 
+* Make sure all objects use a unique external id fields and that fields is always populated. This will required a trigger or PB on all objects. If you don't have a meaningful external id,  you can set it by concatenating orgId_recordId. 
+* Create a data definition file as per below example.
+
+#### Setup
+You will need to create a data definition json file (data-def.json) anywhere in your DX project, usually in your data folder. For the export and import data folder, I usually create one folder for each target environment as you might have different set of data for different type of environment (DEV vs QA vs UAT vs SIT). With that being said, you might have more than one data definition jsonf file (data-def-qa.json, data-def-sit.json). 
+* active : only run the export/import if active = true
+* objectName : api name of the standard/custom object
+* filename: name of the CSV file to export or import
+* fields: list of api name fields (comma separated). You can use cross reference field in order to upsert child to parent relationship. For Recordtype Id, simply use DeveloperName of your object record type and the command will fetch automatically the id of the record type in your target env. 
+* where: SOQL where clause to filter out certain records
+
+```json
+{
+  "objects": [
+      {
+        "active" : true,
+        "objectName" : "Parent_Object__c", 
+        "filename" : "ABC_Parent_Objects.csv",
+        "externalField" : "External_ID__c",
+        "fields" : "Name,RecordType.DeveloperName,Status__c,External_ID__c",
+        "where" : "Status__c = 'Active'"
+      },
+      {
+        "active" : true,
+        "objectName" : "Child_Object__c", 
+        "filename" : "ABC_Child_Objects.csv",
+        "externalField" : "External_ID__c",
+        "fields" : "Name,External_ID__c,Action__c,Completed__c,Parent_Object__r.External_ID__c",
+        "where" : ""
+      }
+  ]
+}
+```
+
+#### Export
+```shell
+sfdx dxb:data:transfer:export -f data/data-def.json -d data/dev -u <sourceEnv>
+```
+
+#### Import
+```shell
+sfdx dxb:data:transfer:import -f data/data-def.json -d data/dev -u <targetEnv>
+```
+
+#### Azure Pipeline
+How does it looks like in your yaml ? 
+```yaml
+- script: |
+    sfdx dxb:data:transfer:export -f data/data-def.json -d data/dev -u <sourceEnv>
+    sfdx dxb:data:transfer:import -f data/data-def.json -d data/dev -u <targetEnv>
+  condition: succeeded()
+  displayName: "DataLoad to targetEnv"
+```
+
+
 ### Delta Deployment
 
 ```shell

@@ -19,7 +19,8 @@ export default class DataTransferImport extends SfdxCommand {
   
     protected static flagsConfig = {
         definitionfile: flags.string({char:'f',description:'path to a dxb data definition file',required:true}),
-        datadir: flags.string({char:'d',description:'path of data to import',required:true})
+        datadir: flags.string({char:'d',description:'path of data to import',required:true}),
+        pollingTimeout: flags.milliseconds({char:'i',description:'Bulk polling timeout in milliseconds'})
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
@@ -44,7 +45,7 @@ export default class DataTransferImport extends SfdxCommand {
         this.objectdescribes = {};
 
         this.connection = this.org.getConnection();
-        this.connection.bulk.pollTimeout = this.setting.pollingTimeout || 120000; // 2 min
+        this.connection.bulk.pollTimeout = this.flags.pollingTimeout || this.setting.pollTimeout || 120000; // 2 min
         if (!fs.existsSync(this.datadir)) {
             throw new SfdxError('This folder do not exist.');
         }

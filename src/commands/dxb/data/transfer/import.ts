@@ -37,11 +37,14 @@ export default class DataTransferImport extends SfdxCommand {
     protected definitionfile:string;
     protected objectdescribes:any;
     public async run() {
-        this.connection = this.org.getConnection();
+        
         this.definitionfile = this.flags.definitionfile;
         this.datadir = this.flags.datadir;
         this.setting = JSON.parse(fs.readFileSync(this.definitionfile).toString());
         this.objectdescribes = {};
+
+        this.connection = this.org.getConnection();
+        this.connection.bulk.pollTimeout = this.setting.pollingTimeout || 120000; // 2 min
         if (!fs.existsSync(this.datadir)) {
             throw new SfdxError('This folder do not exist.');
         }
@@ -164,18 +167,21 @@ export default class DataTransferImport extends SfdxCommand {
         return new Promise( (resolve, reject) => {
             var csvFileIn:any = fs.createReadStream(filename);
             this.connection.bulk.load(object, "upsert", {extIdField:externalIdField}, csvFileIn, (err:any, rets:any) => {
-                if (err) { reject(err.message); }
                 var results = {
                     success : [],
                     errors : []
                 }
-                for (var i=0; i < rets.length; i++) {
-                    if (rets[i].success) {
-                        results.success.push(rets[i]);
-                    } else {
-                        results.errors.push(rets[i]);
-                        if (results.errors.length <= 5 ) {
-                            console.log('    ', rets[i].errors.join(', '));
+                if (err) { 
+                    console.error(err.message); 
+                }else if (rets){
+                    for (var i=0; i < rets.length; i++) {
+                        if (rets[i].success) {
+                            results.success.push(rets[i]);
+                        } else {
+                            results.errors.push(rets[i]);
+                            if (results.errors.length <= 5 ) {
+                                console.log('    ', rets[i].errors.join(', '));
+                            }
                         }
                     }
                 }

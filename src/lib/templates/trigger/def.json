@@ -1,0 +1,15 @@
+{
+  "vars": [
+    "className",
+    "triggerName",
+    "apiVersion",
+    "sobject"
+  ],
+  "files": [
+    ["apex.cls", "cls"],
+    ["apex.cls-meta.xml", "cls-meta.xml"],
+    ["trigger.trigger","trigger"],
+    ["trigger.trigger-meta.xml","trigger-meta.xml"]
+  ],
+  "bundle": false
+}

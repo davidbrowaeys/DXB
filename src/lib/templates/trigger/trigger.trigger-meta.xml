@@ -1,0 +1,4 @@
+<ApexTrigger xmlns="urn:metadata.tooling.soap.sforce.com" fqn="{{triggerName}}">
+  <apiVersion>{{apiVersion}}</apiVersion>
+  <status>Active</status>
+</ApexTrigger>

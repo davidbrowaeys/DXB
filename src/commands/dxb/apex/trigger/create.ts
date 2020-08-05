@@ -1,8 +1,6 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxProject, SfdxError } from '@salesforce/core';
+import { SfdxProject } from '@salesforce/core';
 
-const exec = require('child_process').execSync;
-const execAsync = require('child_process').exec;
 const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
@@ -10,7 +8,7 @@ const os = require('os');
 
 export default class ApexTriggerCreation extends SfdxCommand {
 
-    public static description = 'Create scratch org';
+    public static description = 'This command create trigger and apex class by simply specifying object name according to domain layer.';
 
     public static examples = [
         `$ sfdx dxb:apex:trigger:create -o Account`
@@ -106,6 +104,7 @@ function createFiles(templateFolder, sobject, vars, done) {
             splitVars.forEach((value) => {
                 content = updateContent(content, value);
             });
+            content = updateContent(content, 'sobject='+sobject);
             
             let newFile = path.join(`${outputdir}/triggers`, `${name}.${fileExtension}`);
             if (fileExtension.toString().includes('cls')) {

@@ -1,3 +1,3 @@
-trigger {{triggerName}} on {{sobject}} (before insert) {
-	new {{className}}();
+trigger {{triggerName}} on {{sobject}} (before insert, before update) {
+	new {{className}}().execute();
 }

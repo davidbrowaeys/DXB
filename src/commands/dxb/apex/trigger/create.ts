@@ -50,7 +50,7 @@ export default class ApexTriggerCreation extends SfdxCommand {
                         'apiVersion=' + apiversion.toPrecision(3); + ',' +
                         'sobject=' + sobject;
         
-        let templateFolder = path.join(os.homedir(), '.sfdx-templates', template);
+        let templateFolder = path.join('.sfdx-templates', template);
         if (!fse.existsSync(templateFolder)) {
             templateFolder = path.join(__dirname, '../../../../lib/templates/', template);
         }

@@ -47,9 +47,10 @@ export default class DataTransferExport extends SfdxCommand {
     }
     private export(job:any):Promise<any>{
       return new Promise((resolve, reject) => {
+        job.fields = job.fields.replace(/ /g,'');
         const exportfile = path.join(this.outputdir,job.filename);
         this.ux.log(`\nRegister export for [${job.objectName},${exportfile}]`);
-        let query:string = `select ${job.fields} from ${job.objectName}`;
+        let query:string = `select ${job.fields.replace(/ /g,'')} from ${job.objectName}`;
         if (job.where){
           query += ` where ${job.where}`;
         }

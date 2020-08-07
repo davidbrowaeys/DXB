@@ -48,7 +48,7 @@ export default class DataTransferExport extends SfdxCommand {
     private export(job:any):Promise<any>{
       return new Promise((resolve, reject) => {
         const exportfile = path.join(this.outputdir,job.filename);
-        this.ux.startSpinner(`\nRegister export for [${job.objectName},${exportfile}]`);
+        this.ux.log(`\nRegister export for [${job.objectName},${exportfile}]`);
         let query:string = `select ${job.fields} from ${job.objectName}`;
         if (job.where){
           query += ` where ${job.where}`;
@@ -59,19 +59,19 @@ export default class DataTransferExport extends SfdxCommand {
         resolve(job);
       }).then(async (result:any) => {
         return await this.startQuery(result);
-      }).then ( (result) => {
-        this.ux.stopSpinner('Completed');
       });
     }
     private startQuery(job){
       return new Promise( (resolve, reject) => {
-          console.log('>>>',job.query);
-          this.connection.query(job.query, (err, result) => {
-              if (err) { 
-                reject(err); 
-              }
-              
-              var headers = [];
+        var records = [];
+        var query:any = this.connection.query(job.query)
+          .on("record", function(record) {
+            records.push(record);
+          })
+          .on("end", function() {
+            console.log("total in database : " + query.totalSize);
+            console.log("total fetched : " + query.totalFetched);
+            var headers = [];
               job.fields.forEach(function(key) {
                   const k = key.trim().toLowerCase();
                   headers.push({id: k, title: k});
@@ -81,7 +81,7 @@ export default class DataTransferExport extends SfdxCommand {
                   header: headers,
                   encoding:'utf8'
               });
-              result.records.forEach(element => {
+              records.forEach(element => {
                 job.fields.forEach(function(key) {
                   const k = key.trim().toLowerCase();
                   if (k.indexOf('.') >= 0){ //handle cross reference fields
@@ -95,12 +95,16 @@ export default class DataTransferExport extends SfdxCommand {
                 });
                 delete element.attributes;
               });
-              console.log('Exported :',result.records.length, 'record(s)\n');
-              csvWriter.writeRecords(result.records)       // returns a promise
+              console.log('Exported :',records.length, 'record(s)\n');
+              csvWriter.writeRecords(records)       // returns a promise
               .then(() => {
                   resolve(job);
               });
-          });
+          })
+          .on("error", function(err) {
+            console.error(err);
+          })
+          .run({ autoFetch : true, maxFetch : 100000 }); // synonym of Query#execute();
       });
     }
 }

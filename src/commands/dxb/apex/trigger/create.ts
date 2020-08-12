@@ -4,7 +4,6 @@ import { SfdxProject } from '@salesforce/core';
 const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
-{
  export default class ApexTriggerCreation extends SfdxCommand {
     public static description = 'This command create trigger and apex class by simply specifying object name according to domain layer.';
 

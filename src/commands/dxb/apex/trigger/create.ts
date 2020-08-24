@@ -20,7 +20,7 @@ const fs = require('fs');
             required: true,
             description: 'api name of SObject'
         }),
-        sourceApiVersion: flags.number({
+        sourceapiversion: flags.number({
             char: 'v',
             description: 'set api version of the generated class'
         })

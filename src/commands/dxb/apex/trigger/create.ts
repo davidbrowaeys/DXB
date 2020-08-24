@@ -5,6 +5,7 @@ const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
  export default class ApexTriggerCreation extends SfdxCommand {
+     
     public static description = 'This command create trigger and apex class by simply specifying object name according to domain layer.';
 
     public static examples = [
@@ -19,7 +20,7 @@ const fs = require('fs');
             required: true,
             description: 'api name of SObject'
         }),
-        apiversion: flags.number({
+        sourceApiVersion: flags.number({
             char: 'v',
             description: 'set api version of the generated class'
         })
@@ -37,7 +38,7 @@ const fs = require('fs');
         const project = await SfdxProject.resolve();
         var config: any = await project.resolveProjectConfig();
         const sobject = this.flags.sobject;
-        const apiversion = this.flags.apiversion | config.sourceApiVersion;
+        const apiversion = this.flags.sourceApiVersion | config.sourceApiVersion;
 
         const template = 'trigger';
         const vars =    'className=' + sobject.replace('__c', '').replace('_', '') + 'TriggerHandler,' +

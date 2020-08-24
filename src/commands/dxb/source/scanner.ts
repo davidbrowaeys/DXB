@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
+import { SfdxError, SfdxProject } from '@salesforce/core';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -17,7 +17,7 @@ export default class DXBScanner extends SfdxCommand {
     file: flags.string({ char: 'f', description: 'file path of code scanner results'}),
     excludedfiles: flags.string({ char: 'e', description: 'file path of classes to exclude'}), 
     severity: flags.number({ char: 's', description: 'severity threshold, if set to 3 it will throw an error for all violations where severity is 3 and lower', default: 1}), 
-    highseverityrules: flags.string({ char: 'r', description: 'Name of the rules you want to mark a high severity'}),
+    highseverityrules: flags.string({ char: 'r', description: 'Name of the rules you want to mark a high severity'})
   };
 
   // Comment this out if your command does not require an org username
@@ -40,16 +40,21 @@ export default class DXBScanner extends SfdxCommand {
   }
 
   public async run() {
+  	const project = await SfdxProject.resolve();
+    var config: any = await project.resolveProjectConfig();
+
     let filepath = this.flags.file;
     let excludedFilesPath = this.flags.excludedfiles;
     let highseverityrules = this.flags.highseverityrules;
-    if (highseverityrules){
-    	highseverityrules = highseverityrules.split(',');
-    }
+
     let severity = this.flags.severity;
     if (!fs.existsSync(filepath)) {
     	throw new SfdxError("PMD JSON Report file results does not exist!");
     }
+    if (highseverityrules){
+    	highseverityrules = highseverityrules.split(',');
+    }
+
     this.ux.log('Calculating quality gate...\n');
     let results = JSON.parse(fs.readFileSync(filepath).toString());
     let excludedFiles = this.getExcludedFiles(excludedFilesPath);
@@ -59,7 +64,7 @@ export default class DXBScanner extends SfdxCommand {
     	let fileJson: any = path.parse(elem.fileName);
     	if (elem.violations && !excludedFiles.includes(fileJson.name)){
     		elem.violations.forEach( v => {
-    			if (parseInt(v.severity) <= severity || highseverityrules.includes(v.ruleName)) {
+    			if (parseInt(v.severity) <= severity || (highseverityrules && highseverityrules.includes(v.ruleName)) || (config && config.dxb && config.dxb.highseverityrules && config.dxb.highseverityrules.highseverityrules.includes(v.ruleName))) {
     				content += `${fileJson.name}[${v.line} - ${v.column}] - ${v.ruleName}(${v.category}) - Severity(${v.severity}) ${v.message}\n`;
     				throwError = true;
     			}

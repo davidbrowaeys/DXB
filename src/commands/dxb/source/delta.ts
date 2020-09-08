@@ -49,7 +49,7 @@ export default class extends SfdxCommand {
     return { deltaMeta }
   }
   private onlyUnique(value: any, index: any, self: any) {
-    return self.indexOf(value) === index && value.startsWith(basedir);
+    return self.indexOf(value) === index && value.startsWith(basedir) && value.indexOf('lwc/jsconfig.json') < 0;
   }
   public getDeltaChanges(mode: any, deltakey: any): any {
     var gitresult;

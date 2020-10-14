@@ -210,6 +210,17 @@ export default class Org extends SfdxCommand {
     if (config.pre_legacy_packages) {
       await this.deploy_legacy_packages(orgname, config.pre_legacy_packages, 'pre');
     }
+    if (config.deferPermissionSet){
+      console.log(exec(`sfdx force:source:deploy -u ${orgname} -p ${config.deferPermissionSet} -w 600`).toString());
+    }
+    if (config.deferSharingUser){
+      console.log(exec(`sfdx force:user:permset:assign -n ${config.deferSharingUser} -u ${orgname} -o ${orgname}`).toString());
+    }
+
+    if (config.userPermissionsKnowledgeUser){
+      console.log(exec(`sfdx force:data:record:update -s User -w "Name='User User'" -v "Country=Australia" -u ${orgname}`).toString());
+      console.log(exec(`sfdx force:data:record:update -s User -w "Name='User User'" -v "UserPermissionsKnowledgeUser=true" -u ${orgname}`).toString());
+    }
 
     //REMOVE FIELDS TRACKING HISTORY
     if (this.flags.includetrackinghistory) {

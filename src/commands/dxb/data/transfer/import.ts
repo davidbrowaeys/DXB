@@ -179,7 +179,7 @@ export default class DataTransferImport extends SfdxCommand {
                 for (var i = 0; i < csvSplitResponse.totalChunks; i++){
                     console.log(`Batch ${i+1} out of ${csvSplitResponse.totalChunks}...`);
                     var fn = filename.split('.csv').join(i+'.csv');
-                    var results = await this.upsertRecords(object, fn , externalIdField);
+                    await this.upsertRecords(object, fn , externalIdField);
                 }
                 resolve('Split resolve'); 
               }).catch(csvSplitError => {

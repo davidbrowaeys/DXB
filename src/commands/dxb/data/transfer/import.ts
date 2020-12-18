@@ -4,6 +4,7 @@ import { SfdxError,Connection } from '@salesforce/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as csv from 'csv-parser';
+import * as csvSplitStream from 'csv-split-stream';
 import {createObjectCsvWriter as createCsvWriter} from 'csv-writer';
 
 
@@ -45,7 +46,7 @@ export default class DataTransferImport extends SfdxCommand {
         this.objectdescribes = {};
 
         this.connection = this.org.getConnection();
-        this.connection.bulk.pollTimeout = this.flags.pollingtimeout || this.setting.pollTimeout || 120000; // 2 min
+        this.connection.bulk.pollTimeout = this.flags.pollingtimeout || this.setting.pollTimeout || 10000000; // 10 min
         if (!fs.existsSync(this.datadir)) {
             throw new SfdxError('This folder do not exist.');
         }
@@ -66,7 +67,7 @@ export default class DataTransferImport extends SfdxCommand {
         return new Promise( async (resolve, reject) => {
             const filepath = path.join(this.datadir,config.filename);
             const importfile = path.join(this.importdir,`tmp_${config.filename}`);
-            console.log(`Register import for [${config.objectName},${filepath}]`);
+            console.log(`Register import for [\x1b[33m${config.objectName},${filepath}\x1b[0m]`);
             if (this.objectdescribes[config.objectName] === undefined) {
                 this.objectdescribes[config.objectName] = await this.getObjectDescribe(config.objectName);
             }
@@ -83,7 +84,7 @@ export default class DataTransferImport extends SfdxCommand {
             return await this.initFile(results.config);
          }).then(async (results:any) => {
             console.log('Import data to org...');
-            return await this.upsertRecords(results.objectName, results.importfile, results.externalField );
+            return await this.splitByChunks(results.objectName, results.importfile, results.externalField );
         });
     }
 
@@ -164,17 +165,40 @@ export default class DataTransferImport extends SfdxCommand {
         });
     }
 
+    private splitByChunks(object, filename, externalIdField = 'Id'){
+        return new Promise( (resolve, reject) => {
+            csvSplitStream.split(
+                fs.createReadStream(filename),
+                {
+                  lineLimit: 10000
+                },
+                (index) => fs.createWriteStream(filename.split('.csv').join(index+'.csv'))
+              )
+              .then( async (csvSplitResponse) => {
+                fs.unlinkSync(filename);
+                for (var i = 0; i < csvSplitResponse.totalChunks; i++){
+                    console.log(`Batch ${i+1} out of ${csvSplitResponse.totalChunks}...`);
+                    var fn = filename.split('.csv').join(i+'.csv');
+                    var results = await this.upsertRecords(object, fn , externalIdField);
+                }
+                resolve('Split resolve'); 
+              }).catch(csvSplitError => {
+                console.log('csvSplitStream failed!', csvSplitError);
+              });
+        });
+    }
+
     private upsertRecords(object, filename, externalIdField = 'Id'){
         return new Promise( (resolve, reject) => {
             var csvFileIn:any = fs.createReadStream(filename);
             this.connection.bulk.load(object, "upsert", {extIdField:externalIdField}, csvFileIn, (err:any, rets:any) => {
-                var results = {
-                    success : [],
-                    errors : []
-                }
                 if (err) { 
                     console.error(err.message); 
                 }else if (rets){
+                    var results = {
+                        success : [],
+                        errors : []
+                    }
                     for (var i=0; i < rets.length; i++) {
                         if (rets[i].success) {
                             results.success.push(rets[i]);
@@ -186,7 +210,8 @@ export default class DataTransferImport extends SfdxCommand {
                         }
                     }
                 }
-                console.log('Imported :', results.success.length,'succeed -', results.errors.length, 'failed\n');
+                console.log('Imported :',`\x1b[32m${results.success.length}\x1b[0m`,'succeed -',`\x1b[31m${results.errors.length}\x1b[0m`, 'failed\n');
+                fs.unlinkSync(filename);
                 resolve(results);
             });
         });

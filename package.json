@@ -1,7 +1,7 @@
 {
   "name": "dxb",
   "description": "A set of utility for sfdx",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "author": "David Browaeys",
   "bugs": "https://github.com/davidbrowaeys/DXB/issues",
   "bin": {
@@ -16,6 +16,7 @@
     "awesome-typescript-loader": "^5.2.1",
     "chalk": "^2.4.2",
     "csv-parser": "^2.3.2",
+    "csv-split-stream": "^1.0.2",
     "csv-writer": "^1.6.0",
     "fast-csv": "^3.0.1",
     "request-promise": "^4.2.4",

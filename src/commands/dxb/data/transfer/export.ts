@@ -49,7 +49,7 @@ export default class DataTransferExport extends SfdxCommand {
       return new Promise((resolve, reject) => {
         job.fields = job.fields.replace(/ /g,'');
         const exportfile = path.join(this.outputdir,job.filename);
-        this.ux.log(`\nRegister export for [${job.objectName},${exportfile}]`);
+        console.log(`Register export for [\x1b[33m${job.objectName},${exportfile}\x1b[0m]`);
         let query:string = `select ${job.fields.replace(/ /g,'')} from ${job.objectName}`;
         if (job.where){
           query += ` where ${job.where}`;
@@ -70,8 +70,7 @@ export default class DataTransferExport extends SfdxCommand {
             records.push(record);
           })
           .on("end", function() {
-            console.log("total in database : " + query.totalSize);
-            console.log("total fetched : " + query.totalFetched);
+            console.log('Total Records Exported :',`\x1b[32m${query.totalFetched}\x1b[0m`, 'record(s)\n');
             var headers = [];
               job.fields.forEach(function(key) {
                   const k = key.trim().toLowerCase();
@@ -96,7 +95,6 @@ export default class DataTransferExport extends SfdxCommand {
                 });
                 delete element.attributes;
               });
-              console.log('Exported :',records.length, 'record(s)\n');
               csvWriter.writeRecords(records)       // returns a promise
               .then(() => {
                   resolve(job);

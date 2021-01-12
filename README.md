@@ -20,6 +20,23 @@ Some of the commands required some configuration. So in order to fully utilize D
   ```shell
   sfdx dxb:install
   ``` 
+ ### Options
+ 
+ * *defaultdurationdays*: override default scratch org duration to 30
+ * *packages*: list of managed package id's for scratch org creation
+ * *userPermissionsKnowledgeUser* : mark scratch org user as Knowledge User
+ * *deferPermissionSet* : path of defer shring rule permission set metadat to deploy, i.e.: force-app/main/default/permissionsets/Manage_Defer_Sharing_Permissions.permissionset-meta.xml
+ * *deferSharingUser* : name of the defer shring rule permission set
+ * *manual_config_required*: dxb scratch org creation in the event process required a manual pre deployment
+ * *manual_config_start_url*: override default url when opening scratch org
+ * *manual_steps*: this attribute can be use to document manul pre deployment steps when using dxb org creation command. Only work along with *manual_config_start_url*.
+ * *apextemplatepath*: path to apex class template creation,i.e.: 
+ * *orgdefault_config*: this attribute allow to define a set of rule to override certain metadata attribute specific to scratch org creation that might not be supported, i.e. field update to assign record to specific user.
+    * *folder* : name of the metadata folder to look at 
+    * *rules* : set of rule for that metadata type
+        *  *regex* : regex to evaluate,i.e.: <runAsUser>.+</runAsUser>
+        *  *replaceby* : value to replace metadata attribute found by, use {{mergevalue}} in order to dynamically populate with the value define by mergefield
+        *  *mergefield* : name of the attribute to populate, only support username at this stage from scratch org username, but this could be extended with other in the future.
 
 ### Sample Definition Output
   ```json
@@ -38,6 +55,9 @@ Some of the commands required some configuration. So in order to fully utilize D
         "defaultdurationdays": "30",
         "packages": [],
         "pre_legacy_packages": [],
+        "userPermissionsKnowledgeUser" : true,
+        "deferPermissionSet": "force-app/main/default/permissionsets/Manage_Defer_Sharing_Permissions.permissionset-meta.xml",
+        "deferSharingUser": "Manage_Defer_Sharing_Permissions",
         "disableFeedTrackingHistory": [],
         "manual_config_required": false,
         "manual_config_start_url": "/ltng/switcher?destination=classic&referrer=%2Flightning%2Fsetup%2FSetupOneHome%2Fhome",

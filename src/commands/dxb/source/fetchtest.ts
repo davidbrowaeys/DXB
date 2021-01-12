@@ -5,7 +5,7 @@ import * as path from 'path';
 let basedir: string;
 export default class extends SfdxCommand {
 
-  public static description = 'This command calculated specified test classes base on source path.';
+  public static description = 'This command calculated specified test classes base on source path. This command is to use after source:delta.';
 
   public static examples = [
     `$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml`,
@@ -16,7 +16,7 @@ export default class extends SfdxCommand {
   public static args = [{ name: 'file' }];
 
   protected static flagsConfig = {
-    sourcepath: flags.string({ char: 'p', description: 'source path'}),
+    sourcepath: flags.string({ char: 'p', description: 'source path, comma separated if multiple'}),
     metatype: flags.string({ char: 't', description: 'metatype comma separated, i.e.: objects,classes,workflows', default: 'objects,classes,workflows' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
     testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
@@ -40,7 +40,6 @@ export default class extends SfdxCommand {
     let metatypes = this.flags.metatype.split(',');
     this.regex = this.flags.testclsnameregex;
     basedir = this.flags.basedir;
-
     let deltaMeta = sourcepath.split(',');
     //retrieve all classes
     this.getAllClasses(basedir);
@@ -69,8 +68,14 @@ export default class extends SfdxCommand {
       this.testClasses.push(element);
       return;
     }
+    //do we have a sibling test class with same name ? 
+    var siblingTestClass = this.allClasses.find(f => f.search(element + 'Test') >= 0);
+    if (siblingTestClass){
+      let file:any = path.parse(siblingTestClass);
+      if (!this.testClasses.includes(file.name))this.testClasses.push(file.name);
+    }
     //go through each classes and check if element is referenced in the file content (case senstive ?!)
-    this.allClasses.forEach(f => {
+    this.allClasses.forEach((f) => {
       let file: any = path.parse(f);
       if (!this.testClasses.includes(file.name)) {
         var content = fs.readFileSync(f).toString();
@@ -81,7 +86,6 @@ export default class extends SfdxCommand {
       }
     });
   }
-
   public getAllClasses(directory: string) {
     var currentDirectorypath = path.join(directory);
 

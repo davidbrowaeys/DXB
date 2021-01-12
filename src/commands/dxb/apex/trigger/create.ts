@@ -25,16 +25,8 @@ const fs = require('fs');
             description: 'set api version of the generated class'
         })
     };
-    // Comment this out if your command does not require an org username
-    protected static requiresUsername = false;
 
-    // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = false;
-
-    // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = false;
-
-    public async run() {
+    public async run() : Promise<any> {
         const project = await SfdxProject.resolve();
         var config: any = await project.resolveProjectConfig();
         const sobject = this.flags.sobject;

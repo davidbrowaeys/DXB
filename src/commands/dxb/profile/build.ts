@@ -120,13 +120,13 @@ export default class PofileBuild extends SfdxCommand {
         profilename : flags.string({char:'p',description:'Profile name to be converted'})
     };
     // Comment this out if your command does not require an org username
-    protected static requiresUsername = true;
+    protected static requiresUsername = false;
   
     // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = true;
+    protected static supportsDevhubUsername = false;
   
     // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = false;
+    protected static requiresProject = true;
   
     public async run() {
         var profilename = this.flags.profilename;

@@ -254,6 +254,15 @@ export default class Org extends SfdxCommand {
       console.log('No setup data...');
     }
 
+    if (config.default_user_role){
+      var roleResult = JSON.parse(exec(`sfdx force:data:soql:query -q "select Id from UserRole where DeveloperName = ${config.default_user_role}" -u ${orgname} --json`).toString());
+      if (roleResult && roleResult.result &&  roleResult.result.totalSize === 1){
+        console.log(exec(`sfdx force:data:record:update -s User -w "Name='User User'" -v "UserRoleId=${roleResult.result.records[0].Id}" -u ${orgname}`).toString());
+      }else{
+        console.log('Default role not found');
+      }
+    }
+
     //create other user, this also fix FLS being deleted from profile
     if (config.user_def_file){
       output = await this.create_user(orgname, config.user_alias_prefix, config.user_def_file);

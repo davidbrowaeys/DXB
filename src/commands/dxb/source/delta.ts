@@ -1,5 +1,9 @@
 import { flags, SfdxCommand } from '@salesforce/command';
+import { SfdxProject } from '@salesforce/core';
 import {execSync as exec} from 'child_process';
+import * as path from 'path';
+import * as js2xmlparser from 'js2xmlparser';
+import * as fs from 'fs';
 
 let basedir: string;
 export default class extends SfdxCommand {
@@ -18,6 +22,7 @@ export default class extends SfdxCommand {
     mode: flags.string({ char: 'm', description: 'commitid|tags|branch', default: "commitid" }),
     deltakey: flags.string({ char: 'k', description: 'commit id, tags prefix or name, branch name' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
+    outputpackage: flags.string({ char: 'p', description: 'output path of the package.xml to generate, i.e.: ./manifest'}),
     testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
   };
 
@@ -34,19 +39,68 @@ export default class extends SfdxCommand {
   protected allClasses: string[] = [];
   protected processedClasses: string[] = [];
   protected regex;
+  protected projectConfig;
+
   public async run() {
+    //project config
+    const project = await SfdxProject.resolve();
+    this.projectConfig = await project.resolveProjectConfig();
+    //flags
     let mode = this.flags.mode;
     let deltakey = this.flags.deltakey;
+    let outputpackage = this.flags.outputpackage;
     this.regex = this.flags.testclsnameregex;
     basedir = this.flags.basedir;
-
+    //run delta
     let deltaMeta = this.getDeltaChanges(mode, deltakey);
+    //build package.xml ?   
+    if (outputpackage){
+      return {deltaMeta:this.buildPackageXml(outputpackage,deltaMeta)};
+    }
     let deployOutput = '';
     if (deltaMeta && deltaMeta.length > 0) {
       deployOutput += `${deltaMeta.join(',')}`;
     } 
     this.ux.log(deployOutput);
     return { deltaMeta }
+  }
+  private buildPackageXml(outputpackage,deltaMeta){
+    var metadataConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../lib/metadata-def.json')).toString());
+    var packageJson:any = {
+      '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' },
+      'version' : this.projectConfig.sourceApiVersion,
+      types : []
+    };
+    var requiredParent = ['Report','Dashboard', 'EmailTemplate','Document']
+    var requiredParentOnly = ['LightningComponentBundle','AuraDefinitionBundle', 'StaticResource','CustomObject','ExperienceBundle'];
+    //transform here
+    deltaMeta.forEach(file => {
+      file = path.parse(file);
+      var metadataDir = file.dir.split(basedir).join('').split('/').filter( x => x != '');
+      if (metadataConfig[metadataDir[0]]){
+        var metaType = metadataConfig[metadataDir[0]];
+        var fileName = file.name.split(new RegExp('\\.','g'))[0];
+        var tp = packageJson.types.find((t:any) => t.name === metaType);
+        if (!tp){
+          tp = {
+            members:[],
+            name : metaType
+          }
+          packageJson.types.push(tp);
+        }
+        if ( (requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)){
+          if(!tp.members.includes(metadataDir[1]))tp.members.push(metadataDir[1]);
+          fileName = metadataDir[1] +'/'+fileName;
+        }
+        if (!tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)) tp.members.push(fileName);
+      }
+    });
+    //write package.xml
+    if (!fs.existsSync(outputpackage)) {
+        fs.mkdirSync(outputpackage);
+    }
+    var xml = js2xmlparser.parse("Package", packageJson, { declaration: { encoding: 'UTF-8' }});
+    fs.writeFileSync(outputpackage+'/package.xml', xml);
   }
   private onlyUnique(value: any, index: any, self: any) {
     return self.indexOf(value) === index && value.startsWith(basedir) && value.indexOf('lwc/jsconfig.json') < 0;

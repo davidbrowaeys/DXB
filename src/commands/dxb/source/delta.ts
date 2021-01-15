@@ -2,7 +2,6 @@ import { flags, SfdxCommand } from '@salesforce/command';
 import { SfdxProject } from '@salesforce/core';
 import {execSync as exec} from 'child_process';
 import * as path from 'path';
-import * as js2xmlparser from 'js2xmlparser';
 import * as fs from 'fs';
 
 let basedir: string;
@@ -65,6 +64,7 @@ export default class extends SfdxCommand {
     return { deltaMeta }
   }
   private buildPackageXml(outputpackage,deltaMeta){
+    var js2xmlparser = require('js2xmlparser');
     var metadataConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../lib/metadata-def.json')).toString());
     var packageJson:any = {
       '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' },

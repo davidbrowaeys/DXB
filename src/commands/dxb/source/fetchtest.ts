@@ -73,7 +73,8 @@ export default class extends SfdxCommand {
 					var parser = new xml2js.Parser({ "explicitArray": false });
 					parser.parseString(data, function (err, result) {
 						const classPath = path.join(basedir, 'classes');
-						result.Package.types.forEach(metaType => {
+						var metadata_types = Array.isArray(result.Package.types) ? result.Package.types : [result.Package.types];
+						metadata_types.forEach(metaType => {
 							if (metaType.name === 'ApexClass') {
 								if (Array.isArray(metaType.members)) {
 									metaType.members.forEach(elem => {

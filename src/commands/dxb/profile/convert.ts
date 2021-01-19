@@ -32,7 +32,7 @@ function convertProfile(profilename) {
                 "loginIpRanges": result.Profile.loginIpRanges,
                 "userPermissions": result.Profile.userPermissions
             }, null, 2));
-            //classAccesses
+            
             if (!result) {
                 console.log(`Could not split ${profilename}`);
                 return;

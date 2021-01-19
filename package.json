@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.4.7",
+	"version": "1.5.1",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -38,7 +38,7 @@
 		"ts-node": "^8",
 		"tslint": "^5",
 		"typescript": "^3.9.7",
-		"xml2js": "^0.4.19"
+		"xml2js": "^0.4.23"
 	},
 	"engines": {
 		"node": ">=8.0.0"

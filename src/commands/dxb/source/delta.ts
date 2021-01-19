@@ -72,6 +72,7 @@ export default class extends SfdxCommand {
     };
     var requiredParent = ['Report','Dashboard', 'EmailTemplate','Document']
     var requiredParentOnly = ['LightningComponentBundle','AuraDefinitionBundle', 'StaticResource','CustomObject','ExperienceBundle'];
+    var useWildcard = ['QuickAction'];
     //transform here
     deltaMeta.forEach(file => {
       file = path.parse(file);
@@ -79,6 +80,7 @@ export default class extends SfdxCommand {
       if (metadataConfig[metadataDir[0]]){
         var metaType = metadataConfig[metadataDir[0]];
         var fileName = file.name.split(new RegExp('\\.','g'))[0];
+        
         var tp = packageJson.types.find((t:any) => t.name === metaType);
         if (!tp){
           tp = {
@@ -87,11 +89,16 @@ export default class extends SfdxCommand {
           }
           packageJson.types.push(tp);
         }
-        if ( (requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)){
-          if(!tp.members.includes(metadataDir[1]))tp.members.push(metadataDir[1]);
-          fileName = metadataDir[1] +'/'+fileName;
+        if (useWildcard.includes(metaType)){
+          fileName = '*'
         }
-        if (!tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)) tp.members.push(fileName);
+        if ( (requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)){
+          if(metadataDir[1] && !tp.members.includes(metadataDir[1])){
+            tp.members.push(metadataDir[1]);
+            fileName = metadataDir[1] +'/'+fileName;
+          }
+        }
+        if (fileName && !tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)) tp.members.push(fileName);
       }
     });
     //write package.xml

@@ -5,7 +5,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 let basedir: string;
-let diff_filter= "AMR";
 export default class extends SfdxCommand {
 
   public static description = 'This command generate delta package by doing git diff.';

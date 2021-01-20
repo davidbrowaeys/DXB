@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 let basedir: string;
+let diff_filter= "AMR";
 export default class extends SfdxCommand {
 
   public static description = 'This command generate delta package by doing git diff.';
@@ -12,6 +13,7 @@ export default class extends SfdxCommand {
   public static examples = [
     `$ sfdx dxb:source:delta -m tags -k mytag`,
     `$ sfdx dxb:source:delta -m branch -k origin/master`,
+    `$ sfdx dxb:source:delta -m branch -k origin/master -p deltamanifest`,
     `$ sfdx dxb:source:delta -m commitid -k 123456`,
   ];
 
@@ -22,7 +24,8 @@ export default class extends SfdxCommand {
     deltakey: flags.string({ char: 'k', description: 'commit id, tags prefix or name, branch name' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
     outputpackage: flags.string({ char: 'p', description: 'output path of the package.xml to generate, i.e.: ./manifest'}),
-    testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
+    testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' }),
+    destructivechange: flags.boolean({char: 'x', description: 'Indicate if need to generate destructivePackage.xml (experimental not working yet)', default: false})
   };
 
   // Comment this out if your command does not require an org username
@@ -50,11 +53,16 @@ export default class extends SfdxCommand {
     let outputpackage = this.flags.outputpackage;
     this.regex = this.flags.testclsnameregex;
     basedir = this.flags.basedir;
+    let destructivechange = this.flags.destructivechange;
     //run delta
     let deltaMeta = this.getDeltaChanges(mode, deltakey);
+    if (destructivechange){
+      let deleteFiles = this.getDeltaChanges(mode, deltakey,'D');
+      this.buildPackageXml(outputpackage,deleteFiles,'destructiveChanges.xml');
+    }
     //build package.xml ?   
     if (outputpackage){
-      return {deltaMeta:this.buildPackageXml(outputpackage,deltaMeta)};
+      return {deltaMeta:this.buildPackageXml(outputpackage,deltaMeta, 'package.xml')};
     }
     let deployOutput = '';
     if (deltaMeta && deltaMeta.length > 0) {
@@ -63,7 +71,7 @@ export default class extends SfdxCommand {
     this.ux.log(deployOutput);
     return { deltaMeta }
   }
-  private buildPackageXml(outputpackage,deltaMeta){
+  private buildPackageXml(outputpackage,deltaMeta, packageFileName){
     var js2xmlparser = require('js2xmlparser');
     var packageJson:any = {
       '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' },
@@ -106,15 +114,15 @@ export default class extends SfdxCommand {
         fs.mkdirSync(outputpackage);
     }
     var xml = js2xmlparser.parse("Package", packageJson, { declaration: { encoding: 'UTF-8' }});
-    fs.writeFileSync(outputpackage+'/package.xml', xml);
+    fs.writeFileSync(path.join(outputpackage,packageFileName), xml);
   }
   private onlyUnique(value: any, index: any, self: any) {
     return self.indexOf(value) === index && value.startsWith(basedir) && value.indexOf('lwc/jsconfig.json') < 0;
   }
-  public getDeltaChanges(mode: any, deltakey: any): any {
+  public getDeltaChanges(mode: any, deltakey: any,filter:string='AMR'): any {
     var gitresult;
     if (mode === 'branch') {
-      gitresult = exec(`git diff ${deltakey} --name-only --diff-filter=AMR`).toString().split('\n');
+      gitresult = exec(`git diff ${deltakey} --name-only --diff-filter=${filter}`).toString().split('\n');
     } else if (mode === 'tags') {
       if (deltakey) {
         gitresult = exec(`git diff $(git describe --match ${deltakey}* --abbrev=0 --all)..HEAD --name-only --diff-filter=AMR`).toString().split('\n');

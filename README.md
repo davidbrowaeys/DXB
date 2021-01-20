@@ -326,7 +326,7 @@ Sample output, delta_manifest/package.xml
     </types>
 </<Package>
 ```
-You can not reference the generate xml in your sfdx deploy command
+You can now reference the generated xml in your sfdx deploy command
 ```shell
 sfdx force:source:deploy -x delta_manifest/package.xml -u targetenv -g
 ```

@@ -162,13 +162,13 @@ Another way of doing is developers simply use the commands locally and decompose
 
 * Convert & Build a single profile
   ```shell
-  sfdx dxb:profile:build -p Admin -o force-app/main/default/profiles
+  sfdx dxb:profile:build -p Admin -r force-app/main/default/profiles
   sfdx dxb:profile:convert -p Admin -r src/profiles
   ```
 
 * Convert & Build all profile
   ```shell
-  sfdx dxb:profile:build -o src/profiles
+  sfdx dxb:profile:build -r src/profiles
   sfdx dxb:profile:convert -r src/profiles
   ```
 
@@ -182,7 +182,7 @@ sfdx dxb:user:access:why -o Product2 -f External_ID__c -i johndoe@abc.com.au
 ```
 
 ### Clean your permission sets
-In regards to permission set, if you want to remove access of a specific objetcs, fields, ... you simply need to remove the whole tags from the permissiom, you do not need to set the access to false. In many organisation, I see people doing prod sync, which increase the size of the perm set metadata files, because salesforce api will fetch everything that is included in the ```mdapi:retrieve```. This those seemns to be the case for profiles though. 
+In regards to permission set, if you want to remove access of a specific objetcs, fields, ... you simply need to remove the whole tags from the permissiom, you do not need to set the access to false. In many organisation, I see people doing prod sync, which increase the size of the perm set metadata files, because salesforce api will fetch everything that is included in the ```mdapi:retrieve```. This doesn't seem to be the case for profiles though, you must explicitly mark something as false. 
 
 The idea of this command is to delete those unnecessary false access from files and keep your permission set clean. 
 ```shell
@@ -238,7 +238,7 @@ sfdx dxb:data:transfer:import -f data/data-def.json -d data/dev -u <targetEnv>
 ```
 
 #### Azure Pipeline
-How does it looks like in your yaml ? 
+How does it looks like in your yaml ? Reference data are usually store in your repo. But you could also decide to transfer from one dedicated env to another.
 ```yaml
 - script: |
     sfdx dxb:data:transfer:export -f data/data-def.json -d data/dev -u <sourceEnv>
@@ -301,4 +301,64 @@ if (delta.testClasses != null && delta.testClasses.isEmpty() == false){
 }
 def cmd = "sfdx force:source:deploy -p "+delta.deltaMeta.join(',')+" -u prod -w 600 "+options;
 bat cmd;
+```
+
+The challenge of this option is that if you delta is big, you might encounter long arguments list exception from your shell. Lately I've updated the delta to generate a proper package.xml.
+
+```shell
+sfdx dxb:source:delta -m branch -k origin/master -l RunSpecifiedTests -p delta_manifest
+```
+
+Sample output, delta_manifest/package.xml
+```xml
+<?xml version='1.0' encoding='UTF-8'?>
+<Package xmlns='http://soap.sforce.com/2006/04/metadata'>
+    <version>50.0</version>
+    <types>
+        <members>MyClass</members>
+        <members>MyTestClass</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Account</members>
+        <members>Invoice__c</members>
+        <name>CustomObject</name>
+    </types>
+</<Package>
+```
+You can not reference the generate xml in your sfdx deploy command
+```shell
+sfdx force:source:deploy -x delta_manifest/package.xml -u targetenv -g
+```
+
+or using the mdapi with src conversion and add your destructive change manifest into it.
+```shell
+sfdx force:source:convert -x delta_manifest/package.xml --outputdir mdapioutput
+cp destructiveChanges/destructiveChanges.xml mdapioutput/
+sfdx force:mdapi:deploy -u targetenv -l RunLocalTests w 600 -d mdapioutput -g
+```
+
+The fetch test command can also be adapted to read at the generated manifest.
+```shell
+sfdx dxb:source:fetchtest -x delta_manifest/package.xml > testCLasses
+```
+
+Sample Output
+```shell
+-r "MyTestClass"
+```
+
+I've been using this technique in a few project now and it has been quite good. Some other consideration is that your pipeline must be adapted if your delta doesn't contain metadata that depend on test classes in which case I check if my testClasses file contains something, if no then update TestLevel to NoTestRun. 
+
+```bash
+if [[ "$TESTLEVEL" == "RunSpecifiedTests" ]]
+then 
+  TESTCLASSES=$(<testClasses)
+  if [ -s "testClasses" ] 
+  then 
+    echo "-    Test Classes: $TESTCLASSES"
+  else
+    TESTLEVEL="NoTestRun"
+  fi
+fi
 ```

@@ -73,20 +73,22 @@ export default class extends SfdxCommand {
 					var parser = new xml2js.Parser({ "explicitArray": false });
 					parser.parseString(data, function (err, result) {
 						const classPath = path.join(basedir, 'classes');
-						var metadata_types = Array.isArray(result.Package.types) ? result.Package.types : [result.Package.types];
-						metadata_types.forEach(metaType => {
-							if (metaType.name === 'ApexClass') {
-								if (Array.isArray(metaType.members)) {
-									metaType.members.forEach(elem => {
-										getTestClasses(classPath, 'classes', elem);
-									});
-								} else {
-									getTestClasses(classPath, 'classes', metaType.members);
+						if (result.Package.types){
+							var metadata_types = Array.isArray(result.Package.types) ? result.Package.types : [result.Package.types];
+							metadata_types.forEach(metaType => {
+								if (metaType.name === 'ApexClass') {
+									if (Array.isArray(metaType.members)) {
+										metaType.members.forEach(elem => {
+											getTestClasses(classPath, 'classes', elem);
+										});
+									} else {
+										getTestClasses(classPath, 'classes', metaType.members);
+									}
 								}
+							});
+							if (testClasses && testClasses.length > 0) {
+								console.log(` -r "${testClasses.join(',')}"`);
 							}
-						});
-						if (testClasses && testClasses.length > 0) {
-							console.log(` -r "${testClasses.join(',')}"`);
 						}
 					});
 				});

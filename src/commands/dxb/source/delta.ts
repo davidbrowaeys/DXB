@@ -1,6 +1,6 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import { SfdxProject } from '@salesforce/core';
-import {execSync as exec} from 'child_process';
+import { execSync as exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -22,9 +22,9 @@ export default class extends SfdxCommand {
     mode: flags.string({ char: 'm', description: 'commitid|tags|branch', default: "commitid" }),
     deltakey: flags.string({ char: 'k', description: 'commit id, tags prefix or name, branch name' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
-    outputpackage: flags.string({ char: 'p', description: 'output path of the package.xml to generate, i.e.: ./manifest'}),
+    outputpackage: flags.string({ char: 'p', description: 'output path of the package.xml to generate, i.e.: ./manifest' }),
     testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' }),
-    destructivechange: flags.boolean({char: 'x', description: 'Indicate if need to generate destructivePackage.xml (experimental not working yet)', default: false})
+    destructivechange: flags.boolean({ char: 'x', description: 'Indicate if need to generate destructivePackage.xml (experimental not working yet)', default: false })
   };
 
   // Comment this out if your command does not require an org username
@@ -55,71 +55,75 @@ export default class extends SfdxCommand {
     let destructivechange = this.flags.destructivechange;
     //run delta
     let deltaMeta = this.getDeltaChanges(mode, deltakey);
-    if (destructivechange){
-      let deleteFiles = this.getDeltaChanges(mode, deltakey,'D');
-      this.buildPackageXml(outputpackage,deleteFiles,'destructiveChanges.xml');
+    if (destructivechange) {
+      let deleteFiles = this.getDeltaChanges(mode, deltakey, 'D');
+      this.buildPackageXml(outputpackage, deleteFiles, 'destructiveChanges.xml');
     }
     //build package.xml ?   
-    if (outputpackage){
-      return {deltaMeta:this.buildPackageXml(outputpackage,deltaMeta, 'package.xml')};
+    if (outputpackage) {
+      return { deltaMeta: this.buildPackageXml(outputpackage, deltaMeta, 'package.xml') };
     }
     let deployOutput = '';
     if (deltaMeta && deltaMeta.length > 0) {
       deployOutput += `${deltaMeta.join(',')}`;
-    } 
+    }
     this.ux.log(deployOutput);
     return { deltaMeta }
   }
-  private buildPackageXml(outputpackage,deltaMeta, packageFileName){
+  private buildPackageXml(outputpackage, deltaMeta, packageFileName) {
     var js2xmlparser = require('js2xmlparser');
-    var packageJson:any = {
+    var packageJson: any = {
       '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' },
-      'version' : this.projectConfig.sourceApiVersion,
-      types : []
+      'version': this.projectConfig.sourceApiVersion,
+      types: []
     };
-    var requiredParent = ['Report','Dashboard', 'EmailTemplate','Document']
-    var requiredParentOnly = ['LightningComponentBundle','AuraDefinitionBundle', 'StaticResource','CustomObject','ExperienceBundle'];
+    var requiredParent = ['Report', 'Dashboard', 'EmailTemplate', 'Document']
+    var requiredParentOnly = ['LightningComponentBundle', 'AuraDefinitionBundle', 'StaticResource', 'CustomObject', 'ExperienceBundle'];
 
     //transform here
     deltaMeta.forEach(file => {
       file = path.parse(file);
-      var metadataDir = file.dir.split(basedir).join('').split('/').filter( x => x != '');
-      if (metadataConfig[metadataDir[0]]){
+      var metadataDir = file.dir.split(basedir).join('').split('/').filter(x => x != '');
+      if (metadataConfig[metadataDir[0]]) {
         var metaType = metadataConfig[metadataDir[0]];
-        var fileSplit = file.name.split(new RegExp('\\.','g'));
-        var fileName = file.name.split(new RegExp('\\.','g'))[0];
+        var fileSplit = file.name.split(new RegExp('\\.', 'g'));
+        var fileName = file.name.split(new RegExp('\\.', 'g'))[0];
         if (fileSplit.length === 3) {
-          fileName = fileSplit[0]+'.'+fileSplit[1];
+          fileName = fileSplit[0] + '.' + fileSplit[1];
         }
-        var tp = packageJson.types.find((t:any) => t.name === metaType);
-        if (!tp){
+        var tp = packageJson.types.find((t: any) => t.name === metaType);
+        if (!tp) {
           tp = {
-            members:[],
-            name : metaType
+            members: [],
+            name: metaType
           }
           packageJson.types.push(tp);
         }
-        
-        if ( (requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)){
-          if(metadataDir[1] && !tp.members.includes(metadataDir[1])){
+
+        if ((requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)) {
+          if (metadataDir[1] && !tp.members.includes(metadataDir[1])) {
             tp.members.push(metadataDir[1]);
-            fileName = metadataDir[1] +'/'+fileName;
+            fileName = metadataDir[1] + '/' + fileName;
+          } else if (fileName && !tp.members.includes(fileName)){
+            tp.members.push(fileName);
           }
         }
-        if (fileName && !tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)) tp.members.push(fileName);
+        if (fileName && !tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)){
+          tp.members.push(fileName);
+        }
       }
     });
     //write package.xml
     if (!fs.existsSync(outputpackage)) {
-        fs.mkdirSync(outputpackage);
+      fs.mkdirSync(outputpackage);
     }
-    var xml = js2xmlparser.parse("Package", packageJson, { declaration: { encoding: 'UTF-8' }});
-    fs.writeFileSync(path.join(outputpackage,packageFileName), xml);
+    var xml = js2xmlparser.parse("Package", packageJson, { declaration: { encoding: 'UTF-8' } });
+    fs.writeFileSync(path.join(outputpackage, packageFileName), xml);
   }
   private onlyUnique(value: any, index: any, self: any) {
     return self.indexOf(value) === index && value.startsWith(basedir) && value.indexOf('lwc/jsconfig.json') < 0;
   }
-  public getDeltaChanges(mode: any, deltakey: any,filter:string='AMR'): any {
+  public getDeltaChanges(mode: any, deltakey: any, filter: string = 'AMR'): any {
     var gitresult;
     if (mode === 'branch') {
       gitresult = exec(`git diff ${deltakey} --name-only --diff-filter=${filter}`).toString().split('\n');

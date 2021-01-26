@@ -100,17 +100,36 @@ export default class extends SfdxCommand {
           packageJson.types.push(tp);
         }
 
-        if ((requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)) {
-          if (metadataDir[1] && !tp.members.includes(metadataDir[1])) {
-            tp.members.push(metadataDir[1]);
+        if (requiredParent.includes(metaType) && metadataDir[1]){
+          if (metadataDir[1]){
+            
+            if (!tp.members.includes(metadataDir[1])) tp.members.push(metadataDir[1]);
             fileName = metadataDir[1] + '/' + fileName;
-          } else if (fileName && !tp.members.includes(fileName)){
-            tp.members.push(fileName);
+
+            if (fileName && !tp.members.includes(fileName)){
+              tp.members.push(fileName);
+            }
           }
-        }
-        if (fileName && !tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)){
+        }else if (requiredParentOnly.includes(metaType)){
+          console.log(metadataDir[1],fileName);
+          if (metadataDir[1]){
+            if (!tp.members.includes(metadataDir[1])) tp.members.push(metadataDir[1]);
+          }else if (fileName && !tp.members.includes(fileName)) tp.members.push(fileName);
+        }else if (fileName && !tp.members.includes(fileName)){
           tp.members.push(fileName);
         }
+
+        // if ((requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)) {
+        //   if (metadataDir[1] && !tp.members.includes(metadataDir[1])) {
+        //     tp.members.push(metadataDir[1]);
+        //     fileName = metadataDir[1] + '/' + fileName;
+        //   } else if (fileName && !tp.members.includes(fileName)){
+        //     tp.members.push(fileName);
+        //   }
+        // }
+        // if (fileName && !tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)){
+        //   tp.members.push(fileName);
+        // }
       }
     });
     //write package.xml

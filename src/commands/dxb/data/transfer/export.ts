@@ -18,7 +18,8 @@ export default class DataTransferExport extends SfdxCommand {
   
     protected static flagsConfig = {
         definitionfile: flags.string({char:'f',description:'path to a dxb data definition file',required:true}),
-        outputdir:flags.string({char:'d',description:'path export directory',default:'.'})
+        outputdir:flags.string({char:'d',description:'path export directory',default:'.'}),
+        querylimit:flags.number({char:'l',description:'Maximum number of records to fetch',default:500000}),
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
@@ -32,10 +33,11 @@ export default class DataTransferExport extends SfdxCommand {
     protected connection:Connection;
     protected outputdir:string;
     protected csvWriter:any;
-
+    protected querylimit:number;
     public async run() {
         let definitionfile = this.flags.definitionfile;
         this.outputdir = this.flags.outputdir;
+        this.querylimit = this.flags.outputdir;
         this.connection = this.org.getConnection();
         JSON.parse(fs.readFileSync(definitionfile).toString())
           .objects.reduce((accumulatorPromise, elem) => {
@@ -103,7 +105,7 @@ export default class DataTransferExport extends SfdxCommand {
           .on("error", function(err) {
             console.error(err);
           })
-          .run({ autoFetch : true, maxFetch : 100000 }); // synonym of Query#execute();
+          .run({ autoFetch : true, maxFetch : this.querylimit }); // synonym of Query#execute();
       });
     }
 }

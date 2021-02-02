@@ -111,25 +111,12 @@ export default class extends SfdxCommand {
             }
           }
         }else if (requiredParentOnly.includes(metaType)){
-          console.log(metadataDir[1],fileName);
           if (metadataDir[1]){
             if (!tp.members.includes(metadataDir[1])) tp.members.push(metadataDir[1]);
           }else if (fileName && !tp.members.includes(fileName)) tp.members.push(fileName);
         }else if (fileName && !tp.members.includes(fileName)){
           tp.members.push(fileName);
         }
-
-        // if ((requiredParent.includes(metaType) && metadataDir[1]) || requiredParentOnly.includes(metaType)) {
-        //   if (metadataDir[1] && !tp.members.includes(metadataDir[1])) {
-        //     tp.members.push(metadataDir[1]);
-        //     fileName = metadataDir[1] + '/' + fileName;
-        //   } else if (fileName && !tp.members.includes(fileName)){
-        //     tp.members.push(fileName);
-        //   }
-        // }
-        // if (fileName && !tp.members.includes(fileName) && !requiredParentOnly.includes(metaType)){
-        //   tp.members.push(fileName);
-        // }
       }
     });
     //write package.xml
@@ -142,18 +129,18 @@ export default class extends SfdxCommand {
   private onlyUnique(value: any, index: any, self: any) {
     return self.indexOf(value) === index && value.startsWith(basedir) && value.indexOf('lwc/jsconfig.json') < 0;
   }
-  public getDeltaChanges(mode: any, deltakey: any, filter: string = 'AMR'): any {
+  public getDeltaChanges(mode: any, deltakey: any, filter: string = 'AMRU'): any {
     var gitresult;
     if (mode === 'branch') {
       gitresult = exec(`git diff ${deltakey} --name-only --diff-filter=${filter}`).toString().split('\n');
     } else if (mode === 'tags') {
       if (deltakey) {
-        gitresult = exec(`git diff $(git describe --match ${deltakey}* --abbrev=0 --all)..HEAD --name-only --diff-filter=AMR`).toString().split('\n');
+        gitresult = exec(`git diff $(git describe --match ${deltakey}* --abbrev=0 --all) --name-only --diff-filter=${filter}`).toString().split('\n');
       } else {
-        gitresult = exec(`git diff $(git describe --tags --abbrev=0 --all)..HEAD --name-only --diff-filter=AMR`).toString().split('\n');
+        gitresult = exec(`git diff $(git describe --tags --abbrev=0 --all) --name-only --diff-filter=${filter}`).toString().split('\n');
       }
     } else {
-      gitresult = exec(`git diff --name-only ${deltakey} --diff-filter=AMR`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
+      gitresult = exec(`git diff --name-only ${deltakey} --diff-filter=${filter}`).toString().split('\n'); //this only work with specific commit ids, how to get file that changed since last tag ? 
     }
     //filter unnecessary files
     var files = gitresult.filter(this.onlyUnique);

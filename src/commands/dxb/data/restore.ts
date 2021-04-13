@@ -85,10 +85,10 @@ export default class DataRestore extends SfdxCommand {
     //     }
     // }
 
-    private upsertRecords(object, filename){
+    private upsertRecords(object, filename, externalIdField = 'Id'){
         this.ux.log(object, filename);
         var csvFileIn:any = fs.createReadStream(filename);
-        this.connection.bulk.load(object, "upsert", {extIdField:'Id'}, csvFileIn, (err:any, rets:any) => {
+        this.connection.bulk.load(object, "upsert", {extIdField:externalIdField}, csvFileIn, (err:any, rets:any) => {
             if (err) { throw new SfdxError(err.message); }
             for (var i=0; i < rets.length; i++) {
                 if (rets[i].success) {

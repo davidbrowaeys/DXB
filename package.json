@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.6.1",
+	"version": "1.6.3",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -12,14 +12,15 @@
 		"@oclif/config": "^1.17.0",
 		"@oclif/errors": "^1.2.2",
 		"@salesforce/command": "^3.0.5",
-		"@salesforce/core": "^2.16.0",
+		"@salesforce/core": "^2.20.0",
 		"@salesforce/ts-types": "^1.4.3",
 		"awesome-typescript-loader": "^5.2.1",
-		"js2xmlparser": "^4.0.1",
 		"chalk": "^2.4.2",
 		"csv-parser": "^2.3.2",
 		"csv-split-stream": "^1.0.2",
 		"csv-writer": "^1.6.0",
+		"js2xmlparser": "^4.0.1",
+		"puppeteer": "^7.1.0",
 		"tslib": "^1",
 		"tty-table": "^2.7.0"
 	},

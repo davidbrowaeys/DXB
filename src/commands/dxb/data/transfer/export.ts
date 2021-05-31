@@ -81,7 +81,7 @@ export default class DataTransferExport extends SfdxCommand {
               var csvWriter = createCsvWriter({  
                   path: job.exportfile,
                   header: headers,
-                  encoding:'utf8'
+                  encoding:'utf-8'
               });
               records.forEach(element => {
                 job.fields.forEach(function(key) {

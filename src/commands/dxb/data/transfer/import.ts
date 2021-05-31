@@ -137,7 +137,7 @@ export default class DataTransferImport extends SfdxCommand {
                 path: config.importfile,
                 header: headers,
                 append: true,
-                encoding:'utf8'
+                encoding:'utf-8'
             });
             //start data masking
             var isHeader = true;

@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.6.4",
+	"version": "1.7.1",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -20,7 +20,6 @@
 		"csv-split-stream": "^1.0.2",
 		"csv-writer": "^1.6.0",
 		"js2xmlparser": "^4.0.1",
-		"puppeteer": "^7.1.0",
 		"tslib": "^1",
 		"tty-table": "^2.7.0"
 	},

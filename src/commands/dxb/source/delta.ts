@@ -103,7 +103,7 @@ export default class extends SfdxCommand {
         if (requiredParent.includes(metaType) && metadataDir[1]){
           if (metadataDir[1]){
             
-            if (!tp.members.includes(metadataDir[1])) tp.members.push(metadataDir[1]);
+            if (!tp.members.includes(metadataDir[1]) && metadataDir[1] !== 'unfiled$public') tp.members.push(metadataDir[1]);
             fileName = metadataDir[1] + '/' + fileName;
 
             if (fileName && !tp.members.includes(fileName)){

@@ -78,7 +78,7 @@ export default class extends SfdxCommand {
       types: []
     };
     var requiredParent = ['Report', 'Dashboard', 'EmailTemplate', 'Document']
-    var requiredParentOnly = ['LightningComponentBundle', 'AuraDefinitionBundle', 'StaticResource', 'CustomObject', 'ExperienceBundle'];
+    var requiredParentOnly = ['LightningComponentBundle', 'AuraDefinitionBundle', 'StaticResource', 'CustomObject', 'ExperienceBundle', 'CustomObjectTranslation'];
 
     //transform here
     deltaMeta.forEach(file => {

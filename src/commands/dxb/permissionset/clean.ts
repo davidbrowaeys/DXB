@@ -47,44 +47,74 @@ function clean(rootdir:string,profilename:string, extension:string){
                 // }
                 //objectPermissions
                 if (result.PermissionSet.objectPermissions){
-                    result.PermissionSet.objectPermissions = result.PermissionSet.objectPermissions.filter((value:any, index:any, arr:any) =>{
-                        return  value.allowCreate === 'true' || 
-                                value.allowDelete === 'true' || 
-                                value.allowEdit === 'true' || 
-                                value.allowRead === 'true' || 
-                                value.modifyAllRecords === 'true' || 
-                                value.viewAllRecords === 'true';
-                    });
+                    if(Array.isArray(result.PermissionSet.objectPermissions)){
+                        result.PermissionSet.objectPermissions = result.PermissionSet.objectPermissions.filter((value:any, index:any, arr:any) =>{
+                            return  value.allowCreate === 'true' || 
+                                    value.allowDelete === 'true' || 
+                                    value.allowEdit === 'true' || 
+                                    value.allowRead === 'true' || 
+                                    value.modifyAllRecords === 'true' || 
+                                    value.viewAllRecords === 'true';
+                        });
+                    }else if (  result.PermissionSet.objectPermissions.allowCreate === 'false' && 
+                                result.PermissionSet.objectPermissions.allowDelete === 'false' && 
+                                result.PermissionSet.objectPermissions.allowEdit === 'false' && 
+                                result.PermissionSet.objectPermissions.allowRead === 'false' && 
+                                result.PermissionSet.objectPermissions.modifyAllRecords === 'false' && 
+                                result.PermissionSet.fieldPermissions.viewAllRecords === 'false'){
+                        delete result.PermissionSet.objectPermissions;
+                    }
+                        
                 }
                 //fieldPermissions
                 if (result.PermissionSet.fieldPermissions){
-                    result.PermissionSet.fieldPermissions = result.PermissionSet.fieldPermissions.filter((value:any, index:any, arr:any) =>{
-                        return value.readable === 'true' || value.editable === 'true';
-                    });
+                    if(Array.isArray(result.PermissionSet.fieldPermissions)){
+                        result.PermissionSet.fieldPermissions = result.PermissionSet.fieldPermissions.filter((value:any, index:any, arr:any) =>{
+                            return value.readable === 'true' || value.editable === 'true';
+                        });
+                    }else if (result.PermissionSet.fieldPermissions.readable === 'false' && result.PermissionSet.fieldPermissions.editable){
+                        delete result.PermissionSet.fieldPermissions;
+                    }
                 }
                 //classAccesses
                 if (result.PermissionSet.classAccesses){
-                    result.PermissionSet.classAccesses = result.PermissionSet.classAccesses.filter((value:any, index:any, arr:any) =>{
-                        return value.enabled === 'true';
-                    });
+                    if(Array.isArray(result.PermissionSet.classAccesses)){
+                        result.PermissionSet.classAccesses = result.PermissionSet.classAccesses.filter((value:any, index:any, arr:any) =>{
+                            return value.enabled === 'true';
+                        });
+                    }else if (result.PermissionSet.classAccesses.enabled === 'false'){
+                        delete result.PermissionSet.classAccesses;
+                    }
                 }
                 //pageAccesses
                 if (result.PermissionSet.pageAccesses){
-                    result.PermissionSet.pageAccesses = result.PermissionSet.pageAccesses.filter((value:any, index:any, arr:any) =>{
-                        return value.enabled === 'true';
-                    });
+                    if(Array.isArray(result.PermissionSet.pageAccesses)){
+                        result.PermissionSet.pageAccesses = result.PermissionSet.pageAccesses.filter((value:any, index:any, arr:any) =>{
+                            return value.enabled === 'true';
+                        });
+                    }else if (result.PermissionSet.pageAccesses.enabled === 'false'){
+                        delete result.PermissionSet.pageAccesses;
+                    }
                 }
                 //userPermissions
                 if (result.PermissionSet.userPermissions){
-                    result.PermissionSet.userPermissions = result.PermissionSet.userPermissions.filter((value:any, index:any, arr:any) =>{
-                        return value.enabled === 'true';
-                    });
+                    if(Array.isArray(result.PermissionSet.userPermissions)){
+                        result.PermissionSet.userPermissions = result.PermissionSet.userPermissions.filter((value:any, index:any, arr:any) =>{
+                            return value.enabled === 'true';
+                        });
+                    }else if (result.PermissionSet.userPermissions.enabled === 'false'){
+                        delete result.PermissionSet.userPermissions;
+                    }
                 }
                 //recordTypeVisibilities
                 if (result.PermissionSet.recordTypeVisibilities){
-                    result.PermissionSet.recordTypeVisibilities = result.PermissionSet.recordTypeVisibilities.filter((value:any, index:any, arr:any) =>{
-                        return value.visible === 'true';
-                    });
+                    if(Array.isArray(result.PermissionSet.recordTypeVisibilities)){
+                        result.PermissionSet.recordTypeVisibilities = [...result.PermissionSet.recordTypeVisibilities].filter((value:any, index:any, arr:any) =>{
+                            return value.visible === 'true';
+                        });
+                    }else if (result.PermissionSet.recordTypeVisibilities.visible === 'false'){
+                        delete result.PermissionSet.recordTypeVisibilities;
+                    }
                 }
                 delete result.PermissionSet['$'];
                 result.PermissionSet['@'] = { xmlns: 'http://soap.sforce.com/2006/04/metadata' };

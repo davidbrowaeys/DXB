@@ -1,37 +1,36 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.7.3",
+	"version": "1.7.5",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
 		"sfdx": "bin/run"
 	},
 	"dependencies": {
-		"@oclif/command": "^1.8.0",
-		"@oclif/config": "^1.17.0",
-		"@oclif/errors": "^1.2.2",
-		"@salesforce/command": "^3.0.5",
-		"@salesforce/core": "^2.20.0",
-		"@salesforce/ts-types": "^1.4.3",
-		"awesome-typescript-loader": "^5.2.1",
-		"chalk": "^2.4.2",
+		"@salesforce/command": "^4.2.0",
+		"@salesforce/core": "^2.29.0",
+		"@salesforce/plugin-user": "^1.7.0",
+		"@salesforce/ts-types": "^1.5.20",
+		"chalk": "^4.1.2",
 		"csv-parser": "^2.3.2",
 		"csv-split-stream": "^1.0.2",
 		"csv-writer": "^1.6.0",
 		"js2xmlparser": "^4.0.1",
-		"tslib": "^1",
+		"salesforce-alm": "^53.6.0",
+		"tslib": "^2.1.0",
 		"tty-table": "^2.7.0"
 	},
 	"devDependencies": {
-		"@oclif/dev-cli": "1.22.0",
-		"@oclif/plugin-help": "^2",
-		"@oclif/test": "^1.2.4",
+		"@oclif/dev-cli": "1.26.5",
+		"@oclif/plugin-help": "3.2.9",
+		"@oclif/test": "^1.2.8",
 		"@oclif/tslint": "^3",
-		"@salesforce/dev-config": "^1.5.0",
+		"@salesforce/dev-config": "^2.1.0",
 		"@types/chai": "^4",
+		"@types/jsforce": "^1.9.23",
 		"@types/mocha": "^5",
-		"@types/node": "^10",
+		"@types/node": "^14.14.7",
 		"cli-table": "0.3.1",
 		"js2xmlparser": "^4.0.1",
 		"readline-sync": "^1.4.10",
@@ -41,7 +40,7 @@
 		"xml2js": "^0.4.23"
 	},
 	"engines": {
-		"node": ">=8.0.0"
+		"node": ">=12.0.0"
 	},
 	"files": [
 		"/bin",

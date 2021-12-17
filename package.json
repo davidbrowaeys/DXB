@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.7.5",
+	"version": "1.7.6",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -11,6 +11,7 @@
 		"@salesforce/command": "^4.2.0",
 		"@salesforce/core": "^2.29.0",
 		"@salesforce/plugin-user": "^1.7.0",
+		"@salesforce/source-deploy-retrieve": "^2.2.0",
 		"@salesforce/ts-types": "^1.5.20",
 		"chalk": "^4.1.2",
 		"csv-parser": "^2.3.2",

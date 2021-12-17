@@ -25,62 +25,59 @@ function buildProfile(profilename){
     if (profilesetting.loginIpRanges){
         profile["loginIpRanges"] = profilesetting.loginIpRanges;
     }
-    if (profilesetting.userPermissions){
-        profile["userPermissions"] = profilesetting.userPermissions;
-    }
     //applicationVisibilities
     profile.applicationVisibilities = [];
     if (fs.existsSync(profilepath+'/applicationVisibilities')) {
-        fs.readdirSync(profilepath+'/applicationVisibilities').forEach(file => {
+        fs.readdirSync(profilepath+'/applicationVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.applicationVisibilities.push(JSON.parse(fs.readFileSync(profilepath+'/applicationVisibilities/'+file).toString()));
         });
     }
     //classAccess
     profile.classAccesses = [];
     if (fs.existsSync(profilepath+'/classAccesses')) {
-        fs.readdirSync(profilepath+'/classAccesses').forEach(file => {
+        fs.readdirSync(profilepath+'/classAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.classAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/classAccesses/'+file).toString()));
         });
     }
     //customSettingAccesses
     profile.customSettingAccesses = [];
     if (fs.existsSync(profilepath+'/customSettingAccesses')) {
-        fs.readdirSync(profilepath+'/customSettingAccesses').forEach(file => {
+        fs.readdirSync(profilepath+'/customSettingAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.customSettingAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/customSettingAccesses/'+file).toString()));
         });
     }
     //externalDataSourceAccesses
     profile.externalDataSourceAccesses = [];
     if (fs.existsSync(profilepath+'/externalDataSourceAccesses')) {
-        fs.readdirSync(profilepath+'/externalDataSourceAccesses').forEach(file => {
+        fs.readdirSync(profilepath+'/externalDataSourceAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.externalDataSourceAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/externalDataSourceAccesses/'+file).toString()));
         });
     }
     //flowAccesses
     profile.flowAccesses = [];
     if (fs.existsSync(profilepath+'/flowAccesses')) {
-        fs.readdirSync(profilepath+'/flowAccesses').forEach(file => {
+        fs.readdirSync(profilepath+'/flowAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.flowAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/flowAccesses/'+file).toString()));
         });
     }
     //categoryGroupVisibilities
     profile.categoryGroupVisibilities = [];
     if (fs.existsSync(profilepath+'/categoryGroupVisibilities')) {
-        fs.readdirSync(profilepath+'/categoryGroupVisibilities').forEach(file => {
+        fs.readdirSync(profilepath+'/categoryGroupVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.categoryGroupVisibilities.push(JSON.parse(fs.readFileSync(profilepath+'/categoryGroupVisibilities/'+file).toString()));
         });
     }
     //customMetadataTypeAccesses
     profile.customMetadataTypeAccesses = [];
     if (fs.existsSync(profilepath+'/customMetadataTypeAccesses')) {
-        fs.readdirSync(profilepath+'/customMetadataTypeAccesses').forEach(file => {
+        fs.readdirSync(profilepath+'/customMetadataTypeAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.customMetadataTypeAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/customMetadataTypeAccesses/'+file).toString()));
         });
     }
     //customPermissions
     profile.customPermissions = [];
     if (fs.existsSync(profilepath+'/customPermissions')) {
-        fs.readdirSync(profilepath+'/customPermissions').forEach(file => {
+        fs.readdirSync(profilepath+'/customPermissions').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.customPermissions.push(JSON.parse(fs.readFileSync(profilepath+'/customPermissions/'+file).toString()));
         });
     }
@@ -89,7 +86,7 @@ function buildProfile(profilename){
     profile.fieldPermissions = [];
     profile.recordTypeVisibilities = [];
     if (fs.existsSync(profilepath+'/objectPermissions')) {
-        fs.readdirSync(profilepath+'/objectPermissions').forEach(file => {
+        fs.readdirSync(profilepath+'/objectPermissions').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             var objectpath = profilepath+'/objectPermissions/'+file;
             //objectPermissions
             if (fs.existsSync(objectpath+'/'+file+'.json')){
@@ -97,13 +94,13 @@ function buildProfile(profilename){
             }
             //fieldPermissions
             if (fs.existsSync(objectpath+'/fieldPermissions')){
-                fs.readdirSync(objectpath+'/fieldPermissions').forEach(file => {
+                fs.readdirSync(objectpath+'/fieldPermissions').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
                     profile.fieldPermissions.push(JSON.parse(fs.readFileSync(objectpath+'/fieldPermissions/'+file).toString()));
                 });
             }
             //recordTypeVisibilities
             if (fs.existsSync(objectpath+'/recordTypeVisibilities')){
-                fs.readdirSync(objectpath+'/recordTypeVisibilities').forEach(file => {
+                fs.readdirSync(objectpath+'/recordTypeVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
                     profile.recordTypeVisibilities.push(JSON.parse(fs.readFileSync(objectpath+'/recordTypeVisibilities/'+file).toString()));
                 });
             }
@@ -112,29 +109,36 @@ function buildProfile(profilename){
     //layoutAssignments
     profile.layoutAssignments = [];
     if (fs.existsSync(profilepath+'/layoutAssignments')) {
-        fs.readdirSync(profilepath+'/layoutAssignments').forEach(file => {
+        fs.readdirSync(profilepath+'/layoutAssignments').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.layoutAssignments.push(JSON.parse(fs.readFileSync(profilepath+'/layoutAssignments/'+file).toString()));
         });
     }
     //pageAccesses
     profile.pageAccesses = [];
     if (fs.existsSync(profilepath+'/pageAccesses')) {
-        fs.readdirSync(profilepath+'/pageAccesses').forEach(file => {
+        fs.readdirSync(profilepath+'/pageAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.pageAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/pageAccesses/'+file).toString()));
         });
     }
     //tabVisibilities
     profile.tabVisibilities = [];
     if (fs.existsSync(profilepath+'/tabVisibilities')) {
-        fs.readdirSync(profilepath+'/tabVisibilities').forEach(file => {
+        fs.readdirSync(profilepath+'/tabVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
             profile.tabVisibilities.push(JSON.parse(fs.readFileSync(profilepath+'/tabVisibilities/'+file).toString()));
         });
     }
+    //user permissions
+    if (profilesetting.userPermissions){
+        profile["userPermissions"] = profilesetting.userPermissions;
+    }
+    //sort profile attributes
+    profile = sortObjKeysAlphabetically(profile);
     var xml = js2xmlparser.parse("Profile", profile, { declaration: { encoding: 'UTF-8' }});
     fs.writeFileSync(sourcepath+'/'+profilename+'.profile-meta.xml', xml);
 }
 
-export default class PofileBuild extends SfdxCommand {
+const sortObjKeysAlphabetically = (obj) => Object.fromEntries(Object.entries(obj).sort());
+export default class ProfileBuild extends SfdxCommand {
 
     public static description = 'Convert profile xml into small chunks of json files';
   
@@ -156,7 +160,7 @@ export default class PofileBuild extends SfdxCommand {
         if (profilename){
             buildProfile(profilename);    
         }else{
-            fs.readdirSync(sourcepath).forEach(file => {
+            fs.readdirSync(sourcepath).sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
                 if (file.indexOf('profile-meta.xml') >= 0){
                     profilename = file.split('.')[0];
                     buildProfile(profilename);

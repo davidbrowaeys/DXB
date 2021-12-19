@@ -98,9 +98,6 @@ export default class extends SfdxCommand {
         const fileBase = file.base.split('-meta.xml')[0].split(new RegExp('\\.', 'g'));
         const fSuffix = fileBase.pop();
         const fName = fileBase.join('.');
-        console.log('================================');
-        console.log('File Detail:',file);
-        console.log('Meta Detail:',fileBase,fSuffix);
         //try to get direct metadata base on file suffix only, anything that is not in registry.strictDirectoryNames
         let metadataType:MetadataType = this.registryAccess.getTypeBySuffix(fSuffix);
         if (metadataType){

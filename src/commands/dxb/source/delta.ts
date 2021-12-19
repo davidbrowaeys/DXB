@@ -96,8 +96,11 @@ export default class extends SfdxCommand {
         const metadataDir = file.dir.split(basedir).join('').split('/').filter(x => x != '');
         //find metadata suffix and file name
         const fileBase = file.base.split('-meta.xml')[0].split(new RegExp('\\.', 'g'));
-        const fName = fileBase[0];
-        const fSuffix = fileBase[1];
+        const fSuffix = fileBase.pop();
+        const fName = fileBase.join('.');
+        console.log('================================');
+        console.log('File Detail:',file);
+        console.log('Meta Detail:',fileBase,fSuffix);
         //try to get direct metadata base on file suffix only, anything that is not in registry.strictDirectoryNames
         let metadataType:MetadataType = this.registryAccess.getTypeBySuffix(fSuffix);
         if (metadataType){
@@ -136,6 +139,11 @@ export default class extends SfdxCommand {
         var xml = js2xmlparser.parse("Package", this.packageJson, { declaration: { encoding: 'UTF-8' } });
         fs.writeFileSync(path.join(outputpackage, packageFileName), xml);
   }
+  /**
+   * Initialise new metadata type in package json object 
+   * @param metadataType Metadata type name
+   * @returns array for passedmetadata type
+   */
   private initMetadataTypeInPackage(metadataType:MetadataType){
     var tp = this.packageJson.types.find((t: any) => t.name === metadataType.name);
     if (!tp) {
@@ -147,12 +155,31 @@ export default class extends SfdxCommand {
     }
     return tp;
   }
+  /**
+   * Add metadata member to package json specific metadata type
+   * @param tp array of member for metadata type
+   * @param memberName name of member
+   */
   private addMemberToPackage(tp, memberName){
     if (!tp.members.includes(memberName))tp.members.push(memberName);
   }
+  /**
+   * Only keep unique files 
+   * @param value file path 
+   * @param index index in the array
+   * @param self array
+   * @returns filtered array
+   */
   private onlyUnique(value: any, index: any, self: any) {
     return self.indexOf(value) === index && value.startsWith(basedir) && value.indexOf('lwc/jsconfig.json') < 0;
   }
+  /**
+   * Identify files that has changes in order to form delta
+   * @param mode comparison mode : branch, tags, commitid
+   * @param deltakey branch/commit id or tag to compare against
+   * @param filter git filter, default to AMRU
+   * @returns 
+   */
   public getDeltaChanges(mode: any, deltakey: any, filter: string = 'AMRU'): any {
     var gitresult;
     if (mode === 'branch') {

@@ -100,7 +100,7 @@ export default class extends SfdxCommand {
         const fName = fileBase.join('.');
         //try to get direct metadata base on file suffix only, anything that is not in registry.strictDirectoryNames
         let metadataType:MetadataType = this.registryAccess.getTypeBySuffix(fSuffix);
-        if (metadataType){
+        if ((metadataType && fSuffix !== 'site' && fSuffix !== 'md') || (metadataType && fSuffix == 'md' && file.base.endsWith('-meta.xml'))){
             var tp = this.initMetadataTypeInPackage(metadataType);
             const metadataTypIndex = metadataDir.findIndex(x => metadataType.directoryName === x);
             //add member to packageJson, if inFolder, then need to add also the parent, if strictDirectory then add parent only

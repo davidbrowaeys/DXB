@@ -62,12 +62,18 @@ export default class extends SfdxCommand {
     let outputpackage = this.flags.outputpackage;
     basedir = this.flags.basedir;
     let destructivechange = this.flags.destructivechange;
-    //run delta
-    let deltaMeta = this.getDeltaChanges(mode, deltakey);
+    let rollback = this.flags.rollback;
+    let filter = 'AMRU';
     if (destructivechange) {
       let deleteFiles = this.getDeltaChanges(mode, deltakey, 'D');
       this.buildPackageXml(outputpackage, deleteFiles, 'destructiveChanges.xml');
+    }else if (rollback) {
+      let deleteFiles = this.getDeltaChanges(mode, deltakey, 'D');
+      this.buildPackageXml(outputpackage, deleteFiles, 'destructiveChanges.xml');
+      filter = 'MRD';
     }
+    //run delta
+    let deltaMeta = this.getDeltaChanges(mode, deltakey, filter);
     //build package.xml ?   
     if (outputpackage) {
       return { deltaMeta: this.buildPackageXml(outputpackage, deltaMeta, 'package.xml') };

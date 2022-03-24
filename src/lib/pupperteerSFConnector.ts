@@ -1,4 +1,4 @@
-import * as puppeteer from 'puppeteer';
+//import * as puppeteer from 'puppeteer';
 import { execSync as exec } from 'child_process';
 
 export class PuppeteerSFConnector{
@@ -16,10 +16,10 @@ export class PuppeteerSFConnector{
     async initBrowser(){
 		try{
 			console.log('Initialise Browser');
-			this.browser = await puppeteer.launch({
-				args: ['--disable-features=site-per-process'],
-				headless: this.options.cliOnly //set headless to false if you want to open browser
-			});
+			// this.browser = await puppeteer.launch({
+			// 	args: ['--disable-features=site-per-process'],
+			// 	headless: this.options.cliOnly //set headless to false if you want to open browser
+			// });
 			this.page = await this.browser.newPage();
 			await this.page.setDefaultNavigationTimeout(this.options.defaultNavigationTimeout);
 		}catch(err){

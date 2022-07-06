@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
-	"description": "A set of utility for sfdx",
-	"version": "1.7.9",
+	"description": "A set of utility for sfdx and salesforce deployment",
+	"version": "1.7.11",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {

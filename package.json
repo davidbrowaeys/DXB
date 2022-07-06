@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
-	"description": "A set of utility for sfdx and salesforce deployment",
-	"version": "1.7.11",
+	"description": "A set of utility for sfdx",
+	"version": "1.7.12",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -9,7 +9,7 @@
 	},
 	"dependencies": {
 		"@salesforce/command": "^4.2.0",
-		"@salesforce/core": "^2.29.0",
+		"@salesforce/core": "^2.37.1",
 		"@salesforce/plugin-user": "^1.7.0",
 		"@salesforce/source-deploy-retrieve": "^6.2.0",
 		"@salesforce/ts-types": "^1.5.20",

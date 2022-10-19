@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.7.12",
+	"version": "1.7.13",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -41,7 +41,7 @@
 		"xml2js": "^0.4.23"
 	},
 	"engines": {
-		"node": ">=12.0.0"
+		"node": ">=14.0.0"
 	},
 	"files": [
 		"/bin",

@@ -22,10 +22,11 @@ export default class CommunityPublish extends SfdxCommand {
     protected static requiresProject = true;
 
     public async run() {
-        const allcommunities = JSON.parse(exec(`sfdx force:data:soql:query -q "SELECT Name FROM Network WHERE Status = 'Live'" --resultformat json`).toString());
+        const username = this.org.getUsername();
+        const allcommunities = JSON.parse(exec(`sfdx force:data:soql:query -q "SELECT Name FROM Network WHERE Status = 'Live'" --resultformat json -u ${username}`).toString());
         if (allcommunities !== null){
             allcommunities.result?.records?.forEach( (elem) => {
-                console.log(exec(`sfdx force:community:publish -n ${elem.Name}`).toString());
+                console.log(exec(`sfdx force:community:publish -n ${elem.Name} -u ${username}`).toString());
             })
         }
     }

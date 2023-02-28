@@ -107,7 +107,7 @@ export default class extends SfdxCommand {
         //try to get direct metadata base on file suffix only, anything that is not in registry.strictDirectoryNames
         let metadataType:MetadataType = this.registryAccess.getTypeBySuffix(fSuffix);
         if ((metadataType && fSuffix !== 'site' && fSuffix !== 'md') || (metadataType && fSuffix == 'md' && file.base.endsWith('-meta.xml'))){
-            var tp = this.initMetadataTypeInPackage(metadataType);
+            var tp = this.initMetadataTypeInPackage(metadataType.name);
             const metadataTypIndex = metadataDir.findIndex(x => metadataType.directoryName === x);
             //add member to packageJson, if inFolder, then need to add also the parent, if strictDirectory then add parent only
             if (metadataType.strictDirectoryName){
@@ -122,11 +122,15 @@ export default class extends SfdxCommand {
             const metadataTypIndex = metadataDir.findIndex(x => registry.strictDirectoryNames[x] !== undefined);
             if (metadataTypIndex >= 0){
                 metadataType = this.registryAccess.getTypeByName(registry.strictDirectoryNames[metadataDir[metadataTypIndex]]);
-                var tp = this.initMetadataTypeInPackage(metadataType);
+
+                if(metadataType.name === 'CustomObject' && fSuffix != "objects"){
+                  var tp = this.initMetadataTypeInPackage(metadataType.children.types[metadataType.children.suffixes[fSuffix]].name);
+                  this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] + '.' + fName);
                 //add member to packageJson, if inFolder, then need to add also the parent, if strictDirectory then add parent only
-                if (metadataType.strictDirectoryName){
+                }else if (metadataType.strictDirectoryName){
                     this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] ? metadataDir[metadataTypIndex + 1] : fName);
                 }else{
+                    var tp = this.initMetadataTypeInPackage(metadataType.name);
                     if (metadataType.inFolder && metadataDir[metadataTypIndex + 1] !== 'unfiled$public'){
                         this.addMemberToPackage(tp,metadataDir[metadataTypIndex + 1]);
                     }
@@ -147,12 +151,12 @@ export default class extends SfdxCommand {
    * @param metadataType Metadata type name
    * @returns array for passedmetadata type
    */
-  private initMetadataTypeInPackage(metadataType:MetadataType){
-    var tp = this.packageJson.types.find((t: any) => t.name === metadataType.name);
+  private initMetadataTypeInPackage(metadataType:String){
+    var tp = this.packageJson.types.find((t: any) => t.name === metadataType);
     if (!tp) {
         tp = {
             members: [],
-            name: metadataType.name
+            name: metadataType
         }
         this.packageJson.types.push(tp);
     }

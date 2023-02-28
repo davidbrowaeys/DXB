@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxProject } from '@salesforce/core';
+import { SfdxProject, Connection } from '@salesforce/core';
 import { execSync as exec } from 'child_process';
 import {
     registry,
@@ -29,6 +29,7 @@ export default class extends SfdxCommand {
     deltakey: flags.string({ char: 'k', description: 'commit id, tags prefix or name, branch name' }),
     basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
     outputpackage: flags.string({ char: 'p', description: 'output directory path of the delta package.xml to generate, i.e.: ./manifest' }),
+    granularmode: flags.boolean({ char: 'g', description: 'If true, then delta will be very granular for Custom Object, otherwise will deploy the whole object', default: false}),
     destructivechange: flags.boolean({ char: 'x', description: 'Indicate if need to generate destructivePackage.xml (experimental not working yet)', default: false })
   };
 
@@ -51,12 +52,16 @@ export default class extends SfdxCommand {
     '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' },
     types: []
   };
+  protected connection:Connection;
+  protected granularMode:boolean;
 
   public async run() {
     //project config
     const project = await SfdxProject.resolve();
     this.projectConfig = await project.resolveProjectConfig();
+    this.connection = this.org.getConnection();
     //flags
+    this.granularMode = this.flags.granularmode;
     let mode = this.flags.mode;
     let deltakey = this.flags.deltakey;
     let outputpackage = this.flags.outputpackage;
@@ -66,10 +71,10 @@ export default class extends SfdxCommand {
     let filter = 'AMRU';
     if (destructivechange) {
       let deleteFiles = this.getDeltaChanges(mode, deltakey, 'D');
-      this.buildPackageXml(outputpackage, deleteFiles, 'destructiveChanges.xml');
+      await this.buildPackageXml(outputpackage, deleteFiles, 'destructiveChanges.xml');
     }else if (rollback) {
       let deleteFiles = this.getDeltaChanges(mode, deltakey, 'D');
-      this.buildPackageXml(outputpackage, deleteFiles, 'destructiveChanges.xml');
+      await this.buildPackageXml(outputpackage, deleteFiles, 'destructiveChanges.xml');
       filter = 'MRD';
     }
     //run delta
@@ -91,12 +96,12 @@ export default class extends SfdxCommand {
    * @param deltaMeta 
    * @param packageFileName 
    */
-  private buildPackageXml(outputpackage, deltaMeta, packageFileName) {
+  private async buildPackageXml(outputpackage, deltaMeta, packageFileName) {
     var js2xmlparser = require('js2xmlparser');
     this.packageJson.version = this.projectConfig.sourceApiVersion;
 
     //got to the list of file change and build package json { members: [], name: 'metadatatype_name'}
-    deltaMeta.forEach(file => {
+    deltaMeta.forEach(async (file) => {
         file = path.parse(file);
         //split file directory path to find metadata type
         const metadataDir = file.dir.split(basedir).join('').split('/').filter(x => x != '');
@@ -123,9 +128,15 @@ export default class extends SfdxCommand {
             if (metadataTypIndex >= 0){
                 metadataType = this.registryAccess.getTypeByName(registry.strictDirectoryNames[metadataDir[metadataTypIndex]]);
 
-                if(metadataType.name === 'CustomObject' && fSuffix != "objects"){
+                if(metadataType.name === 'CustomObject' && fSuffix != "objects" && this.granularMode){
                   var tp = this.initMetadataTypeInPackage(metadataType.children.types[metadataType.children.suffixes[fSuffix]].name);
                   this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] + '.' + fName);
+                  const masterDetail:any = await this.findMasterDetailRelField(metadataDir[metadataTypIndex + 1]);
+                  if (masterDetail){    //what if the master detail field file is not in the same folder or is not in the same repo completely ? 
+                    metadataType = this.registryAccess.getTypeByName('CustomField');
+                    var tp = this.initMetadataTypeInPackage(metadataType.children.types[metadataType.children.suffixes[fSuffix]].name);
+                    this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] + '.' + masterDetail.name);   //assuming the MD field file it is in the same repo ? but need to improve this
+                  }
                 //add member to packageJson, if inFolder, then need to add also the parent, if strictDirectory then add parent only
                 }else if (metadataType.strictDirectoryName){
                     this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] ? metadataDir[metadataTypIndex + 1] : fName);
@@ -203,5 +214,18 @@ export default class extends SfdxCommand {
     //filter unnecessary files
     var files = gitresult.filter(this.onlyUnique);
     return files;
-  }
+  }/**
+   * @description Retrieve Object fields 
+   */
+  private findMasterDetailRelField(objectname:any){
+    return new Promise( (resolve, reject) => {
+        this.connection.sobject(objectname).describe(function(err, meta) {
+            if (err) { throw new Error(err.message); }
+            console.log(meta.fields);
+            const fieldMeta = meta.fields.find( (f) => f.relationshipOrder !== null && f.relationshipOrder === 0);
+            console.log(fieldMeta);
+            resolve(fieldMeta);
+        });
+    });
+}
 }

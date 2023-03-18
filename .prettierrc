@@ -1,0 +1,9 @@
+{
+  "trailingComma": "none",
+  "overrides": [
+    {
+      "files": "**/src/**/*.ts",
+      "options": { "parser": "ts" }
+    }
+  ]
+}

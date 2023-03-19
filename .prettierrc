@@ -3,7 +3,7 @@
   "overrides": [
     {
       "files": "**/src/**/*.ts",
-      "options": { "parser": "ts" }
+      "options": { "parser": "typescript" }
     }
   ]
 }

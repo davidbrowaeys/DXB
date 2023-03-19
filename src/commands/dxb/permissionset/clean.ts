@@ -1,183 +1,271 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-
-const path = require('path');
-const fs = require('fs');
-var xml2js = require('xml2js');
-var js2xmlparser = require('js2xmlparser');
-
-function clean(rootdir:string,profilename:string, extension:string){
-    var profilepath = path.join(rootdir,`${profilename}.${extension}`);
-    fs.readFile(profilepath, (err:any, data:any) => {
-        var parser = new xml2js.Parser( {"explicitArray":false});
-        parser.parseString(data,function (err:any, result:any) {
-                // //profile
-                // fs.writeFileSync(outprofilepath+'/'+profilename+'.json', JSON.stringify({
-                //     "custom" : result.PermissionSet.custom,
-                //     "userLicense" : result.PermissionSet.userLicense,
-                //     "fileExtension" : extension
-                // }, null, 2));
-                // //classAccesses
-                // if (!result){
-                //     console.log(`Could not split ${profilename}`);
-                //     return;
-                // }
-                // //applicationVisibilities
-                // if (result.PermissionSet.applicationVisibilities){
-                //     if (!fs.existsSync(outprofilepath+'/applicationVisibilities')) {
-                //         fs.mkdirSync(outprofilepath+'/applicationVisibilities');
-                //     }
-                //     if (!Array.isArray(result.PermissionSet.applicationVisibilities)){
-                //         result.PermissionSet.applicationVisibilities = [result.PermissionSet.applicationVisibilities];
-                //     }
-                //     result.PermissionSet.applicationVisibilities.forEach((elem:any) => {
-                //         fs.writeFileSync(outprofilepath+'/applicationVisibilities/'+elem.application+'.json', JSON.stringify(elem, null, 2));
-                //     });
-                // }
-                // //classAccesses
-                // if (result.PermissionSet.classAccesses){
-                //     if (!fs.existsSync(outprofilepath+'/classAccesses')) {
-                //         fs.mkdirSync(outprofilepath+'/classAccesses');
-                //     }
-                //     if (!Array.isArray(result.PermissionSet.classAccesses)){
-                //         result.PermissionSet.classAccesses = [result.PermissionSet.classAccesses];
-                //     }
-                //     result.PermissionSet.classAccesses.forEach((elem:any) =>{
-                //         fs.writeFileSync(outprofilepath+'/classAccesses/'+elem.apexClass+'.json', JSON.stringify(elem, null, 2));
-                //     });
-                // }
-                //objectPermissions
-                if (result.PermissionSet.objectPermissions){
-                    if(Array.isArray(result.PermissionSet.objectPermissions)){
-                        result.PermissionSet.objectPermissions = result.PermissionSet.objectPermissions.filter((value:any, index:any, arr:any) =>{
-                            return  value.allowCreate === 'true' || 
-                                    value.allowDelete === 'true' || 
-                                    value.allowEdit === 'true' || 
-                                    value.allowRead === 'true' || 
-                                    value.modifyAllRecords === 'true' || 
-                                    value.viewAllRecords === 'true';
-                        });
-                    }else if (  result.PermissionSet.objectPermissions.allowCreate === 'false' && 
-                                result.PermissionSet.objectPermissions.allowDelete === 'false' && 
-                                result.PermissionSet.objectPermissions.allowEdit === 'false' && 
-                                result.PermissionSet.objectPermissions.allowRead === 'false' && 
-                                result.PermissionSet.objectPermissions.modifyAllRecords === 'false' && 
-                                result.PermissionSet.fieldPermissions.viewAllRecords === 'false'){
-                        delete result.PermissionSet.objectPermissions;
-                    }
-                        
-                }
-                //fieldPermissions
-                if (result.PermissionSet.fieldPermissions){
-                    if(Array.isArray(result.PermissionSet.fieldPermissions)){
-                        result.PermissionSet.fieldPermissions = result.PermissionSet.fieldPermissions.filter((value:any, index:any, arr:any) =>{
-                            return value.readable === 'true' || value.editable === 'true';
-                        });
-                    }else if (result.PermissionSet.fieldPermissions.readable === 'false' && result.PermissionSet.fieldPermissions.editable){
-                        delete result.PermissionSet.fieldPermissions;
-                    }
-                }
-                //classAccesses
-                if (result.PermissionSet.classAccesses){
-                    if(Array.isArray(result.PermissionSet.classAccesses)){
-                        result.PermissionSet.classAccesses = result.PermissionSet.classAccesses.filter((value:any, index:any, arr:any) =>{
-                            return value.enabled === 'true';
-                        });
-                    }else if (result.PermissionSet.classAccesses.enabled === 'false'){
-                        delete result.PermissionSet.classAccesses;
-                    }
-                }
-                //pageAccesses
-                if (result.PermissionSet.pageAccesses){
-                    if(Array.isArray(result.PermissionSet.pageAccesses)){
-                        result.PermissionSet.pageAccesses = result.PermissionSet.pageAccesses.filter((value:any, index:any, arr:any) =>{
-                            return value.enabled === 'true';
-                        });
-                    }else if (result.PermissionSet.pageAccesses.enabled === 'false'){
-                        delete result.PermissionSet.pageAccesses;
-                    }
-                }
-                //userPermissions
-                if (result.PermissionSet.userPermissions){
-                    if(Array.isArray(result.PermissionSet.userPermissions)){
-                        result.PermissionSet.userPermissions = result.PermissionSet.userPermissions.filter((value:any, index:any, arr:any) =>{
-                            return value.enabled === 'true';
-                        });
-                    }else if (result.PermissionSet.userPermissions.enabled === 'false'){
-                        delete result.PermissionSet.userPermissions;
-                    }
-                }
-                //recordTypeVisibilities
-                if (result.PermissionSet.recordTypeVisibilities){
-                    if(Array.isArray(result.PermissionSet.recordTypeVisibilities)){
-                        result.PermissionSet.recordTypeVisibilities = [...result.PermissionSet.recordTypeVisibilities].filter((value:any, index:any, arr:any) =>{
-                            return value.visible === 'true';
-                        });
-                    }else if (result.PermissionSet.recordTypeVisibilities.visible === 'false'){
-                        delete result.PermissionSet.recordTypeVisibilities;
-                    }
-                }
-                delete result.PermissionSet['$'];
-                result.PermissionSet['@'] = { xmlns: 'http://soap.sforce.com/2006/04/metadata' };
-                var xml = js2xmlparser.parse("PermissionSet", result.PermissionSet, { declaration: { encoding: 'UTF-8' }});
-                fs.writeFileSync(profilepath, xml);
-                console.log(`Permissionsets(s) cleaned: ${profilepath}`);
-        });
-    });
-}
+import {
+    flags,
+    SfdxCommand
+} from '@salesforce/command';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as xml2js from 'xml2js';
+import * as js2xmlparser from 'js2xmlparser';
 
 export default class PermSetClean extends SfdxCommand {
 
-    public static description = 'This command remove fls and object where all access are set to false';
-  
+    public static description = 'This command remove fls and object where all access are set to "false"';
+
     public static examples = [
-    `sfdx dxb:permissionset:clean -p Customer_Community_My_Application -r src/permissionsets`,
+        `$  sfdx dxb:permissionset:clean -f force-app/main/default/permissionsets/Social_Customer_Service_Permission_Set.permissionset-meta.xml`
     ];
-  
-    public static args = [{name: 'file'}];
-  
+
+    public static args = [{
+        name: 'file'
+    }];
+
     protected static flagsConfig = {
-        permissionsetname : flags.string({char:'p',description:'Permission set name to be converted'}),
-        rootdir : flags.string({char:'r',description:'source path to permissionsets metadata directory, i.e.: src/permissionsets or force-app/main/default/permissionsets', default:'force-app/main/default/permissionsets'})
+        file: flags.string({
+            char: 'f',
+            description: 'File path pf permission set to clean'
+        }),
+        permissionsetname: flags.string({
+            char: 'p',
+            description: 'Permission set name to clean(deprecated)'
+        }),
+        rootdir: flags.string({
+            char: 'r',
+            description: 'source path to permissionsets metadata directory, i.e.: src/permissionsets or force-app/main/default/permissionsetsn(deprecated)',
+            default: 'force-app/main/default/permissionsets'
+        })
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
-  
+
     // Comment this out if your command does not support a hub org username
     protected static supportsDevhubUsername = true;
-  
+
     // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
     protected static requiresProject = false;
-  
+
     public async run() {
-        var profilename:string = this.flags.permissionsetname;
-        var rootdir:string = this.flags.rootdir;
-        if (profilename){
-            try{
-                if (fs.existsSync(path.join(rootdir,profilename+'.permissionset'))){
-                    clean(rootdir, profilename,'permissionset');
-                }    
-            }catch(err){
-                console.log(`Could not find ${profilename}.permissionset`);
+        const {permissionSetName, file, rootDir} = this.flags;
+
+        if (permissionSetName) {
+            this.cleanPermissionSet(rootDir, permissionSetName);
+        } else if (file){
+            this.clean(file);
+        }else {
+            this.cleanAllPermissionSets(rootDir);
+        }
+    }
+
+    protected cleanPermissionSet(rootDir: string, permissionSetName: string) {
+        const permissionSetPaths = this.getPermissionSetPaths(rootDir, permissionSetName);
+
+        permissionSetPaths.forEach((filePath) => {
+            if (fs.existsSync(filePath)) {
+                const permissionSetPath = path.join(rootDir, `${permissionSetName}.${path.extname(filePath)}`);
+                this.clean(permissionSetPath);
+            } else {
+                console.log(`Could not find ${filePath}`);
             }
-            try{
-                if (fs.existsSync(path.join(rootdir,profilename+'.permissionset-meta.xml'))){
-                    clean(rootdir, profilename,'permissionset-meta.xml');
+        });
+    }
+
+    protected cleanAllPermissionSets(rootDir: string) {
+        fs.readdirSync(rootDir).forEach((fileName) => {
+            const fileExt = path.extname(fileName);
+            if (fileExt === '.permissionset-meta.xml' || fileExt === '.permissionset') {
+                const permissionSetName = fileName.split('.')[0];
+                try {
+                    const permissionSetPath = path.join(rootDir, `${permissionSetName}.${fileExt}`);
+                    this.clean(permissionSetPath);
+                } catch (err) {
+                    console.log(`Could not clean up ${permissionSetName}: ${err}`);
                 }
-            }catch(err){
-                console.log(`Could not find ${profilename}.permissionset-meta.xml`);
             }
-        }else{
-            fs.readdirSync(rootdir).forEach( (file:string) => {
-                if (file.indexOf('.permissionset-meta.xml') >= 0 || file.indexOf('.permissionset') >= 0){
-                    profilename = file.split('.')[0];
-                    var extension:string = file.substring(file.indexOf('permissionset'));
-                    try{
-                        clean(rootdir, profilename, extension);
-                    }catch(err){
-                        console.log(`Could not split ${profilename}`);
-                    }
-                }
-            });
+        });
+    }
+
+    protected getPermissionSetPaths(rootDir: string, permissionSetName: string) {
+        return [
+            path.join(rootDir, `${permissionSetName}.permissionset`),
+            path.join(rootDir, `${permissionSetName}.permissionset-meta.xml`)
+        ];
+    }
+
+    protected async clean(permissionSetPath: string) {
+        const data = await fs.promises.readFile(permissionSetPath, "utf8");
+
+        const result = await xml2js.parseStringPromise(data, {
+            explicitArray: false,
+        });
+
+        this.filterObjectPermissions(result);
+        this.filterFieldPermissions(result);
+        this.filterClassAccesses(result);
+        this.filterPageAccesses(result);
+        this.filterUserPermissions(result);
+        this.filterRecordTypeVisibilities(result);
+
+        delete result.PermissionSet["$"];
+        result.PermissionSet["@"] = {
+            xmlns: "http://soap.sforce.com/2006/04/metadata"
+        };
+        const xml = js2xmlparser.parse("PermissionSet", result.PermissionSet, {
+            declaration: {
+                encoding: "UTF-8"
+            },
+        });
+
+        await fs.promises.writeFile(permissionSetPath, xml);
+        console.log(`Permissionsets(s) cleaned: ${permissionSetPath}`);
+    }
+
+    private filterArrayByAttributeValue(arr: any[], attribute: string, value: string): any[] {
+        return arr.filter((item) => item[attribute] === value);
+    }
+
+    private filterClassAccesses(result: any): void {
+        const classAccesses = result.PermissionSet.classAccesses;
+
+        if (!classAccesses) {
+            return;
+        }
+
+        if (Array.isArray(classAccesses)) {
+            result.PermissionSet.classAccesses = this.filterArrayByAttributeValue(
+              classAccesses,
+              "enabled",
+              "true"
+            );
+            if (!result.PermissionSet.classAccesses.length) {
+                delete result.PermissionSet.classAccesses;
+            }
+        } else if (result.PermissionSet.classAccesses.enabled === 'false') {
+            delete result.PermissionSet.classAccesses;
+        }
+    }
+
+    private filterPageAccesses(result: any): void {
+        const pageAccesses = result.PermissionSet.pageAccesses;
+
+        if (!pageAccesses) {
+            return;
+        }
+
+        if (Array.isArray(pageAccesses)) {
+            result.PermissionSet.pageAccesses = this.filterArrayByAttributeValue(
+                pageAccesses,
+                "enabled",
+                "true"
+            );
+            if (!result.PermissionSet.pageAccesses.length) {
+                delete result.PermissionSet.pageAccesses;
+            }
+        } else if (result.PermissionSet.pageAccesses.enabled === 'false') {
+            delete result.PermissionSet.pageAccesses;
+        }
+    }
+
+
+    private filterObjectPermissions(result: any): void {
+        console.log(JSON.stringify(result.PermissionSet.objectPermissions));
+        
+        const objectPermissions = result.PermissionSet.objectPermissions;
+        
+        if (!result.PermissionSet.objectPermissions) {
+            return;
+        }
+        if (Array.isArray(objectPermissions)) {
+            result.PermissionSet.objectPermissions = this.filterArrayByAttributeValue(
+                objectPermissions,
+                "allowCreate",
+                "true"
+            ).concat(
+                this.filterArrayByAttributeValue(objectPermissions, "allowDelete", "true"),
+                this.filterArrayByAttributeValue(objectPermissions, "allowEdit", "true"),
+                this.filterArrayByAttributeValue(objectPermissions, "allowRead", "true"),
+                this.filterArrayByAttributeValue(objectPermissions, "modifyAllRecords", "true"),
+                this.filterArrayByAttributeValue(objectPermissions, "viewAllRecords", "true")
+            );
+            if (!result.PermissionSet.objectPermissions.length) {
+                delete result.PermissionSet.objectPermissions;
+            }
+        } else if (
+            objectPermissions.allowCreate === "false" &&
+            objectPermissions.allowDelete === "false" &&
+            objectPermissions.allowEdit === "false" &&
+            objectPermissions.allowRead === "false" &&
+            objectPermissions.modifyAllRecords === "false" &&
+            objectPermissions.viewAllRecords === "false"
+          ) {
+            delete result.PermissionSet.objectPermissions;
+        }
+    }
+
+    private filterFieldPermissions(result: any): void {
+        const fieldPermissions = result.PermissionSet.fieldPermissions;
+
+        if (!fieldPermissions) {
+            return;
+        }
+
+        if (Array.isArray(fieldPermissions)) {
+            result.PermissionSet.fieldPermissions = this.filterArrayByAttributeValue(
+                fieldPermissions,
+                "readable",
+                "true"
+            ).concat(
+                this.filterArrayByAttributeValue(fieldPermissions, "editable", "true")
+            );
+
+            if (!result.PermissionSet.fieldPermissions.length) {
+                delete result.PermissionSet.fieldPermissions;
+            }
+        } else if (
+            fieldPermissions.readable === "false" &&
+            fieldPermissions.editable === "false"
+        ) {
+            delete result.PermissionSet.fieldPermissions;
+        }
+    }
+
+    private filterRecordTypeVisibilities(result: any): void {
+        const recordTypeVisibilities = result.PermissionSet.recordTypeVisibilities;
+
+        if (!recordTypeVisibilities) {
+            return;
+        }
+
+        if (Array.isArray(result.PermissionSet.recordTypeVisibilities)) {
+            result.PermissionSet.recordTypeVisibilities = this.filterArrayByAttributeValue(
+                recordTypeVisibilities,
+                "visible",
+                "true"
+            );
+            if (!result.PermissionSet.recordTypeVisibilities.length) {
+                delete result.PermissionSet.recordTypeVisibilities;
+            }
+        } else if (recordTypeVisibilities.visible === 'false') {
+            delete result.PermissionSet.recordTypeVisibilities;
+        }
+    }
+
+    private filterUserPermissions(result: any): void {
+        const userPermissions = result.PermissionSet.userPermissions;
+
+        if (!userPermissions) {
+            return;
+        }
+
+        if (Array.isArray(result.PermissionSet.userPermissions)) {
+            result.PermissionSet.userPermissions = this.filterArrayByAttributeValue(
+                userPermissions,
+                "enabled",
+                "true"
+            );
+            if (!result.PermissionSet.userPermissions.length) {
+                delete result.PermissionSet.userPermissions;
+            }
+        } else if (result.PermissionSet.userPermissions.enabled === 'false') {
+            delete result.PermissionSet.userPermissions;
         }
     }
 }

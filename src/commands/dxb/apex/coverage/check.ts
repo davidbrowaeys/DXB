@@ -1,12 +1,18 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import * as fs from 'fs';
 import { SfdxError } from '@salesforce/core';
+import * as xml2js from 'xml2js';
+import * as Table from 'cli-table';
 
-var xml2js = require('xml2js');
+const coverageResultTable = new Table({
+    head: ['Classname', 'Path', 'Time', 'Diff'], 
+    colWidths: [30, 50, 10, 10]
+});
+const SUCCESS_MESSAGE:string = 'Code coverage is looking good!';
+const ERROR_MESSAGE:string = 'Insufficient Code Coverage!';
+export default class CoverageCheck extends SfdxCommand {
 
-export default class PofileConvert extends SfdxCommand {
-
-    public static description = 'This method read cobertura xml file and check if any apex class coverage is below the minumum coverage. ';
+    public static description = 'This method read cobertura xml file and check if any class coverage is below the minumum threshold. ';
 
     public static examples = [
         `$ sfdx dxb:apex:coverage:check -f tests/coverage/cobertura.xml`,
@@ -45,13 +51,16 @@ export default class PofileConvert extends SfdxCommand {
                         badClasses.push(apex);
                     }
                 });
-                if (badClasses){
+                if (badClasses && badClasses.length >= 1 ){
                     console.log('Ooops, coverage seems a bit low! Each apex class is expected at least a coverage of '+threshold*100+'%.');
-                    badClasses.forEach(elem =>{
-                        const coverage:number = parseFloat(elem.$['line-rate']);
-                        console.log(`${elem.$.name}: ${elem.$['line-rate'] * 100}% (-${((threshold - coverage) * 100).toFixed(2)}%)`);
-                    })
-                    throw new SfdxError('Insufficient Code Coverage!');
+                    badClasses.forEach((item) => {
+                        const coverage:number = parseFloat(item.$['line-rate']);
+                        coverageResultTable.push([item.$.name, item.$.filename,`${item.$['line-rate'] * 100}%`, `-${((threshold - coverage) * 100).toFixed(2)}%`]);
+                    });
+                    console.log(coverageResultTable.toString());
+                    throw new SfdxError(ERROR_MESSAGE);
+                }else{
+                    console.log(SUCCESS_MESSAGE);
                 }
             }
         });

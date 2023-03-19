@@ -3,16 +3,17 @@ const exec = require('child_process').execSync;
 
 export default class CommunityPublish extends SfdxCommand {
 
-    public static description = 'Convert profile xml into small chunks of json files';
+    public static description = 'Publish experience community to target environment. If not specified, then will fetch all "Live" communities from target env.';
 
     public static examples = [
-        `$ sfdx dxb:source:package:retrieve -f package.xml`
+        `$ sfdx dxb:community:publish`,
+        `$ sfdx dxb:community:publish -n portal1,partner1`
     ];
 
     public static args = [{ name: 'file' }];
 
     protected static flagsConfig = {
-        name: flags.string({char:'n',description:'Comma separated community name. If not specified, then will fetch all "Live" communities from target env'})
+        name: flags.string({char:'n',description:'List of community name separated by comma. If not specified, then will fetch all "Live" communities from target env'})
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;

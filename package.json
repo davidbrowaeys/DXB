@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.8.2",
+	"version": "1.8.3",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -19,6 +19,7 @@
 		"csv-split-stream": "^1.0.2",
 		"csv-writer": "^1.6.0",
 		"js2xmlparser": "^4.0.1",
+		"pdf-creator-node": "^2.3.5",
 		"salesforce-alm": "^53.6.0",
 		"tslib": "^2.1.0",
 		"tty-table": "^2.7.0",

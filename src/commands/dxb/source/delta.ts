@@ -32,7 +32,7 @@ export default class extends SfdxCommand {
   protected static flagsConfig = {
     mode: flags.string({ char: 'm', description: 'commitid|tags|branch', default: "commitid" }),
     deltakey: flags.string({ char: 'k', description: 'commit id, tags prefix or name, branch name' }),
-    basedir: flags.string({ char: 'd', description: 'path of base directory(deprecated)', default: 'force-app/main/default' }),
+    basedir: flags.string({ char: 'd', description: 'path of base directory, i.e.: force-app/main/default. (deprecated)'}),
     outputpackage: flags.string({ char: 'p', description: 'output directory path of the delta package.xml to generate, i.e.: ./manifest' }),
     granularmode: flags.boolean({ char: 'g', description: 'If true, then delta will be very granular for Custom Object, otherwise will deploy the whole object', default: false}),
     destructivechange: flags.boolean({ char: 'x', description: 'Indicate if need to generate destructivePackage.xml (experimental not working yet)', default: false })
@@ -59,13 +59,14 @@ export default class extends SfdxCommand {
   };
   protected granularmode:boolean;
   protected packageDirectories: PackageDirectory[] = [];
-
+  protected basedir:string;
   public async run() {
     let { mode, deltakey, outputpackage, destructivechange, rollback } = this.flags;
     //project config
     this.projectConfig = await  (await SfdxProject.resolve()).resolveProjectConfig();
     this.packageDirectories = this.projectConfig.packageDirectories;
     this.granularmode = this.flags.granularmode;
+    this.basedir = !!this.flags.basedir ? this.flags.basedir : undefined;
     //flags
     let filter = 'AMRU';
     if (destructivechange) {
@@ -132,7 +133,7 @@ export default class extends SfdxCommand {
    * @returns list representation of the path
    */
   private getMetadataDir(f: string): string[] {
-    const p = this.packageDirectories.find( e => f.startsWith(e.path));
+    const p = this.basedir ? {path: this.basedir} : this.packageDirectories.find( e => f.startsWith(e.path));
     return p && f.split(p.path).join('').split('/').filter(x => x !== '');
   }
   /**
@@ -246,7 +247,13 @@ export default class extends SfdxCommand {
    * @returns filtered array
    */
   private filterUniqueForceAppFiles(filePaths: string[]): string[] {
-    const filteredFiles = filePaths.filter(filePath => this.packageDirectories.some((path) => filePath.startsWith(filePath)) && filePath.indexOf('lwc/jsconfig.json') < 0);
+    console.log('basedir',this.basedir, !!this.basedir);
+    const filteredFiles = filePaths.filter((f) => 
+      (
+          (!!this.basedir && f.startsWith(this.basedir)) || 
+        (!this.basedir && this.packageDirectories.some((p) => f.startsWith(p.path)))
+      ) && 
+      f.indexOf('lwc/jsconfig.json') < 0);
     const uniqueFiles = [...new Set(filteredFiles)];
     return uniqueFiles;
   }

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Global Schema</title>
+    <style>
+      {{style}}
+      body{
+        padding: 10px;
+      }
+      .cover{
+        min-height: 500px;
+        height: 500px;
+        padding-top:400px;
+      }
+      .object-table{
+        margin-right: 10px;
+      }
+      .object-table th{
+        width:20%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover" style="page-break-after: always">
+      <h1>{{document.fileName}}</h1>
+    </div>
+    <div style="page-break-after: always">
+      <h2>Document Properties</h2>
+      <table class="table object-table">
+        <tr>
+          <th class="text-bg-primary" scope="row">File Name</th>
+          <td class="text-start">{{document.fileName}}</td>
+        </th>
+        <tr>
+          <th class="text-bg-primary"  scope="row">Document Owner</th>
+          <td class="text-start">{{document.documentOwner}}</td>
+        </tr>
+        <tr>
+          <th class="text-bg-primary" scope="row">Created Date</th>
+          <td class="text-start">{{document.createdDate}}</td>
+        </tr>
+      </table>
+      <h2>Document Sign-Off/Evidence of Review</h2>
+      <p style="width: 80%;">With this acknowledgement, the undersigned hereby agree to the form, content and overall integrity of the accompanying document.</p>
+      <p style="width: 80%;">Each section of this document has been thoroughly reviewed by technical, business leads and subject matter expert groups that have communicated their support for the document content to each of the signatories listed below.  Signatories, in turn, are those individuals that speak on behalf of their respective subject matter experts, technical and business leads.</p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col" width="10%">Version</th>
+            <th scope="col" width="10%">Date</th>
+            <th scope="col" width="30%">Approved By</th>
+            <th scope="col" width="50%">Notes</th>
+          </tr>
+        </thead>
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+    </div>
+    <h2>Document Overview & Description</h2>
+    <p>This document provides the configuration and customization settings that have been implemented. This configuration and customization will serve as the baseline for a full release.</p>
+    <ul>
+      <li>Only sections that have modifications over Salesforce out-of-the-box (OOB) settings are documented.</li>
+      <li>This document is laid out in a consistent manner with the Salesforce customize and configuration settings accessed from Setup | Customize in the Salesforce application.</li>
+      <li>This document does not detail standard Salesforce functionality unless such functionality is requested via a requirement.</li>
+    </ul>
+    <p>The document will provide an in-depth technical understanding of the customization and configuration made to the Salesforce application.  This section is intended to provide guidance to future developers by providing an understanding of the modifications that were made to the Salesforce objects, fields, profiles, roles, etc.  In addition, this section includes an understanding of how to execute the batch upload, with screen shots and troubleshooting tips for common errors that are encountered.<br/>  
+      There are five main sections in the document:
+    </p>
+    <ul>
+      <li>High-Level Data Model – defines the underlying data structure for CRM Implementation application.</li>
+      <li>Custom Functionality Detail Design – Provides the details of some custom components/functionalities that have been developed.</li>
+      <li>Customize – defines the application customizations in terms of labels, workflows, user management, apex, triggers, VisualForce components, reports and dashboards. This section will be defined in Phase </li>
+      <li>Security – defines the PCI compliance security configurations, Salesforce security settings and details of PCI Audit log configurations.</li>
+    </ul>
+    <h2>Standard Objects</h2>
+    {{#each std_objects}}
+    <h3>{{this.Label}}</h3>
+    <h4>Object Details</h4>
+    <table class="table object-table">
+      <tr>
+        <th class="text-bg-primary" scope="row" style="width:20%">Label</th>
+        <td class="text-start">{{this.Label}}</td>
+      </th>
+      <tr>
+        <th class="text-bg-primary"  scope="row">API Name</th>
+        <td class="text-start">{{this.QualifiedApiName}}</td>
+      </tr>
+      <tr>
+        <th class="text-bg-primary" scope="row">Key Prefix</th>
+        <td class="text-start">{{this.KeyPrefix}}</td>
+      </tr>
+      <tr>
+        <th class="text-bg-primary" scope="row">Internal Sharing Model</th>
+        <td class="text-start">{{this.InternalSharingModel}}</td>
+      </tr>
+      <tr>
+        <th class="text-bg-primary" scope="row">External Sharing Model</th>
+        <td class="text-start">{{this.ExternalSharingModel}}</td>
+      </tr>
+    </table>
+    <h3>Field Details</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th class="bg-primary" scope="col">Label</th>
+          <th class="bg-primary" scope="col">API Name</th>
+          <th class="bg-primary text-start" scope="col">Type</th>
+        </tr>
+      </thead>
+      {{#each this.fields}}
+      <tr>
+        <td>{{this.Label}}</td>
+        <td>{{this.QualifiedApiName}}</td>
+        <td class="text-start">{{this.DataType}}</td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/each}}
+    <!--CUSTOM OBJECT-->
+    <h1>Custom Objects</h1>
+    {{#each cust_objects}}
+    <h2>{{this.Label}}</h2>
+    <h3>Object Details</h3>
+    <table class="table">
+      <tr>
+        <th scope="row">Label</th>
+        <td>{{this.Label}}</td>
+      </th>
+      <tr>
+        <th scope="row">API Name</th>
+        <td>{{this.QualifiedApiName}}</td>
+      </tr>
+      <tr>
+        <th scope="row">Key Prefix</th>
+        <td>{{this.KeyPrefix}}</td>
+      </tr>
+      <tr>
+        <th scope="row">Internal Sharing Model</th>
+        <td>{{this.InternalSharingModel}}</td>
+      </tr>
+      <tr>
+        <th scope="row">External Sharing Model</th>
+        <td>{{this.ExternalSharingModel}}</td>
+      </tr>
+    </table>
+    <h3>Field Details</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Label</th>
+          <th scope="col">API Name</th>
+          <th scope="col">Type</th>
+          <th scope="col">Description</th>
+        </tr>
+      </thead>
+      {{#each this.fields}}
+      <tr>
+        <td>{{this.Label}}</td>
+        <td>{{this.QualifiedApiName}}</td>
+        <td>{{this.DataType}}</td>
+        <td class="text-truncate">{{this.Description}}</td>
+      </tr>
+      {{/each}}
+    </table>
+    <hr />
+    {{/each}}
+  </body>
+</html>

@@ -44,14 +44,14 @@ export default class PermSetClean extends SfdxCommand {
     protected static requiresProject = false;
 
     public async run() {
-        const {permissionSetName, file, rootDir} = this.flags;
+        const {permissionsetname, file, rootdir} = this.flags;
 
-        if (permissionSetName) {
-            this.cleanPermissionSet(rootDir, permissionSetName);
+        if (permissionsetname) {
+            this.cleanPermissionSet(rootdir, permissionsetname);
         } else if (file){
             this.clean(file);
         }else {
-            this.cleanAllPermissionSets(rootDir);
+            this.cleanAllPermissionSets(rootdir);
         }
     }
 

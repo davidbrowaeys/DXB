@@ -50,8 +50,7 @@ export default class SchemaDocGen extends SfdxCommand {
     public async run() {
         const {pdfconfig, stylesheet, htmltemplate} = this.flags;
         this.connection = this.org.getConnection();
-        //validate filess
-        console.log(__dirname);
+        //validate files
         let htmlPath = htmltemplate? htmltemplate : path.join(__dirname, '../../../../../src/lib/schema-template.html');
         let cssPath = stylesheet? stylesheet: path.join(__dirname, '../../../../../src/lib/bootstrap.min.css');
         if (!fs.existsSync(htmlPath)){

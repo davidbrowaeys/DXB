@@ -5,21 +5,23 @@
         "border": "10mm",
         "header": {
             "height": "45mm",
-            "contents": "<div style=\"text-align: center;\">Author: David Browaeys</div>"
+            "contents": ""
         },
         "footer": {
             "height": "28mm",
             "contents": {
-                "first": "Cover page",
-                "2": "Second page", 
-                "default": "<span style=\"color: #444;\">{{page}}</span>/<span>{{pages}}</span>", 
-                "last": "Last Page"
+                "default": "<div class=\"pdfheader\"><div class=\"left\">Tabcorp Separation Solution Design</div><div class=\"middle\"><span>{{page}}</span>/<span>{{pages}}</span></div><div class=\"right\">Deloitte Confidential</div></div>"
             }
         }
     },
     "documentInfo": {
-        "fileName": "Tabcorp Solution Design",
+        "title": "Tabcorp Separation Solution Design",
+        "subtitle": "By Deloitte Digital",
         "documentOwner": "David Browaeys", 
-        "createdDate": "21/03/2023"
+        "createdDate": "21/03/2023", 
+        "approvers": [{
+            "name": "David Browaeys",
+            "email": "dbrowaeys@deloitte.com.au"
+        }]
     }
 }

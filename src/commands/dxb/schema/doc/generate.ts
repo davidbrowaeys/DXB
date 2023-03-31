@@ -1,10 +1,10 @@
-import { SfdxCommand } from '@salesforce/command';
+import { SfdxCommand, flags } from '@salesforce/command';
 import { Connection } from '@salesforce/core';
+import * as path from 'path';
 import * as fs from 'fs';
 import * as pdf from 'pdf-creator-node';
 const ORGQUERY = "SELECT WebToCaseDefaultOrigin, UsesStartDateAsFiscalYearName, UiSkin, TrialExpirationDate, TimeZoneSidKey, SystemModstamp, Street, State, SignupCountryIsoCode, ReceivesInfoEmails, ReceivesAdminInfoEmails, PrimaryContact, PreferencesTransactionSecurityPolicy, PreferencesTerminateOldestSession, PreferencesRequireOpportunityProducts, PreferencesOnlyLLPermUserAllowed, PreferencesLightningLoginEnabled, PreferencesConsentManagementEnabled, PreferencesAutoSelectIndividualOnMerge, PostalCode, Phone, OrganizationType, NumKnowledgeService, NamespacePrefix, Name, MonthlyPageViewsUsed, MonthlyPageViewsEntitlement, Longitude, Latitude, LastModifiedDate, LastModifiedById, LanguageLocaleKey, IsSandbox, IsReadOnly, InstanceName, Id, GeocodeAccuracy, FiscalYearStartMonth, Fax, Division, DefaultPricebookAccess, DefaultOpportunityAccess, DefaultLocaleSidKey, DefaultLeadAccess, DefaultContactAccess, DefaultCaseAccess, DefaultCampaignAccess, DefaultCalendarAccess, DefaultAccountAccess, CreatedDate, CreatedById, Country, ComplianceBccEmail, City, Address FROM Organization";
-const STDOBJECTS = "'Account','Contact','AccountContactRelation','Opportunity','Asset','Event','Task'";
-const STDQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE QualifiedApiName IN ("+STDOBJECTS+") ORDER BY NamespacePrefix, QualifiedApiName LIMIT 2000";
+const STDQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE QualifiedApiName IN ('{{stdobject}}') ORDER BY NamespacePrefix, QualifiedApiName LIMIT 2000";
 const CUSTOMQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE DeploymentStatus != null AND IsCustomizable = TRUE ORDER BY NamespacePrefix, QualifiedApiName";
 const FIELDQUERY = "SELECT Id, EntityDefinitionId, EntityDefinition.QualifiedApiName, DurableId, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, Length, DataType, ServiceDataTypeId, ValueTypeId, ExtraTypeInfo, IsCalculated, IsHighScaleNumber, IsHtmlFormatted, IsNameField, IsNillable, IsWorkflowFilterable, IsCompactLayoutable, Precision, Scale, IsFieldHistoryTracked, IsIndexed, IsApiFilterable, IsApiSortable, IsListFilterable, IsListSortable, IsApiGroupable, IsListVisible, ControllingFieldDefinitionId, LastModifiedDate, LastModifiedById, PublisherId, RunningUserFieldAccessId, RelationshipName, ReferenceTo, ReferenceTargetField, IsCompound, IsSearchPrefilterable, IsPolymorphicForeignKey, IsAiPredictionField, BusinessOwnerId, BusinessStatus, SecurityClassification, ComplianceGroup, Description FROM FieldDefinition WHERE EntityDefinition.QualifiedApiName IN ({{object_name}}) ORDER BY NamespacePrefix, QualifiedApiName";
 const APEXCLSQUERY = "SELECT Id, Name, ApiVersion, Status, Body, IsValid, LengthWithoutComments FROM ApexClass WHERE NamespacePrefix = null ORDER BY Name";
@@ -13,14 +13,29 @@ const NAMEDCREDQUERY = "SELECT Id, DeveloperName, Endpoint, PrincipalType, Langu
 const CONNECTEDAPPQUERY = "SELECT Id, Name, MobileStartUrl, RefreshTokenValidityPeriod, UvidTimeout, OptionsAllowAdminApprovedUsersOnly, OptionsRefreshTokenValidityMetric, MobileSessionTimeout, OptionsCodeCredentialGuestEnabled, OptionsFullContentPushNotifications, OptionsAllowExpiredUvidJWT, OptionsIsInternal, OptionsHasSessionLevelPolicy, PinLength, StartUrl FROM ConnectedApplication";
 export default class SchemaDocGen extends SfdxCommand {
 
-    public static description = '';
+    public static description = 'This command generate a as-build technical design pdf document by pulling metadata such as cusotm object, classes etc directly from an org.';
 
     public static examples = [
+        'sfdx dxb:schema:generate:doc -u tlcuat -c config/documentinfo.json'
     ];
 
     public static args = [{ name: 'file' }];
 
-    protected static flagsConfig = {};
+    protected static flagsConfig = {
+        pdfconfig:flags.string({
+            char: 'c',
+            description: 'File path of pdf document as json',
+            required:true
+        }),
+        stylesheet: flags.string({
+            char: 's',
+            description: 'File path of stylesheet, default(boostrap)'
+        }),
+        htmltemplate: flags.string({
+            char: 't',
+            description: 'File path of html template, default(dxb template)'
+        }),
+    };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
 
@@ -33,8 +48,25 @@ export default class SchemaDocGen extends SfdxCommand {
     protected connection:Connection;
 
     public async run() {
+        const {pdfconfig, stylesheet, htmltemplate} = this.flags;
         this.connection = this.org.getConnection();
-
+        //validate filess
+        console.log(__dirname);
+        let htmlPath = htmltemplate? htmltemplate : path.join(__dirname, '../../../../../src/lib/schema-template.html');
+        let cssPath = stylesheet? stylesheet: path.join(__dirname, '../../../../../src/lib/bootstrap.min.css');
+        if (!fs.existsSync(htmlPath)){
+            throw new Error(`HTML Template not found: ${htmlPath}`);
+        }
+        if (!fs.existsSync(cssPath)){
+            throw new Error(`Stylesheet file not found: ${cssPath}`);
+        }
+        if (!fs.existsSync(pdfconfig)){
+            throw new Error(`PDF Metadata Config Json file not found: ${pdfconfig}`);
+        }
+        const documentMeta:any = JSON.parse(fs.readFileSync(pdfconfig, "utf8"));
+        if(!documentMeta.metadata || !documentMeta.metadata.stdobjects || !Array.isArray(documentMeta.metadata.stdobjects)){
+            throw new Error(`You must define list of standard objects as follow "metadata": { stdobjects: ["Account","Contact"]} in your pdf document:${pdfconfig}`);
+        }
         //const settings = await this.getSettingMetadata(['Case']);
         //retrieve objects informatin
         this.ux.startSpinner('Retrieve organization info');
@@ -42,10 +74,10 @@ export default class SchemaDocGen extends SfdxCommand {
         const ssoSettings = await this.getSSOSettingMetadata();
         this.ux.stopSpinner(`Done`);
         this.ux.startSpinner('Retrieve standard object list');
-        let std_objects = await this.query(STDQUERY);
+        let std_objects = await this.query(STDQUERY.split('{{stdobject}}').join(documentMeta.metadata.stdobjects.join("','")));
         this.ux.stopSpinner(`${std_objects.length} found!`);
         this.ux.startSpinner('Retrieve standard object metadata');
-        std_objects = await this.getObjectDefinition(std_objects, 'CustomObject',[ 'Account','Contact','AccountContactRelation','Opportunity','Asset','Event','Task']);
+        std_objects = await this.getObjectDefinition(std_objects, 'CustomObject',documentMeta.metadata.stdobjects);
         this.ux.stopSpinner(`Done`);
         this.ux.startSpinner('Retrieve custom object list');
         let cust_objects = await this.query(CUSTOMQUERY);
@@ -85,9 +117,8 @@ export default class SchemaDocGen extends SfdxCommand {
         
         
         this.ux.startSpinner('Create pdf document');
-        const documentMeta:any = JSON.parse(fs.readFileSync("/Users/dbrowaeys/workspace/DXB/src/lib/documentinfo.json", "utf8"));
-        const html = fs.readFileSync("/Users/dbrowaeys/workspace/DXB/src/lib/schema-template.html", "utf8");
-        const css = fs.readFileSync("/Users/dbrowaeys/workspace/DXB/src/lib/bootstrap.min.css", "utf8");
+        const html = fs.readFileSync(htmlPath, "utf8");
+        const css = fs.readFileSync(cssPath, "utf8");
         const document = {
             html: html,
             data: {
@@ -177,43 +208,51 @@ export default class SchemaDocGen extends SfdxCommand {
         return Promise.all(chunks.map(async (c) => {
             try{
                 return this.toArray(await this.connection.metadata.readSync('SharingRules', c))
-                    .fiter ((sh:any) => sh && !!sh.fullName)
                     .map( (sh:any) => {
-                        let {sharingCriteriaRules, sharingOwnerRules} = sh;
-                        if(sharingCriteriaRules){
-                            sharingCriteriaRules = this.toArray(sharingCriteriaRules);
-                            sharingCriteriaRules.sharedTo = this.toArray(sharingCriteriaRules.sharedTo);
-                            let formattedShareTo = [];
-                            sharingCriteriaRules.sharedTo.forEach(r => {
-                                for (let k in r){
-                                    let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
-                                    formattedShareTo.push({label:this.toCapitalCase(k), value});
-                                }
-                            });
-                            sharingCriteriaRules.sharedTo = formattedShareTo;
+                        if (sh && sh.fullName){
+                            let {sharingCriteriaRules, sharingOwnerRules} = sh;
+                            if(sharingCriteriaRules){
+                                sharingCriteriaRules = this.toArray(sharingCriteriaRules).map( (shc:any) =>{
+                                    shc.criteriaItems = this.toArray(shc.criteriaItems);
+                                    shc.sharedTo = this.toArray(shc.sharedTo);
+                                    let formattedSharedTo = [];
+                                    shc.sharedTo.forEach(r => {
+                                        for (let k in r){
+                                            let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
+                                            formattedSharedTo.push({label:this.toCapitalCase(k), value});
+                                        }
+                                    });
+                                    shc.sharedTo = formattedSharedTo;
+                                    return {...shc};
+                                });
+                            }
+                            if(sharingOwnerRules){
+                                sharingOwnerRules = this.toArray(sharingOwnerRules).map( (sho:any) =>{
+                                    //shared to
+                                    let formattedSharedTo = [];
+                                    sho.sharedTo = this.toArray(sho.sharedTo);
+                                    sho.sharedTo.forEach(r => {
+                                        for (let k in r){
+                                            let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
+                                            formattedSharedTo.push({label:this.toCapitalCase(k), value});
+                                        }
+                                    });
+                                    sho.sharedTo = formattedSharedTo;
+                                    //shared from
+                                    let formattedSharedFrom = [];
+                                    sho.sharedFrom = this.toArray(sho.sharedFrom);
+                                    sho.sharedFrom.forEach(r => {
+                                        for (let k in r){
+                                            let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
+                                            formattedSharedFrom.push({label:this.toCapitalCase(k), value});
+                                        }
+                                    });
+                                    sho.sharedFrom = formattedSharedFrom;
+                                    return {...sho};
+                                });
+                            }
+                            return {...sh, sharingOwnerRules, sharingCriteriaRules};
                         }
-                        if(sharingOwnerRules){
-                            sharingOwnerRules = this.toArray(sh.sharingOwnerRules);
-                            sharingOwnerRules.sharedTo = this.toArray(sharingOwnerRules.sharedTo);
-                            let formattedShareTo = [];
-                            sharingOwnerRules.sharedTo.forEach(r => {
-                                for (let k in r){
-                                    let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
-                                    formattedShareTo.push({label:this.toCapitalCase(k), value});
-                                }
-                            });
-                            sharingOwnerRules.sharedTo = formattedShareTo;
-                            formattedShareTo = [];
-                            sharingOwnerRules.sharedFrom = this.toArray(sharingOwnerRules.sharedFrom);
-                            sharingOwnerRules.sharedFrom.forEach(r => {
-                                for (let k in r){
-                                    let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
-                                    formattedShareTo.push({label:this.toCapitalCase(k), value});
-                                }
-                            });
-                            sharingOwnerRules.sharedFrom = formattedShareTo;
-                        }
-                        return {...sh, sharingOwnerRules, sharingCriteriaRules};
                     });
             }catch(err){}
         }));
@@ -304,9 +343,9 @@ export default class SchemaDocGen extends SfdxCommand {
                 });
             }
             const sharingCriteriaRules = sharingRules?.sharingCriteriaRules;
-            const sharingOwnerRules = sharingRules?.sharingCriteriaRules;
-            console.log(o.QualifiedApiName,sharingCriteriaRules,sharingOwnerRules);
-            return {...o,...objectMeta, sharingCriteriaRules, sharingOwnerRules};
+            const sharingOwnerRules = sharingRules?.sharingOwnerRules;
+            const hasSharingRules = !!sharingCriteriaRules || !!sharingOwnerRules;
+            return {...o,...objectMeta, hasSharingRules, hasOwnerSharingRules: !!sharingOwnerRules, hasCriteriaSharingRules: !!sharingCriteriaRules, sharingCriteriaRules, sharingOwnerRules};
         });
     }
 

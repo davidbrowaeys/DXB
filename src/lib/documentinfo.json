@@ -14,14 +14,17 @@
             }
         }
     },
+    "metadata": {
+        "stdobjects": ["Account","Contact","AccountContactRelation","Opportunity","Asset","Event","Task"]
+    },
     "documentInfo": {
-        "title": "Tabcorp Separation Solution Design",
-        "subtitle": "By Deloitte Digital",
+        "title": "ABC Technical Design",
+        "subtitle": "By David Browaeys",
         "documentOwner": "David Browaeys", 
         "createdDate": "21/03/2023", 
         "approvers": [{
             "name": "David Browaeys",
-            "email": "dbrowaeys@deloitte.com.au"
+            "email": "davidbrowaeys@fakeemail.com"
         }]
     }
 }

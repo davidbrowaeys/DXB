@@ -545,69 +545,78 @@
           {{/each}}
         </table>
         {{/ifCond}}
+        {{#ifCond this.hasSharingRules '===' true}}
         <h5>Sharing Rules</h5>
-        <h6>Criteria Based Sharing</h6>
+        <p>Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings for selected sets of users.</p>
+        {{#ifCond this.hasOwnerSharingRules '===' true}}
+        <h6>Owner-Based Sharing</h6>
+        <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
         <table class="table">
           <thead>
             <tr>
               <th class="bg-primary" scope="col" >Name</th>
-              <th class="bg-primary text-start" scope="col" >Criteria</th>
-              <th class="bg-primary text-start" scope="col">Shared To</th>
               <th class="bg-primary text-start" scope="col">Access</th>
-            </tr>
-          </thead>
-          {{#each this.sharingCriteriaRules}}
-          <tr>
-            <td style="width:50px;">{{this.label}}</td>
-            <td class="text-start" style="width:300px;word-break: break-all;">
-              <ul>
-                {{#each this.criteriaItems}}
-                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
-                {{/each}}
-              </ul>
-            </td>
-            <td class="text-start" style="word-break: break-all;">
-              <ul>
-                {{#each this.sharedTo}}
-                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
-                {{/each}}
-              </ul>
-            </td>
-            <td style="width:50px;">{{this.accessLevel}}</td>
-          </tr>
-          {{/each}}
-        </table>
-        <h6>Owner Based Sharing</h6>
-        <table class="table">
-          <thead>
-            <tr>
-              <th class="bg-primary" scope="col" >Name</th>
               <th class="bg-primary text-start" scope="col" >Shared From</th>
               <th class="bg-primary text-start" scope="col">Shared To</th>
-              <th class="bg-primary text-start" scope="col">Access</th>
             </tr>
           </thead>
           {{#each this.sharingOwnerRules}}
           <tr>
-            <td style="width:50px;">{{this.label}}</td>
-            <td class="text-start" style="word-break: break-all;">
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
               <ul>
                 {{#each this.sharedFrom}}
                   <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
                 {{/each}}
               </ul>
             </td>
-            <td class="text-start" style="word-break: break-all;">
+            <td class="text-start" style="width:200px;word-break: break-all;">
               <ul>
                 {{#each this.sharedTo}}
                   <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
                 {{/each}}
               </ul>
             </td>
-            <td style="width:50px;">{{this.accessLevel}}</td>
           </tr>
           {{/each}}
         </table>
+        {{/ifCond}}
+        {{#ifCond this.hasCriteriaSharingRules '===' true}}
+        <h6>Criteria-Based Sharing</h6>
+        <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary text-start" scope="col">Access</th>
+              <th class="bg-primary text-start" scope="col" >Criteria</th>
+              <th class="bg-primary text-start" scope="col">Shared To</th>
+            </tr>
+          </thead>
+          {{#each this.sharingCriteriaRules}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.criteriaItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{/ifCond}}
         {{#ifCond this.hasTriggers '===' true}}
         <h5>Apex Triggers</h5>
         <table class="table">
@@ -807,6 +816,79 @@
           </tr>
           {{/each}}
         </table>
+        {{/ifCond}}
+
+        {{#ifCond this.hasSharingRules '===' true}}
+        <h5>Sharing Rules</h5>
+        <p>Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings for selected sets of users.</p>
+        {{#ifCond this.hasOwnerSharingRules '===' true}}
+        <h6>Owner-Based Sharing</h6>
+        <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col">Access</th>
+              <th class="bg-primary text-start" scope="col" >Shared From</th>
+              <th class="bg-primary text-start" scope="col">Shared To</th>
+            </tr>
+          </thead>
+          {{#each this.sharingOwnerRules}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedFrom}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.hasCriteriaSharingRules '===' true}}
+        <h6>Criteria-Based Sharing</h6>
+        <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary text-start" scope="col">Access</th>
+              <th class="bg-primary text-start" scope="col" >Criteria</th>
+              <th class="bg-primary text-start" scope="col">Shared To</th>
+            </tr>
+          </thead>
+          {{#each this.sharingCriteriaRules}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.criteriaItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
         {{/ifCond}}
         {{/each}}
         <h2>Apex Classes</h2>

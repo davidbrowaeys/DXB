@@ -407,3 +407,20 @@ then
   fi
 fi
 ```
+
+### Schema Doc Gen
+
+This command generate as-build technical design pdf document by pulling metadata such as standard object, custom objects, apex classes, triggers etc directly from an org.
+
+You will need to create a pdf document config json file as follow:
+https://github.com/davidbrowaeys/DXB/blob/master/src/lib/documentinfo.json
+
+List of standard objects is quite big so we only limit to what you need be defining <i>metadata.stdobjects</i>. For custom objects, currently it pull simply everything (except managed packages metadata).
+
+The html template & stylesheet are included in DXB but you can add your own if required:
+https://github.com/davidbrowaeys/DXB/blob/master/src/lib/schema-template.html
+https://github.com/davidbrowaeys/DXB/blob/master/src/lib/bootstrap.min.css
+
+Future Enhancements:
+
+- generate document based on a package.xml so that you can limit to only what you need.

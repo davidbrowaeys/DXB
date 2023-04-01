@@ -13,10 +13,10 @@ const NAMEDCREDQUERY = "SELECT Id, DeveloperName, Endpoint, PrincipalType, Langu
 const CONNECTEDAPPQUERY = "SELECT Id, Name, MobileStartUrl, RefreshTokenValidityPeriod, UvidTimeout, OptionsAllowAdminApprovedUsersOnly, OptionsRefreshTokenValidityMetric, MobileSessionTimeout, OptionsCodeCredentialGuestEnabled, OptionsFullContentPushNotifications, OptionsAllowExpiredUvidJWT, OptionsIsInternal, OptionsHasSessionLevelPolicy, PinLength, StartUrl FROM ConnectedApplication";
 export default class SchemaDocGen extends SfdxCommand {
 
-    public static description = 'This command generate a as-build technical design pdf document by pulling metadata such as cusotm object, classes etc directly from an org.';
+    public static description = 'This command-line can generate technical design documentation for a Salesforce org. The tool retrieves metadata information about standard and custom objects, Apex classes, triggers, REST resources, named credentials, and connected apps from the org and then creates a PDF document containing the collected information. The tool uses the pdfmake library to generate the PDF document based on an HTML template and a CSS stylesheet.';
 
     public static examples = [
-        'sfdx dxb:schema:generate:doc -u tlcuat -c config/documentinfo.json'
+        'sfdx dxb:schema:generate:doc -u myenv -c config/documentinfo.json'
     ];
 
     public static args = [{ name: 'file' }];
@@ -24,16 +24,16 @@ export default class SchemaDocGen extends SfdxCommand {
     protected static flagsConfig = {
         pdfconfig:flags.string({
             char: 'c',
-            description: 'File path of pdf document as json',
+            description: 'A required string parameter that represents the file path of a JSON configuration file for the PDF document generation.',
             required:true
         }),
         stylesheet: flags.string({
             char: 's',
-            description: 'File path of stylesheet, default(boostrap)'
+            description: 'An optional string parameter that represents the file path of a stylesheet for the generated HTML document. If not specified, the default Bootstrap stylesheet will be used'
         }),
         htmltemplate: flags.string({
             char: 't',
-            description: 'File path of html template, default(dxb template)'
+            description: ' An optional string parameter that represents the file path of an HTML template for the PDF document generation. If not specified, the default DXB template will be used.'
         }),
     };
     // Comment this out if your command does not require an org username
@@ -47,26 +47,22 @@ export default class SchemaDocGen extends SfdxCommand {
 
     protected connection:Connection;
 
-    public async run() {
-        const {pdfconfig, stylesheet, htmltemplate} = this.flags;
-        this.connection = this.org.getConnection();
-        //validate files
-        let htmlPath = htmltemplate? htmltemplate : path.join(__dirname, '../../../../../src/lib/schema-template.html');
-        let cssPath = stylesheet? stylesheet: path.join(__dirname, '../../../../../src/lib/bootstrap.min.css');
-        if (!fs.existsSync(htmlPath)){
-            throw new Error(`HTML Template not found: ${htmlPath}`);
-        }
-        if (!fs.existsSync(cssPath)){
-            throw new Error(`Stylesheet file not found: ${cssPath}`);
-        }
-        if (!fs.existsSync(pdfconfig)){
-            throw new Error(`PDF Metadata Config Json file not found: ${pdfconfig}`);
-        }
-        const documentMeta:any = JSON.parse(fs.readFileSync(pdfconfig, "utf8"));
-        if(!documentMeta.metadata || !documentMeta.metadata.stdobjects || !Array.isArray(documentMeta.metadata.stdobjects)){
+    public async run(): Promise<void> {
+        const { pdfconfig, stylesheet, htmltemplate } = this.flags;
+
+        // Ensure required files exist
+        const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../../src/lib/schema-template.html');
+        const cssPath = stylesheet ?? path.join(__dirname, '../../../../../src/lib/bootstrap.min.css');
+        if (!fs.existsSync(htmlPath)) throw new Error(`HTML Template not found: ${htmlPath}`);
+        if (!fs.existsSync(cssPath)) throw new Error(`Stylesheet file not found: ${cssPath}`);
+        if (!fs.existsSync(pdfconfig)) throw new Error(`PDF Metadata Config Json file not found: ${pdfconfig}`);
+        // Parse PDF metadata configuration
+        const documentMeta = JSON.parse(fs.readFileSync(pdfconfig, 'utf8'));
+        if (!documentMeta.metadata?.stdobjects || !Array.isArray(documentMeta.metadata.stdobjects)) {
             throw new Error(`You must define list of standard objects as follow "metadata": { stdobjects: ["Account","Contact"]} in your pdf document:${pdfconfig}`);
         }
-        //const settings = await this.getSettingMetadata(['Case']);
+        // Connect to org
+        this.connection = this.org.getConnection();
         //retrieve objects informatin
         this.ux.startSpinner('Retrieve organization info');
         let orginfo = await this.query(ORGQUERY);
@@ -86,25 +82,20 @@ export default class SchemaDocGen extends SfdxCommand {
         cust_objects = await this.getObjectDefinition(cust_objects, 'CustomObject',cust_objects.map( (e:any) =>{ return e.QualifiedApiName;}));
         this.ux.stopSpinner(`Done`);
 
-        //retrieve apex classes and triggers
-        this.ux.startSpinner('Retrieve apex classes');
-        let apexClasses = await (await this.query(APEXCLSQUERY)).map( (cls:any) => { return {...cls,Body: (cls.Body.length < 100 ? cls.Body : cls.Body.substring(0,100))}});
-        let apexRestResource = apexClasses.filter( (a:any) => a.Body.includes('@RestResource'))
-            .map( (a:any) => { 
-                const regex = /urlMapping=['"]([^'"]+)['"]/;
-                const match = a.Body.match(regex);
-                const urlMappingValue = match ? match[1] : undefined;
-                return {...a,urlMappingValue};
-        });
-        apexClasses = apexClasses.filter( (a:any) => !a.Body.includes('@RestResource'));
-        let apexTestClasses = apexClasses.filter( (a:any) => a.Body.toLowerCase().includes('@istest'));
-        apexClasses = apexClasses.filter( (a:any) => !a.Body.toLowerCase().includes('@isTest'));
+        // Retrieve Apex classes, triggers, and REST resources
+        this.ux.startSpinner('Retrieve Apex classes and triggers');
+        const apexClasses = await this.getApexClasses();
+        const apexTestClasses = apexClasses.filter(cls => cls.Body.toLowerCase().includes('@istest'));
+        const apexTriggers = await this.query(APEXTRGQUERY);
+        std_objects = await this.getTriggerForSObject(std_objects, apexTriggers);
+        cust_objects = await this.getTriggerForSObject(cust_objects, apexTriggers);
+        const apexRestResource = apexClasses.filter(cls => cls.Body.includes('@RestResource'))
+            .map(cls => {
+                const urlMappingValue = cls.Body.match(/urlMapping=['"]([^'"]+)['"]/)?.[1];
+                return { ...cls, urlMappingValue };
+            })
+            .filter(cls => !!cls.urlMappingValue);
         this.ux.stopSpinner(`${apexClasses.length} found!`);
-        this.ux.startSpinner('Retrieve apex triggers');
-        let triggers = await this.query(APEXTRGQUERY);//.map( (cls:any) => { return {...cls,Body: (cls.Body.length < 100 ? cls.Body : cls.Body.substring(0,100))}});
-        this.ux.stopSpinner(`${triggers.length} found!`);
-        std_objects = await this.getTriggerForSObject(std_objects,triggers);
-        cust_objects = await this.getTriggerForSObject(cust_objects,triggers);
 
         //retrieve integration settings
         this.ux.startSpinner('Retrieve name credentials');
@@ -114,7 +105,47 @@ export default class SchemaDocGen extends SfdxCommand {
         let connectedApps:any = await this.getConnectedAppUsage( await this.query(CONNECTEDAPPQUERY) );
         this.ux.stopSpinner(`${connectedApps.length} found!`);
         
-        
+        // finalizing and create actual documet
+        await this.createPdfDocument({
+            orginfo,
+            ssoSettings,
+            std_objects,
+            cust_objects,
+            apexClasses,
+            apexRestResource,
+            apexTestClasses,
+            connectedApps,
+            namedCredentials,
+            documentMeta,
+            cssPath,
+            htmlPath
+        });
+    }
+    /**
+     * Creates a PDF document with the provided HTML content and data, and saves it to a specified file path.
+     *
+     * @param {Object} doc - An object containing various data needed to generate the PDF document, including org information,
+     * SSO settings, standard and custom objects, Apex classes, Apex REST resources, Apex test classes, connected apps,
+     * named credentials, document metadata, and file paths for the HTML and CSS content.
+     *
+     * @returns {Promise<void>} - A Promise that resolves when the PDF document has been created and saved successfully.
+     * The Promise will be rejected if there is an error during the PDF creation process.
+     */
+    private async createPdfDocument(doc){
+        const {
+            orginfo,
+            ssoSettings,
+            std_objects,
+            cust_objects,
+            apexClasses,
+            apexRestResource,
+            apexTestClasses,
+            connectedApps,
+            namedCredentials,
+            documentMeta,
+            cssPath,
+            htmlPath
+        } = doc;
         this.ux.startSpinner('Create pdf document');
         const html = fs.readFileSync(htmlPath, "utf8");
         const css = fs.readFileSync(cssPath, "utf8");
@@ -133,160 +164,178 @@ export default class SchemaDocGen extends SfdxCommand {
                 document: documentMeta.documentInfo,
                 style: css
             },
-            path: "./sample_pdfoutput.pdf",
+            path: `./${documentMeta.documentInfo.title ?? 'DXB Technical Design'}.pdf`,
             type: "",
           };
         await pdf.create(document, documentMeta.pdfOption);
         this.ux.stopSpinner(`Done`);
     }
-
-    private async getConnectedAppUsage(apps:any[]){
-        return Promise.all(apps.map(async (c) => {
-            let usage = 0;
-            try{    //this object doesn't allow to aggregate by UserId field :-(
-                const result:any =await this.connection.query(`SELECT COUNT() FROM OauthToken where AppName = '${c.Name}'`);
-                usage = result.totalSize;
-            }catch(err){}
-            return {...c, usage};
-        }));
+    /**
+     * Retrieves Apex classes from the Salesforce org.
+     * @returns {Promise<Array>} A Promise that resolves to an array of Apex classes.
+    */
+    private async getApexClasses(){
+        return (await this.query(APEXCLSQUERY))
+            .map( (cls:any) => { 
+                return {... cls, Body: (cls.Body.length < 100 ? cls.Body : cls.Body.substring(0,100))
+            }});
     }
-
-    private async getTriggerForSObject(sobjects: any[],allTriggers: any[]){
-        const triggerPerObject:any = allTriggers.reduce((acc:any, cur:any) => {
-            if (acc.has(cur.TableEnumOrId)) {
-            acc.get(cur.TableEnumOrId).push(cur);
-            } else {
-            acc.set(cur.TableEnumOrId, [cur]);
-            }
-            return acc;
-        }, new Map());
-        return sobjects.map( (o:any) => {
-            let triggers = triggerPerObject.get(o.QualifiedApiName);
-            if (triggers){
-                triggers = triggers.map( (t) => {
-                    let operation = [];
-                    if (t.UsageBeforeInsert) operation.push({name:'Before Insert'});
-                    if (t.UsageAfterInsert) operation.push({name:'After Insert'});
-                    if (t.UsageBeforeUpdate) operation.push({name:'Before Update'});
-                    if (t.UsageAfterUpdate) operation.push({name:'After Update'});
-                    if (t.UsageBeforeDelete) operation.push({name:'Before Delete'});
-                    if (t.UsageAfterDelete) operation.push({name:'After Delete'});
-                    if (t.UsageAfterUndelete) operation.push({name:'After Undelete'});
-                    if (t.UsageAfterInsert) operation.push({name:'After Insert'});
-                    return {...t,operation};
-                });
-            }
-            return {...o,triggers,hasTriggers: !!triggers}
+    /**
+     * Gets the usage count of each connected app.
+     * @param {any[]} apps - The array of connected apps to retrieve usage count for.
+     * @returns {Promise<any[]>} An array of objects containing the app and its usage count.
+     */
+    private async getConnectedAppUsage(apps: any[]): Promise<any[]> {
+        const usagePromises = apps.map(async (app) => {
+          try {
+            const result: any = await this.connection.query(`SELECT COUNT() FROM OauthToken where AppName = '${app.Name}'`);
+            return { ...app, usage: result.totalSize };
+          } catch (err) {
+            return { ...app, usage: 0 };
+          }
         });
-    }
-
+        return Promise.all(usagePromises);
+      }
+    /**
+     * Fetches the trigger information for a list of sObjects from a pre-fetched list of all triggers.
+     * @param {Array} sobjects - List of sObjects to fetch trigger information for.
+     * @param {Array} allTriggers - List of all triggers fetched from the org.
+     * @returns {Array} - An array of sObjects with trigger information.
+     */
+    private async getTriggerForSObject(sobjects: any[], allTriggers: any[]): Promise<any[]> {
+        // Convert the list of triggers to a map with sObject names as keys
+        const triggerMap = allTriggers.reduce((acc, cur) => {
+            if (!acc[cur.TableEnumOrId]) {
+                acc[cur.TableEnumOrId] = [];
+            }
+            acc[cur.TableEnumOrId].push(cur);
+            return acc;
+        }, {});
+    
+        // Add trigger information to each sObject in the list
+        return sobjects.map((sobject) => {
+            const triggers = triggerMap[sobject.QualifiedApiName];
+            const triggerInfo = triggers
+                ? triggers.map((trigger) => {
+                    const operations = [];
+                    if (trigger.UsageBeforeInsert) operations.push({ name: 'Before Insert' });
+                    if (trigger.UsageAfterInsert) operations.push({ name: 'After Insert' });
+                    if (trigger.UsageBeforeUpdate) operations.push({ name: 'Before Update' });
+                    if (trigger.UsageAfterUpdate) operations.push({ name: 'After Update' });
+                    if (trigger.UsageBeforeDelete) operations.push({ name: 'Before Delete' });
+                    if (trigger.UsageAfterDelete) operations.push({ name: 'After Delete' });
+                    if (trigger.UsageAfterUndelete) operations.push({ name: 'After Undelete' });
+                    return { ...trigger, operation: operations };
+                })
+                : [];
+            return { ...sobject, triggers: triggerInfo, hasTriggers: triggers?.length > 0 };
+        });
+    }  
+    /**
+     * Fetches the field definition for a list of sObjects in chunks of 10 using the provided SOQL query.
+     * @param {Array} sobjects - List of sObject names to fetch field definition for.
+     * @returns {Promise<Array>} - A Promise that resolves to an array of field definition objects.
+     */
     private async getFieldDefinitionForSObject(sobjects: any[]): Promise<any[]> {
         const chunkSize = 10
         const chunks = []
-
         // Split the array into chunks of 10 records
-        for (let i = 0; i < sobjects.length; i += chunkSize) {
-            const chunk = sobjects.slice(i, i + chunkSize)
-            chunks.push(chunk)
-        }
+        sobjects.forEach((name, index) => {
+            const chunk = sobjects.slice(index, index + chunkSize);
+            chunks.push(chunk);
+        });
         return Promise.all(chunks.map(async (c) => {
             try{
                 return await this.query(FIELDQUERY.split('{{object_name}}').join(`'${c.join("','")}'`));
             }catch(err){}
         }));
     }
-    private async getSharingRulesMetadata(fullNames){
-        const chunkSize = 5
-        const chunks = []
-
-        // Split the array into chunks of chunkSize records (limited to 10 in jsforce)
-        for (let i = 0; i < fullNames.length; i += chunkSize) {
-            const chunk = fullNames.slice(i, i + chunkSize)
-            chunks.push(chunk)
-        }
-        return Promise.all(chunks.map(async (c) => {
-            try{
-                return this.toArray(await this.connection.metadata.readSync('SharingRules', c))
-                    .map( (sh:any) => {
-                        if (sh && sh.fullName){
-                            let {sharingCriteriaRules, sharingOwnerRules} = sh;
-                            if(sharingCriteriaRules){
-                                sharingCriteriaRules = this.toArray(sharingCriteriaRules).map( (shc:any) =>{
-                                    shc.criteriaItems = this.toArray(shc.criteriaItems);
-                                    shc.sharedTo = this.toArray(shc.sharedTo);
-                                    let formattedSharedTo = [];
-                                    shc.sharedTo.forEach(r => {
-                                        for (let k in r){
-                                            let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
-                                            formattedSharedTo.push({label:this.toCapitalCase(k), value});
-                                        }
-                                    });
-                                    shc.sharedTo = formattedSharedTo;
-                                    return {...shc};
-                                });
-                            }
-                            if(sharingOwnerRules){
-                                sharingOwnerRules = this.toArray(sharingOwnerRules).map( (sho:any) =>{
-                                    //shared to
-                                    let formattedSharedTo = [];
-                                    sho.sharedTo = this.toArray(sho.sharedTo);
-                                    sho.sharedTo.forEach(r => {
-                                        for (let k in r){
-                                            let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
-                                            formattedSharedTo.push({label:this.toCapitalCase(k), value});
-                                        }
-                                    });
-                                    sho.sharedTo = formattedSharedTo;
-                                    //shared from
-                                    let formattedSharedFrom = [];
-                                    sho.sharedFrom = this.toArray(sho.sharedFrom);
-                                    sho.sharedFrom.forEach(r => {
-                                        for (let k in r){
-                                            let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
-                                            formattedSharedFrom.push({label:this.toCapitalCase(k), value});
-                                        }
-                                    });
-                                    sho.sharedFrom = formattedSharedFrom;
-                                    return {...sho};
-                                });
-                            }
-                            return {...sh, sharingOwnerRules, sharingCriteriaRules};
-                        }
-                    });
-            }catch(err){}
-        }));
-        // var types = [{type: 'SharingRules', folder: null}];
-        // const list = this.toArray(await this.connection.metadata.list(types, '57.0'));
-        // console.log(list);
-        // return this.toArray(await this.connection.metadata.readSync('SharingRules', fullNames));
+    /**
+     * This method is used to get the sharing rules metadata of an array of fullNames. 
+     * It takes in an array of fullNames as a parameter and returns a promise with the metadata.
+     * @param {array} fullNames - An array of fullNames 
+     * @returns {Promise<Array>} - An array of sharing rules metadata
+     */
+    private async getSharingRulesMetadata(fullNames) {
+      const chunkSize = 5;
+      const chunks = [];
+    
+      // Split the array into chunks of 10 records
+      fullNames.forEach((name, index) => {
+        const chunk = fullNames.slice(index, index + chunkSize);
+        chunks.push(chunk);
+      });
+      return Promise.all(chunks.map(async (c) => {
+        try {
+          return this.toArray(await this.connection.metadata.readSync('SharingRules', c))
+            .map((sh: any) => {
+              if (sh && sh.fullName) {
+                let { sharingCriteriaRules, sharingOwnerRules } = sh;
+                if (sharingCriteriaRules) {
+                  sharingCriteriaRules = this.toArray(sharingCriteriaRules).map((shc: any) => {
+                    shc.criteriaItems = this.toArray(shc.criteriaItems);
+                    shc.sharedTo = this.formatSharedInfo(this.toArray(shc.sharedTo));
+                    return { ...shc };
+                  });
+                }
+                if (sharingOwnerRules) {
+                  sharingOwnerRules = this.toArray(sharingOwnerRules).map((sho: any) => {
+                    sho.sharedTo = this.formatSharedInfo(this.toArray(sho.sharedTo));
+                    sho.sharedFrom = this.formatSharedInfo(this.toArray(sho.sharedFrom));
+                    return { ...sho };
+                  });
+                }
+                return { ...sh, sharingOwnerRules, sharingCriteriaRules };
+              }
+            });
+        } catch (err) { }
+      }));
     }
-    private async getSSOSettingMetadata(){
-        var types = [{type: 'SamlSsoConfig', folder: null}];
-        const list = this.toArray(await this.connection.metadata.list(types, '57.0'));
-        ///////////
-        return  this.toArray(await this.connection.metadata.readSync('SamlSsoConfig', list.map( e => e.fullName)));
+    /**
+     * Retrieves the SSO setting metadata
+     *
+     * @returns {Promise<Array>} - An array of SSO setting metadata
+     */
+    private async getSSOSettingMetadata() {
+        const types = [{ type: 'SamlSsoConfig', folder: null }];
+        const list = await this.toArray(await this.connection.metadata.list(types, '57.0'));
+        const fullNameList = list.map(e => e.fullName);
+        return await this.toArray(await this.connection.metadata.readSync('SamlSsoConfig', fullNameList));
     }
     // private async getSettingMetadata(names: string[]){
     //     return await this.connection.metadata.read('CaseSettings', ['CaseSettings']);
     // }
+    /**
+     * Retrieves custom object metadata from Salesforce for a given list of object api name by using jsforce. 
+     * Jsforce limit to max 10 objects per called so the method split by chunk
+     * @param {string} type - Type of metadata object
+     * @param {array} fullNames - Array of fullNames for the metadata object
+     * @returns {Promise} - Returns a promise
+    */
     private async getMetadataObject(type, fullNames){
-        const chunkSize = 5
-        const chunks = []
-
+        const chunkSize = 5;
+        const chunks = [];
+        
         // Split the array into chunks of 10 records
-        for (let i = 0; i < fullNames.length; i += chunkSize) {
-            const chunk = fullNames.slice(i, i + chunkSize)
-            chunks.push(chunk)
-        }
+        fullNames.forEach((name, index) => {
+          const chunk = fullNames.slice(index, index + chunkSize);
+          chunks.push(chunk);
+        });
         return Promise.all(chunks.map(async (c) => {
             try{
                 return await this.connection.metadata.readSync(type, c);
             }catch(err){}
         }));
     }
-
+    /**
+     * Get the object definition of given sobjects with its metadata, sharing rules metadata, and field definition
+     * @param {Array} sobjects - Array of sobject types to fetch definition for
+     * @param {string} type - Type of the metadata to fetch
+     * @param {Array} fullNames - Array of full names for the metadata to fetch
+     * @returns {Array} - Array of sobjects with its metadata, sharing rules metadata, field definition, and other related information
+    */
     private async getObjectDefinition(sobjects,type, fullNames){
-        // const metadata:any = await this.connection.metadata.readSync(type, fullNames);
+        //get object and related element metadata
         const metadata:any = (await this.getMetadataObject(type, fullNames)).flat();
         const sharingRulesArray:any = (await this.getSharingRulesMetadata(fullNames)).flat();
         const fieldsArray = await this.getFieldDefinitionForSObject(fullNames);
@@ -298,6 +347,7 @@ export default class SchemaDocGen extends SfdxCommand {
             }
             return acc;
           }, new Map());
+        //decorate object with other metadata
         return sobjects.map( o => {
             let objectMeta = metadata.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
             let sharingRules = sharingRulesArray.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
@@ -309,9 +359,7 @@ export default class SchemaDocGen extends SfdxCommand {
             });
             objectMeta.hasValidations = !!objectMeta.validationRules;
             if (objectMeta.hasValidations){
-                if (!Array.isArray(objectMeta.validationRules)){
-                    objectMeta.validationRules = [{...objectMeta.validationRules}];
-                }
+                objectMeta.validationRules = this.toArray(objectMeta.validationRules);
             }
             objectMeta.hasRecordTypes = !!objectMeta.recordTypes;
             if(objectMeta.hasRecordTypes){
@@ -329,15 +377,7 @@ export default class SchemaDocGen extends SfdxCommand {
                     }
                     lv.hasShareTo = !!lv.sharedTo;
                     if (lv.hasShareTo){
-                        lv.sharedTo = this.toArray(lv.sharedTo);
-                        let formattedShareTo = [];
-                        lv.sharedTo.forEach(sh => {
-                            for (let k in sh){
-                                let value = sh[k] ? Array.isArray(sh[k]) ? sh[k].toString() : sh[k] : "";
-                                formattedShareTo.push({label:this.toCapitalCase(k), value});
-                            }
-                        });
-                        lv.sharedTo = formattedShareTo;
+                        lv.sharedTo = this.formatSharedInfo(this.toArray(lv.sharedTo));;
                     }
                 });
             }
@@ -347,18 +387,42 @@ export default class SchemaDocGen extends SfdxCommand {
             return {...o,...objectMeta, hasSharingRules, hasOwnerSharingRules: !!sharingOwnerRules, hasCriteriaSharingRules: !!sharingCriteriaRules, sharingCriteriaRules, sharingOwnerRules};
         });
     }
-
+    /**
+     * Formats the shared object (sharedTo and sharedFrom)
+     * @param {Object} sharedInfo - The object to be formatted
+     * @returns {Array} formattedSharedTo - The formatted object
+    */
+    private formatSharedInfo(sharedInfo) {
+      let formattedSharedTo = [];
+      sharedInfo.forEach(r => {
+        for (let k in r) {
+          let value = r[k] ? Array.isArray(r[k]) ? r[k].toString() : r[k] : "";
+          formattedSharedTo.push({ label: this.toCapitalCase(k), value });
+        }
+      });
+      return formattedSharedTo;
+    }
+    /**
+     * Converts the first character of a string to uppercase.
+     * @param {string} str - The string to be converted. 
+     * @returns {string} - The string with the first character in uppercase.
+     */
     private toCapitalCase(str: string): string {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
-
-    private toArray(prop){
-        if (!Array.isArray(prop)){
-            prop = [{...prop}];
-        }
-        return prop;
+    /**
+     * Converts an object to an array
+     * @param {Object} prop - The object to convert
+     * @returns {Array} An array representation of the object
+     */
+    private toArray(prop) {
+        return Array.isArray(prop) ? prop : [{...prop}];
     }
-
+    /**
+     * Executes a SOQL query
+     * @param {string} soql - The SOQL query to execute
+     * @returns {Promise} The records returned from the query
+     */
     private async query(soql:string){
         return (await this.connection.query(soql)).records; 
     }

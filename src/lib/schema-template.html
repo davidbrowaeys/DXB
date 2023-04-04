@@ -356,7 +356,7 @@
         </li>
       </ol>
     </div> -->
-    <div class="documentContent">
+    <div class="documentContent" style="page-break-after: always">
         <h2 id="DocumentOverview">Document Overview & Description</h2>
         <p>This document provides the configuration and customization settings that have been implemented. This configuration and customization will serve as the baseline for a full release.</p>
         <ul>
@@ -617,6 +617,35 @@
         </table>
         {{/ifCond}}
         {{/ifCond}}
+        {{#ifCond this.hasAutoFlows '===' true}}
+        <h5>Autolaunched Flows</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
+              <th class="bg-primary text-start" scope="col">Subflows Dependencies</th>
+            </tr>
+          </thead>
+          {{#each this.autoflows}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:100px;word-break: break-all;">
+              {{this.interviewLabel}}
+            </td>
+            <td style="width:50px;">{{this.start.triggerType}}({{this.start.recordTriggerType}})</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.subflows}}
+                  <li>{{this.label}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
         {{#ifCond this.hasTriggers '===' true}}
         <h5>Apex Triggers</h5>
         <table class="table">
@@ -790,6 +819,25 @@
           {{/each}}
         </table>
         {{/ifCond}}
+        {{#ifCond this.hasAutoFlows '===' true}}
+        <h5>Autolaunched Flows</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
+            </tr>
+          </thead>
+          {{#each this.autoflows}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:100px;word-break: break-all;">{{this.interviewLabel}}</td>
+            <td style="width:100px;">{{this.start.triggerType}}-{{this.start.recordTriggerType}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
         {{#ifCond this.hasTriggers '===' true}}
         <h5>Apex Triggers</h5>
         <table class="table">
@@ -817,7 +865,6 @@
           {{/each}}
         </table>
         {{/ifCond}}
-
         {{#ifCond this.hasSharingRules '===' true}}
         <h5>Sharing Rules</h5>
         <p>Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings for selected sets of users.</p>
@@ -891,6 +938,48 @@
         {{/ifCond}}
         {{/ifCond}}
         {{/each}}
+      </div>
+      <div class="documentContent" style="page-break-after: always">
+        <h2>Flows</h2>
+        <p>Flows allows to quickly build automated processes without writing code. It uses a graphical, drag-and-drop interface to create processes that can include multiple steps, conditions, and decisions. Flows can be used to automate processes such as creating records, updating records, sending emails, creating tasks, and more.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Subflows Dependencies</th>
+              <th class="bg-primary text-start" scope="col">Operations Count</th>
+            </tr>
+          </thead>
+          {{#each this.flows}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:100px;word-break: break-all;">
+              {{this.interviewLabel}}
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <!-- <ul>
+                {{#each this.subflows}}
+                  <li>{{this.label}}</li>
+                {{/each}}
+              </ul> -->
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#ifCond this.recordLookupCount ">" 0}}
+                <li><strong style="margin-right:10px;">Total Record Lookup:</strong>{{this.recordLookupCount}}</li>
+                {{/ifCond}}
+                {{#ifCond this.recordCreateCount ">" 0}}
+                <li><strong style="margin-right:10px;">Total Record Creation:</strong>{{this.recordCreateCount}}</li>
+                {{/ifCond}}
+                {{#ifCond this.recordUpdateCount ">" 0}}
+                <li><strong style="margin-right:10px;">Total Record Update:</strong>{{this.recordUpdateCount}}</li>
+                {{/ifCond}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
         <h2>Apex Classes</h2>
         <p>Apex classes sections describes the Apex class created and the purpose of the functions are included.</p>
         <table class="table">

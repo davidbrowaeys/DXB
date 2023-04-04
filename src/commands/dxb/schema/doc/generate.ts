@@ -7,6 +7,8 @@ const ORGQUERY = "SELECT WebToCaseDefaultOrigin, UsesStartDateAsFiscalYearName, 
 const STDQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE QualifiedApiName IN ('{{stdobject}}') ORDER BY NamespacePrefix, QualifiedApiName LIMIT 2000";
 const CUSTOMQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE DeploymentStatus != null AND IsCustomizable = TRUE ORDER BY NamespacePrefix, QualifiedApiName";
 const FIELDQUERY = "SELECT Id, EntityDefinitionId, EntityDefinition.QualifiedApiName, DurableId, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, Length, DataType, ServiceDataTypeId, ValueTypeId, ExtraTypeInfo, IsCalculated, IsHighScaleNumber, IsHtmlFormatted, IsNameField, IsNillable, IsWorkflowFilterable, IsCompactLayoutable, Precision, Scale, IsFieldHistoryTracked, IsIndexed, IsApiFilterable, IsApiSortable, IsListFilterable, IsListSortable, IsApiGroupable, IsListVisible, ControllingFieldDefinitionId, LastModifiedDate, LastModifiedById, PublisherId, RunningUserFieldAccessId, RelationshipName, ReferenceTo, ReferenceTargetField, IsCompound, IsSearchPrefilterable, IsPolymorphicForeignKey, IsAiPredictionField, BusinessOwnerId, BusinessStatus, SecurityClassification, ComplianceGroup, Description FROM FieldDefinition WHERE EntityDefinition.QualifiedApiName IN ({{object_name}}) ORDER BY NamespacePrefix, QualifiedApiName";
+const AUTOFLOWQUERY = "SELECT Id, ApiName, Label, Description, ProcessType, TriggerType, TriggerOrder, Environments, Builder, ManageableState, RecordTriggerType, TriggerObjectOrEventLabel, TriggerObjectOrEventId, IsActive, ActiveVersionId, OverriddenFlowId, VersionNumber FROM FlowDefinitionView WHERE ProcessType = 'AutoLaunchedFlow' AND Builder = 'Flow Builder' AND ManageableState = 'unmanaged' AND TriggerObjectOrEventId IN ({{object_name}}) ORDER BY Label";
+const FLOWQUERY = "SELECT Id, ApiName, Label, Description, ProcessType, TriggerType, TriggerOrder, Environments, Builder, ManageableState, RecordTriggerType, TriggerObjectOrEventLabel, TriggerObjectOrEventId, IsActive, ActiveVersionId, OverriddenFlowId, VersionNumber FROM FlowDefinitionView WHERE Builder = 'Flow Builder' AND ManageableState = 'unmanaged' AND TriggerObjectOrEventId = null ORDER BY Label";
 const APEXCLSQUERY = "SELECT Id, Name, ApiVersion, Status, Body, IsValid, LengthWithoutComments FROM ApexClass WHERE NamespacePrefix = null ORDER BY Name";
 const APEXTRGQUERY = "SELECT UsageBeforeInsert, UsageAfterInsert, UsageBeforeUpdate, UsageAfterUpdate, UsageBeforeDelete, UsageAfterDelete, UsageIsBulk, UsageAfterUndelete, ApiVersion, Status, TableEnumOrId, Name, Id, Body FROM ApexTrigger where NamespacePrefix = null"
 const NAMEDCREDQUERY = "SELECT Id, DeveloperName, Endpoint, PrincipalType, Language, MasterLabel, AuthTokenEndpointUrl, JwtIssuer FROM NamedCredential";
@@ -82,6 +84,10 @@ export default class SchemaDocGen extends SfdxCommand {
         cust_objects = await this.getObjectDefinition(cust_objects, 'CustomObject',cust_objects.map( (e:any) =>{ return e.QualifiedApiName;}));
         this.ux.stopSpinner(`Done`);
 
+        this.ux.startSpinner('Retrieve flows and process builders');
+        const flows = this.processFlow(await (await this.getFlowDefinitions()).flat());
+        this.ux.stopSpinner(`${flows.length} found!`);
+
         // Retrieve Apex classes, triggers, and REST resources
         this.ux.startSpinner('Retrieve Apex classes and triggers');
         const apexClasses = await this.getApexClasses();
@@ -118,7 +124,8 @@ export default class SchemaDocGen extends SfdxCommand {
             namedCredentials,
             documentMeta,
             cssPath,
-            htmlPath
+            htmlPath,
+            flows
         });
     }
     /**
@@ -144,7 +151,8 @@ export default class SchemaDocGen extends SfdxCommand {
             namedCredentials,
             documentMeta,
             cssPath,
-            htmlPath
+            htmlPath,
+            flows
         } = doc;
         this.ux.startSpinner('Create pdf document');
         const html = fs.readFileSync(htmlPath, "utf8");
@@ -162,7 +170,8 @@ export default class SchemaDocGen extends SfdxCommand {
                 connectedApps,
                 namedCredentials,
                 document: documentMeta.documentInfo,
-                style: css
+                style: css,
+                flows
             },
             path: `./${documentMeta.documentInfo.title ?? 'DXB Technical Design'}.pdf`,
             type: "",
@@ -195,7 +204,52 @@ export default class SchemaDocGen extends SfdxCommand {
           }
         });
         return Promise.all(usagePromises);
-      }
+    }
+    private async getFlowDefinitions(): Promise<any[]> {
+        const flows = await this.query(FLOWQUERY);
+        if (flows){
+            const fullNameList = flows.map( (f:any) => { return f.ApiName;});
+            const chunkSize = 10
+            const chunks = []
+            // Split the array into chunks of 10 records
+            fullNameList.forEach((name, index) => {
+                const chunk = fullNameList.slice(index, index + chunkSize);
+                chunks.push(chunk);
+            });
+            
+            return Promise.all(chunks.map(async (c) => {
+                try{
+                    return await this.toArray(await this.connection.metadata.readSync('Flow', c));
+                }catch(err){}
+            }));
+        }
+        return undefined;
+    }
+    private processFlow(flows){
+        return flows.map( (f:any) => {
+            return {...f,recordCreateCount: f.recordCreates?.length | 0,recordLookupCount: f.recordLookups?.length | 0, recordUpdateCount: f.recordUpdate?.length | 0}
+        });
+    }
+    private async getFlowDefinitionForSObject(sobjects: any[]): Promise<any[]> {
+        const flows = await this.query(AUTOFLOWQUERY.split('{{object_name}}').join(`'${sobjects.join("','")}'`));
+        if (flows){
+            const fullNameList = flows.map( (f:any) => { return f.ApiName;});
+            const chunkSize = 10
+            const chunks = []
+            // Split the array into chunks of 10 records
+            fullNameList.forEach((name, index) => {
+                const chunk = fullNameList.slice(index, index + chunkSize);
+                chunks.push(chunk);
+            });
+            
+            return Promise.all(chunks.map(async (c) => {
+                try{
+                    return await this.toArray(await this.connection.metadata.readSync('Flow', c));
+                }catch(err){}
+            }));
+        }
+        return undefined;
+    }
     /**
      * Fetches the trigger information for a list of sObjects from a pre-fetched list of all triggers.
      * @param {Array} sobjects - List of sObjects to fetch trigger information for.
@@ -339,6 +393,18 @@ export default class SchemaDocGen extends SfdxCommand {
         const metadata:any = (await this.getMetadataObject(type, fullNames)).flat();
         const sharingRulesArray:any = (await this.getSharingRulesMetadata(fullNames)).flat();
         const fieldsArray = await this.getFieldDefinitionForSObject(fullNames);
+        const flowsArray = await this.getFlowDefinitionForSObject(fullNames);
+        let objectFlows:any = new Map();
+        if (flowsArray){
+            objectFlows = flowsArray.flat().reduce((acc, cur) => {
+                if (acc.has(cur.start.object)) {
+                  acc.get(cur.start.object).push(cur);
+                } else {
+                  acc.set(cur.start.object, [cur]);
+                }
+                return acc;
+              }, new Map());
+        }
         const objectFields:any = fieldsArray.flat().reduce((acc, cur) => {
             if (acc.has(cur.EntityDefinition.QualifiedApiName)) {
               acc.get(cur.EntityDefinition.QualifiedApiName).push(cur);
@@ -351,6 +417,7 @@ export default class SchemaDocGen extends SfdxCommand {
         return sobjects.map( o => {
             let objectMeta = metadata.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
             let sharingRules = sharingRulesArray.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
+            let autoflows = objectFlows.get(o.QualifiedApiName);
             let fields = objectFields.get(o.QualifiedApiName);
             objectMeta.fields = this.toArray(objectMeta.fields);
             objectMeta.fields = objectMeta.fields.map( mf => {
@@ -384,7 +451,7 @@ export default class SchemaDocGen extends SfdxCommand {
             const sharingCriteriaRules = sharingRules?.sharingCriteriaRules;
             const sharingOwnerRules = sharingRules?.sharingOwnerRules;
             const hasSharingRules = !!sharingCriteriaRules || !!sharingOwnerRules;
-            return {...o,...objectMeta, hasSharingRules, hasOwnerSharingRules: !!sharingOwnerRules, hasCriteriaSharingRules: !!sharingCriteriaRules, sharingCriteriaRules, sharingOwnerRules};
+            return {...o,...objectMeta, hasAutoFlows:!!autoflows, autoflows, hasSharingRules, hasOwnerSharingRules: !!sharingOwnerRules, hasCriteriaSharingRules: !!sharingCriteriaRules, sharingCriteriaRules, sharingOwnerRules};
         });
     }
     /**

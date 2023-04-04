@@ -432,7 +432,7 @@
             <td class="text-start">{{this.ExternalSharingModel}}</td>
           </tr>
         </table>
-        {{#ifCond this.hasRecordTypes '===' true}}
+        {{#ifCond this.recordTypes '!==' undefined}}
         <h5>Record Type Details</h5>
         <table class="table">
           <thead>
@@ -451,6 +451,7 @@
           {{/each}}
         </table>
         {{/ifCond}}
+        {{#ifCond this.fields '!==' undefined}}
         <h5>Field Details</h5>
         <table class="table">
           <thead>
@@ -460,32 +461,68 @@
               <th scope="col">Indexed</th>
               <th scope="col">Tracked</th>
               <th class="bg-primary text-start" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Info</th>
             </tr>
           </thead>
           {{#each this.fields}}
           <tr>
-            <td style="width:5%">{{this.Label}}({{this.QualifiedApiName}})</td>
-            <td class="text-start">
+            <td style="width:150px;word-break: break-all;">{{this.Label}}&nbsp;({{this.QualifiedApiName}})</td>
+            <td class="text-start text-truncate" style="width:150px;word-break: break-all;">
               {{this.DataType}}
               {{#ifCond this.required '===' true}}
                 &nbsp;*
               {{/ifCond}}
             </td>
-            <td>
+            <td style="width:20px;">
               {{#ifCond this.IsIndexed '===' true}}
               <span class="symbol">&#9745;</span>
               {{/ifCond}}
             </td>
-            <td>
+            <td style="width:20px;">
               {{#ifCond this.IsFieldHistoryTracked '===' true}}
               <span class="symbol">&#9745;</span>
               {{/ifCond}}
             </td>
-            <td class="text-start">{{this.Description}}
+            <td class="text-start" style="width:100px;word-break: break-all;">{{this.Description}}</td>
+            <td class="text-start" style="word-break: break-all;">
+              {{#ifCond this.encryptionScheme '!==' undefined}}
+              {{#ifCond this.encryptionScheme '!==' 'None'}}
+              <strong>Encyrption Scheme</strong>
+              <p>{{this.encryptionScheme}}</p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.formula '!==' undefined}}
+              <strong>Formula</strong>
+              <p>{{this.formula}}</p>
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Picklist'}}
+              {{#ifCond this.valueSet '!==' undefined}}
+                <strong>Picklist Values</strong>
+                <p>
+                {{#each this.valueSet.valueSetDefinition.value}}
+                  {{this.label}};
+                {{/each}}
+                </p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Summary'}}
+              <strong>Aggregate Key</strong>:{{this.summaryForeignKey}}<br/>
+              <strong>Aggregate Function</strong>:{{this.summaryOperation}}<br/>
+              {{#ifCond this.summaryFilterItems '!==' undefined}}
+              <strong>Filters</strong>:
+              <ul>
+                {{#each this.summaryFilterItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+              {{/ifCond}}
+            </td>
           </tr>
           {{/each}}
         </table>
-        {{#ifCond this.hasValidations '===' true}}
+        {{/ifCond}}
+        {{#ifCond this.validationRules '!==' undefined}}
         <h5>Validation Rule Details</h5>
         <table class="table">
           <thead>
@@ -506,7 +543,7 @@
           {{/each}}
         </table>
         {{/ifCond}}
-        {{#ifCond this.hasListViews '===' true}}
+        {{#ifCond this.listViews '!==' undefined}}
         <h5>List View Details</h5>
         <p>In order to view list of records satisfying certain criteria separately create a list view for each of them.</p>
         <p>The users can update these views to further filter down to specific types of records as needed.</p>
@@ -548,7 +585,7 @@
         {{#ifCond this.hasSharingRules '===' true}}
         <h5>Sharing Rules</h5>
         <p>Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings for selected sets of users.</p>
-        {{#ifCond this.hasOwnerSharingRules '===' true}}
+        {{#ifCond this.sharingOwnerRules '!==' undefined}}
         <h6>Owner-Based Sharing</h6>
         <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
         <table class="table">
@@ -582,7 +619,7 @@
           {{/each}}
         </table>
         {{/ifCond}}
-        {{#ifCond this.hasCriteriaSharingRules '===' true}}
+        {{#ifCond this.sharingCriteriaRules '!==' undefined}}
         <h6>Criteria-Based Sharing</h6>
         <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
         <table class="table">
@@ -706,7 +743,7 @@
             <td class="text-start">{{this.ExternalSharingModel}}</td>
           </tr>
         </table>
-        {{#ifCond this.hasRecordTypes '===' true}}
+        {{#ifCond this.recordTypes '!==' undefined}}
         <h5>Record Type Details</h5>
         <table class="table">
           <thead>
@@ -725,6 +762,7 @@
           {{/each}}
         </table>
         {{/ifCond}}
+        {{#ifCond this.fields '!==' undefined}}
         <h5>Field Details</h5>
         <table class="table">
           <thead>
@@ -734,32 +772,68 @@
               <th scope="col">Indexed</th>
               <th scope="col">Tracked</th>
               <th class="bg-primary text-start" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Info</th>
             </tr>
           </thead>
           {{#each this.fields}}
           <tr>
-            <td style="width:5%">{{this.Label}}({{this.QualifiedApiName}})</td>
-            <td class="text-start">
+            <td style="width:150px;word-break: break-all;">{{this.Label}}&nbsp;({{this.QualifiedApiName}})</td>
+            <td class="text-start text-truncate" style="width:150px;word-break: break-all;">
               {{this.DataType}}
               {{#ifCond this.required '===' true}}
                 &nbsp;*
               {{/ifCond}}
             </td>
-            <td>
+            <td style="width:20px;">
               {{#ifCond this.IsIndexed '===' true}}
               <span class="symbol">&#9745;</span>
               {{/ifCond}}
             </td>
-            <td>
+            <td style="width:20px;">
               {{#ifCond this.IsFieldHistoryTracked '===' true}}
               <span class="symbol">&#9745;</span>
               {{/ifCond}}
             </td>
-            <td class="text-start">{{this.Description}}
+            <td class="text-start" style="width:100px;word-break: break-all;">{{this.Description}}</td>
+            <td class="text-start" style="word-break: break-all;">
+              {{#ifCond this.encryptionScheme '!==' undefined}}
+              {{#ifCond this.encryptionScheme '!==' 'None'}}
+              <strong>Encyrption Scheme</strong>
+              <p>{{this.encryptionScheme}}</p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.formula '!==' undefined}}
+              <strong>Formula</strong>
+              <p>{{this.formula}}</p>
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Picklist'}}
+              {{#ifCond this.valueSet '!==' undefined}}
+                <strong>Picklist Values</strong>
+                <p>
+                {{#each this.valueSet.valueSetDefinition.value}}
+                  {{this.label}};
+                {{/each}}
+                </p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Summary'}}
+              <strong>Aggregate Key</strong>:{{this.summaryForeignKey}}<br/>
+              <strong>Aggregate Function</strong>:{{this.summaryOperation}}<br/>
+              {{#ifCond this.summaryFilterItems '!==' undefined}}
+              <strong>Filters</strong>:
+              <ul>
+                {{#each this.summaryFilterItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+              {{/ifCond}}
+            </td>
           </tr>
           {{/each}}
         </table>
-        {{#ifCond this.hasValidations '===' true}}
+        {{/ifCond}}
+        {{#ifCond this.validationRules '!==' undefined}}
         <h5>Validation Rule Details</h5>
         <table class="table">
           <thead>
@@ -780,15 +854,15 @@
           {{/each}}
         </table>
         {{/ifCond}}
-        {{#ifCond this.hasListViews '===' true}}
+        {{#ifCond this.listViews '!==' undefined}}
         <h5>List View Details</h5>
         <p>In order to view list of records satisfying certain criteria separately create a list view for each of them.</p>
         <p>The users can update these views to further filter down to specific types of records as needed.</p>
         <table class="table">
           <thead>
             <tr>
-              <th class="bg-primary" scope="col">Name</th>
-              <th class="bg-primary text-start" scope="col">Filter Scope</th>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Filter Scope</th>
               <th class="bg-primary text-start" scope="col">Filters</th>
               <th class="bg-primary text-start" scope="col">Share To</th>
             </tr>
@@ -814,52 +888,6 @@
                 {{/each}}
               </ul>
               {{/ifCond}}
-            </td>
-          </tr>
-          {{/each}}
-        </table>
-        {{/ifCond}}
-        {{#ifCond this.hasAutoFlows '===' true}}
-        <h5>Autolaunched Flows</h5>
-        <table class="table">
-          <thead>
-            <tr>
-              <th class="bg-primary" scope="col">Name</th>
-              <th class="bg-primary" scope="col">Description</th>
-              <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
-            </tr>
-          </thead>
-          {{#each this.autoflows}}
-          <tr>
-            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
-            <td style="width:100px;word-break: break-all;">{{this.interviewLabel}}</td>
-            <td style="width:100px;">{{this.start.triggerType}}-{{this.start.recordTriggerType}}</td>
-          </tr>
-          {{/each}}
-        </table>
-        {{/ifCond}}
-        {{#ifCond this.hasTriggers '===' true}}
-        <h5>Apex Triggers</h5>
-        <table class="table">
-          <thead>
-            <tr>
-              <th class="bg-primary" scope="col" >Name</th>
-              <th class="bg-primary text-start" scope="col" >Status</th>
-              <th class="bg-primary text-start" scope="col">API Version</th>
-              <th class="bg-primary text-start" scope="col">Operations</th>
-            </tr>
-          </thead>
-          {{#each this.triggers}}
-          <tr>
-            <td style="width:50px;">{{this.Name}}</td>
-            <td class="text-start" style="width:50px;">{{this.Status}}</td>
-            <td class="text-start" style="width:50px;">{{this.ApiVersion}}</td>
-            <td class="text-start" style="width:50px;">
-              <ul>
-                {{#each this.operation}}
-                  <li>{{this.name}}</li>
-                {{/each}}
-              </ul>
             </td>
           </tr>
           {{/each}}
@@ -936,6 +964,52 @@
           {{/each}}
         </table>
         {{/ifCond}}
+        {{/ifCond}}
+        {{#ifCond this.hasAutoFlows '===' true}}
+        <h5>Autolaunched Flows</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
+            </tr>
+          </thead>
+          {{#each this.autoflows}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:100px;word-break: break-all;">{{this.interviewLabel}}</td>
+            <td style="width:100px;">{{this.start.triggerType}}-{{this.start.recordTriggerType}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.triggers '!==' undefined}}
+        <h5>Apex Triggers</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Status</th>
+              <th class="bg-primary text-start" scope="col">API Version</th>
+              <th class="bg-primary text-start" scope="col">Operations</th>
+            </tr>
+          </thead>
+          {{#each this.triggers}}
+          <tr>
+            <td style="width:50px;">{{this.Name}}</td>
+            <td class="text-start" style="width:50px;">{{this.Status}}</td>
+            <td class="text-start" style="width:50px;">{{this.ApiVersion}}</td>
+            <td class="text-start" style="width:50px;">
+              <ul>
+                {{#each this.operation}}
+                  <li>{{this.name}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
         {{/ifCond}}
         {{/each}}
       </div>

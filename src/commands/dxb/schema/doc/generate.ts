@@ -422,7 +422,11 @@ export default class SchemaDocGen extends SfdxCommand {
             objectMeta.fields = this.toArray(objectMeta.fields);
             objectMeta.fields = objectMeta.fields.map( mf => {
                 let f = fields.find( e => mf.fullName === e.QualifiedApiName);
-                return {...mf,...f};
+                return {
+                    ...f,
+                    ...mf,
+                    summaryFilterItems: this.toArray(mf.summaryFilterItems)
+                };
             });
             objectMeta.hasValidations = !!objectMeta.validationRules;
             if (objectMeta.hasValidations){

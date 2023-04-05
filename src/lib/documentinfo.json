@@ -19,11 +19,11 @@
         "diagrams": {
             "standard": {
                 "title": "Sales Cloud Data Model",
-                "path": "/Users/dbrowaeys/workspace/DXB/src/lib/sales-cloud-overview-data-model.png"
+                "path": "~/sales-cloud-overview-data-model.png"
             },
             "custom": {
                 "title": "Custom Data Model",
-                "path": "/Users/dbrowaeys/workspace/DXB/src/lib/service-cloud-support-overview-data-model.png"
+                "path": "~/service-cloud-support-overview-data-model.png"
             }
         }
     },

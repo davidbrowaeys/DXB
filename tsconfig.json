@@ -8,5 +8,5 @@
       "esnext"
     ]
   },
-  "include": ["./src/**/*"]
+  "include": ["./src/**/*", "lib/lib", "/src/utils/*"]
 }

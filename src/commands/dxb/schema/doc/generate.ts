@@ -60,8 +60,8 @@ export default class SchemaDocGen extends SfdxCommand {
         const { pdfconfig, stylesheet, htmltemplate, manifest } = this.flags;
 
         // Ensure required files exist
-        const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../../src/lib/schema-template.html');
-        const cssPath = stylesheet ?? path.join(__dirname, '../../../../../src/lib/bootstrap.min.css');
+        const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../../lib/utils/schema-template.html');
+        const cssPath = stylesheet ?? path.join(__dirname, '../../../../../lib/utils/bootstrap.min.css');
         if (!fs.existsSync(htmlPath)) throw new Error(`HTML Template not found: ${htmlPath}`);
         if (!fs.existsSync(cssPath)) throw new Error(`Stylesheet file not found: ${cssPath}`);
         if (!fs.existsSync(pdfconfig)) throw new Error(`PDF Metadata Config Json file not found: ${pdfconfig}`);

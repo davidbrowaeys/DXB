@@ -40,7 +40,7 @@ const fs = require('fs');
         
         let templateFolder = path.join('.sfdx-templates', template);
         if (!fse.existsSync(templateFolder)) {
-            templateFolder = path.join(__dirname, '../../../../lib/templates/', template);
+            templateFolder = path.join(__dirname, '../../../../utils/templates/', template);
         }
         console.log(templateFolder);
     

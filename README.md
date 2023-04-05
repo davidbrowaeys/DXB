@@ -437,11 +437,11 @@ sfdx dxb:schema:doc:generate -c config/dxb-abc-docgen.json -x manifest/abc-packa
 
 This command generate as-build technical design pdf document by pulling metadata such as standard object, custom objects, apex classes, triggers etc directly from an org.
 
-You will need to create a pdf document config json file as follow:
+To start using this command, run sfdx dxb:install or copy json definition file from github:
 https://github.com/davidbrowaeys/DXB/blob/master/src/lib/documentinfo.json
 
 List of standard objects is quite big so we only limit to what you need be defining <i>metadata.stdobjects</i>. For custom objects, currently it pull simply everything (except managed packages metadata).
 
-The html template & stylesheet are included in DXB but you can add your own if required:
+The html template & stylesheet are included in DXB but you copy and modify your own if required:
 https://github.com/davidbrowaeys/DXB/blob/master/src/lib/schema-template.html
 https://github.com/davidbrowaeys/DXB/blob/master/src/lib/bootstrap.min.css

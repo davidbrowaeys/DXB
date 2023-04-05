@@ -2,7 +2,9 @@ import { SfdxCommand, flags } from '@salesforce/command';
 import { Connection } from '@salesforce/core';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as mime from 'mime';
 import * as pdf from 'pdf-creator-node';
+import * as xml2js from 'xml2js';
 const ORGQUERY = "SELECT WebToCaseDefaultOrigin, UsesStartDateAsFiscalYearName, UiSkin, TrialExpirationDate, TimeZoneSidKey, SystemModstamp, Street, State, SignupCountryIsoCode, ReceivesInfoEmails, ReceivesAdminInfoEmails, PrimaryContact, PreferencesTransactionSecurityPolicy, PreferencesTerminateOldestSession, PreferencesRequireOpportunityProducts, PreferencesOnlyLLPermUserAllowed, PreferencesLightningLoginEnabled, PreferencesConsentManagementEnabled, PreferencesAutoSelectIndividualOnMerge, PostalCode, Phone, OrganizationType, NumKnowledgeService, NamespacePrefix, Name, MonthlyPageViewsUsed, MonthlyPageViewsEntitlement, Longitude, Latitude, LastModifiedDate, LastModifiedById, LanguageLocaleKey, IsSandbox, IsReadOnly, InstanceName, Id, GeocodeAccuracy, FiscalYearStartMonth, Fax, Division, DefaultPricebookAccess, DefaultOpportunityAccess, DefaultLocaleSidKey, DefaultLeadAccess, DefaultContactAccess, DefaultCaseAccess, DefaultCampaignAccess, DefaultCalendarAccess, DefaultAccountAccess, CreatedDate, CreatedById, Country, ComplianceBccEmail, City, Address FROM Organization";
 const STDQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE QualifiedApiName IN ('{{stdobject}}') ORDER BY NamespacePrefix, QualifiedApiName LIMIT 2000";
 const CUSTOMQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE DeploymentStatus != null AND IsCustomizable = TRUE ORDER BY NamespacePrefix, QualifiedApiName";
@@ -18,11 +20,12 @@ export default class SchemaDocGen extends SfdxCommand {
     public static description = 'This command-line can generate technical design documentation for a Salesforce org. The tool retrieves metadata information about standard and custom objects, Apex classes, triggers, REST resources, named credentials, and connected apps from the org and then creates a PDF document containing the collected information. The tool uses the pdfmake library to generate the PDF document based on an HTML template and a CSS stylesheet.';
 
     public static examples = [
-        'sfdx dxb:schema:generate:doc -u myenv -c config/documentinfo.json'
+        'sfdx dxb:schema:generate:doc -u myenv -c config/documentinfo.json',
+        'sfdx dxb:schema:generate:doc -u myenv -c config/documentinfo.json -m manifest/package.xml'
     ];
 
     public static args = [{ name: 'file' }];
-
+    protected packageCmps;
     protected static flagsConfig = {
         pdfconfig:flags.string({
             char: 'c',
@@ -37,6 +40,10 @@ export default class SchemaDocGen extends SfdxCommand {
             char: 't',
             description: ' An optional string parameter that represents the file path of an HTML template for the PDF document generation. If not specified, the default DXB template will be used.'
         }),
+        manifest: flags.string({
+            char: 'x',
+            description: ' File path of manifest(package.xml) to generate the PDF document for. If not specified, DXB will consider all custom objects (except managed packages).'
+        })
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
@@ -50,7 +57,7 @@ export default class SchemaDocGen extends SfdxCommand {
     protected connection:Connection;
 
     public async run(): Promise<void> {
-        const { pdfconfig, stylesheet, htmltemplate } = this.flags;
+        const { pdfconfig, stylesheet, htmltemplate, manifest } = this.flags;
 
         // Ensure required files exist
         const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../../src/lib/schema-template.html');
@@ -63,6 +70,9 @@ export default class SchemaDocGen extends SfdxCommand {
         if (!documentMeta.metadata?.stdobjects || !Array.isArray(documentMeta.metadata.stdobjects)) {
             throw new Error(`You must define list of standard objects as follow "metadata": { stdobjects: ["Account","Contact"]} in your pdf document:${pdfconfig}`);
         }
+        if(manifest){
+            await this.getComponentsFromManifest(manifest);
+        }
         // Connect to org
         this.connection = this.org.getConnection();
         //retrieve objects informatin
@@ -72,6 +82,9 @@ export default class SchemaDocGen extends SfdxCommand {
         this.ux.stopSpinner(`Done`);
         this.ux.startSpinner('Retrieve standard object list');
         let std_objects = await this.query(STDQUERY.split('{{stdobject}}').join(documentMeta.metadata.stdobjects.join("','")));
+        if (std_objects && this.packageCmps && this.packageCmps.CustomObject){
+            std_objects = std_objects.filter((e:any)=> this.packageCmps.CustomObject.includes(e.QualifiedApiName));
+        }
         this.ux.stopSpinner(`${std_objects.length} found!`);
         this.ux.startSpinner('Retrieve standard object metadata');
         std_objects = await this.getObjectDefinition(std_objects, 'CustomObject',documentMeta.metadata.stdobjects);
@@ -79,28 +92,42 @@ export default class SchemaDocGen extends SfdxCommand {
         this.ux.startSpinner('Retrieve custom object list');
         let cust_objects = await this.query(CUSTOMQUERY);
         cust_objects = cust_objects.filter((e:any)=> !e.NamespacePrefix);
+        if (cust_objects && this.packageCmps && this.packageCmps.CustomObject && !this.packageCmps.CustomObject.includes('*')){
+            cust_objects = cust_objects.filter((e:any)=> this.packageCmps.CustomObject.includes(e.QualifiedApiName));
+        }
         this.ux.stopSpinner(`${cust_objects.length} found!`);
         this.ux.startSpinner('Retrieve custom object metadata');
         cust_objects = await this.getObjectDefinition(cust_objects, 'CustomObject',cust_objects.map( (e:any) =>{ return e.QualifiedApiName;}));
         this.ux.stopSpinner(`Done`);
 
         this.ux.startSpinner('Retrieve flows and process builders');
-        const flows = this.processFlow(await (await this.getFlowDefinitions()).flat());
+        let flows = this.processFlow(await (await this.getFlowDefinitions()).flat());
+        if (flows && this.packageCmps && this.packageCmps.Flow){
+            flows = flows.filter((e:any)=> this.packageCmps.Flow.includes(e.fullName));
+        }
         this.ux.stopSpinner(`${flows.length} found!`);
 
         // Retrieve Apex classes, triggers, and REST resources
         this.ux.startSpinner('Retrieve Apex classes and triggers');
-        const apexClasses = await this.getApexClasses();
+        let apexClasses = await this.getApexClasses();
+        if (apexClasses && this.packageCmps && this.packageCmps.ApexClass && !this.packageCmps.ApexClass.includes('*')){
+            apexClasses = apexClasses.filter((e:any)=> this.packageCmps.ApexClass.includes(e.Name));
+        }
         const apexTestClasses = apexClasses.filter(cls => cls.Body.toLowerCase().includes('@istest'));
-        const apexTriggers = await this.query(APEXTRGQUERY);
+        apexClasses = apexClasses.filter(cls => !cls.Body.toLowerCase().includes('@istest'));
+        let apexTriggers = await this.query(APEXTRGQUERY);
+        if (apexTriggers && this.packageCmps && this.packageCmps.ApexTrigger && !this.packageCmps.ApexTrigger.includes('*')){
+            apexTriggers = apexTriggers.filter((e:any)=> this.packageCmps.ApexTrigger.includes(e.Name));
+        }
         std_objects = await this.getTriggerForSObject(std_objects, apexTriggers);
         cust_objects = await this.getTriggerForSObject(cust_objects, apexTriggers);
-        const apexRestResource = apexClasses.filter(cls => cls.Body.includes('@RestResource'))
+        const apexRestResource = !apexClasses ? undefined: apexClasses?.filter(cls => cls.Body.includes('@RestResource'))
             .map(cls => {
                 const urlMappingValue = cls.Body.match(/urlMapping=['"]([^'"]+)['"]/)?.[1];
                 return { ...cls, urlMappingValue };
             })
             .filter(cls => !!cls.urlMappingValue);
+        apexClasses = apexClasses?.filter(cls => !cls.Body.includes('@RestResource'))
         this.ux.stopSpinner(`${apexClasses.length} found!`);
 
         //retrieve integration settings
@@ -126,6 +153,16 @@ export default class SchemaDocGen extends SfdxCommand {
             cssPath,
             htmlPath,
             flows
+        });
+    }
+    private async getComponentsFromManifest(manifest:string){
+        const data = await fs.promises.readFile(manifest, "utf8");
+        const result = (await xml2js.parseStringPromise(data, {
+            explicitArray: false,
+        }))?.Package;
+        this.packageCmps = {};
+        result.types.forEach( (elem:any) => {
+            this.packageCmps[elem.name] =  this.toArray(elem.members);
         });
     }
     /**
@@ -169,6 +206,7 @@ export default class SchemaDocGen extends SfdxCommand {
                 apexTestClasses,
                 connectedApps,
                 namedCredentials,
+                diagrams: this.processImages(documentMeta.metadata.diagrams),
                 document: documentMeta.documentInfo,
                 style: css,
                 flows
@@ -188,6 +226,27 @@ export default class SchemaDocGen extends SfdxCommand {
             .map( (cls:any) => { 
                 return {... cls, Body: (cls.Body.length < 100 ? cls.Body : cls.Body.substring(0,100))
             }});
+    }
+    private processImages(diagrams) {
+        // read binary data
+        let d = {...diagrams};
+        if (d.standard){
+            const bitmap = fs.readFileSync(d.standard.path);
+            const mimetype = mime.getType(d.standard.path);
+            d.standard = {
+                ...d.standard,
+                src: `data:${mimetype};base64,${Buffer.from(bitmap).toString('base64')}`
+            };
+        }
+        if (d.custom){
+            const bitmap = fs.readFileSync(d.custom.path);
+            const mimetype = mime.getType(d.custom.path);
+            d.custom = {
+                ...d.custom,
+                src: `data:${mimetype};base64,${Buffer.from(bitmap).toString('base64')}`
+            };
+        }
+        return d;
     }
     /**
      * Gets the usage count of each connected app.
@@ -418,6 +477,9 @@ export default class SchemaDocGen extends SfdxCommand {
             let objectMeta = metadata.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
             let sharingRules = sharingRulesArray.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
             let autoflows = objectFlows.get(o.QualifiedApiName);
+            if (autoflows && this.packageCmps && this.packageCmps.Flow){
+                autoflows = autoflows?.filter((e:any)=> this.packageCmps.Flow.includes(e.fullName));
+            }
             let fields = objectFields.get(o.QualifiedApiName);
             objectMeta.fields = this.toArray(objectMeta.fields);
             objectMeta.fields = objectMeta.fields.map( mf => {
@@ -435,6 +497,9 @@ export default class SchemaDocGen extends SfdxCommand {
             objectMeta.hasRecordTypes = !!objectMeta.recordTypes;
             if(objectMeta.hasRecordTypes){
                 objectMeta.recordTypes = this.toArray(objectMeta.recordTypes);
+                if (objectMeta.recordTypes && this.packageCmps && this.packageCmps.RecordType){
+                    objectMeta.recordTypes = objectMeta.recordTypes?.filter((e:any)=> this.packageCmps.RecordType.includes(`${o.QualifiedApiName}.${e.fullName}`));
+                }
             }
             objectMeta.hasListViews = !!objectMeta.listViews;
             if (objectMeta.hasListViews){

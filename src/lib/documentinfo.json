@@ -15,7 +15,17 @@
         }
     },
     "metadata": {
-        "stdobjects": ["Account","Contact","AccountContactRelation","Opportunity","Asset","Event","Task"]
+        "stdobjects": ["Account","Contact","AccountContactRelation","Opportunity","Asset","Event","Task"],
+        "diagrams": {
+            "standard": {
+                "title": "Sales Cloud Data Model",
+                "path": "/Users/dbrowaeys/workspace/DXB/src/lib/sales-cloud-overview-data-model.png"
+            },
+            "custom": {
+                "title": "Custom Data Model",
+                "path": "/Users/dbrowaeys/workspace/DXB/src/lib/service-cloud-support-overview-data-model.png"
+            }
+        }
     },
     "documentInfo": {
         "title": "ABC Technical Design",

@@ -21,6 +21,13 @@
       .documentProp,.documentContent, .pdfheader{
         max-width:764px;
       }
+      .diagram{
+        text-align:center;
+      }
+      .diagram img{
+        max-width:500px;
+        margin-bottom: 20px;
+      }
       .cover{
         min-height: 500px;
         height: 400px;
@@ -373,8 +380,22 @@
           <li>Customize – defines the application customizations in terms of labels, workflows, user management, apex, triggers, VisualForce components, reports and dashboards. This section will be defined in Phase </li>
           <li>Security – defines the PCI compliance security configurations, Salesforce security settings and details of PCI Audit log configurations.</li>
         </ul>
-        <!-- <h2>High-Level Data Model</h2>
-        <p>The following high-level data model defines the underlying data structure for the Implementation application.  Detailed object structure (fields, data types, field lengths, and pick-list values) are detailed in the attached data dictionary.  In addition, the following data model does not include standard objects that are not being used by the Implementation prototype application. Please refer to the Salesforce ERD document.</p> -->
+        {{#ifCond diagrams '!==' undefined}}
+        <h2>High-Level Data Model</h2>
+        <p>The following high-level data model defines the underlying data structure for the Implementation application.  Detailed object structure (fields, data types, field lengths, and pick-list values) are detailed in the attached data dictionary.  In addition, the following data model does not include standard objects that are not being used by the Implementation prototype application. Please refer to the Salesforce ERD document.</p>
+        {{#ifCond diagrams.standard '!==' undefined}}
+        <h3>{{diagrams.standard.title}}</h3>
+        <div class="diagram">
+          <img src="{{diagrams.standard.src}}"/>
+        </div>
+        {{/ifCond}}
+        {{#ifCond diagrams.custom '!==' undefined}}
+        <h3>{{diagrams.custom.title}}</h3>
+        <div class="diagram">
+          <img src="{{diagrams.custom.src}}"/>
+        </div>
+        {{/ifCond}}
+        {{/ifCond}}
         <h2>Objects</h2>
         <h3 id="StandardObjects">Standard Objects</h3>
         {{#each std_objects}}
@@ -434,6 +455,7 @@
         </table>
         {{#ifCond this.recordTypes '!==' undefined}}
         <h5>Record Type Details</h5>
+        <p>A record type is a way to differentiate different kinds of records within an object. It allows users to customize the fields, page layouts, and other features related to a specific record type. This helps to create a more organized and streamlined user experience.</p>
         <table class="table">
           <thead>
             <tr>
@@ -467,7 +489,7 @@
           {{#each this.fields}}
           <tr>
             <td style="width:150px;word-break: break-all;">{{this.Label}}&nbsp;({{this.QualifiedApiName}})</td>
-            <td class="text-start text-truncate" style="width:150px;word-break: break-all;">
+            <td class="text-start" style="width:150px;word-break: break-all;">
               {{this.DataType}}
               {{#ifCond this.required '===' true}}
                 &nbsp;*
@@ -524,6 +546,7 @@
         {{/ifCond}}
         {{#ifCond this.validationRules '!==' undefined}}
         <h5>Validation Rule Details</h5>
+        <p>Validation rules are used in Salesforce to ensure that the data entered into a record meets the standards set by the organization. Validation rules can be used to prevent users from entering incorrect data, or to ensure that certain fields are populated with accurate data. Validation rules can be set up to check for specific criteria and display an error message when a record does not meet the criteria. Validation rules can also be used to enforce data integrity and to ensure data is entered correctly.</p>
         <table class="table">
           <thead>
             <tr>
@@ -683,7 +706,7 @@
           {{/each}}
         </table>
         {{/ifCond}}
-        {{#ifCond this.hasTriggers '===' true}}
+        {{#ifCond this.triggers '!==' undefined}}
         <h5>Apex Triggers</h5>
         <table class="table">
           <thead>
@@ -745,6 +768,7 @@
         </table>
         {{#ifCond this.recordTypes '!==' undefined}}
         <h5>Record Type Details</h5>
+        <p>A record type is a way to differentiate different kinds of records within an object. It allows users to customize the fields, page layouts, and other features related to a specific record type. This helps to create a more organized and streamlined user experience.</p>
         <table class="table">
           <thead>
             <tr>
@@ -835,6 +859,7 @@
         {{/ifCond}}
         {{#ifCond this.validationRules '!==' undefined}}
         <h5>Validation Rule Details</h5>
+        <p>Validation rules are used in Salesforce to ensure that the data entered into a record meets the standards set by the organization. Validation rules can be used to prevent users from entering incorrect data, or to ensure that certain fields are populated with accurate data. Validation rules can be set up to check for specific criteria and display an error message when a record does not meet the criteria. Validation rules can also be used to enforce data integrity and to ensure data is entered correctly.</p>
         <table class="table">
           <thead>
             <tr>
@@ -1074,6 +1099,7 @@
           </tr>
           {{/each}}
         </table>
+        {{#ifCond this.apexRestResource '!==' undefined}}
         <h2>Apex Rest Resources</h2>
         <p>an Apex REST resource is a class in Apex that is annotated with the <strong>@RestResource</strong> annotation. It is used to expose custom REST APIs that can be accessed by external systems, such as web and mobile applications, to perform CRUD (create, read, update, delete) operations on Salesforce data.</p>
         <p>The @RestResource annotation allows you to specify various properties of the REST API, such as the URI mapping, HTTP methods, request and response formats, and authentication requirements.</p>
@@ -1097,6 +1123,8 @@
           </tr>
           {{/each}}
         </table>
+        {{/ifCond}}
+        {{#ifCond this.apexTestClasses '!==' undefined}}
         <h2>Apex Test Classes</h2>
         <table class="table">
           <thead>
@@ -1116,6 +1144,7 @@
           </tr>
           {{/each}}
         </table>
+        {{/ifCond}}
         <h2>Integrations</h2>
         <p>A typical enterprise uses many applications, many or most of which are not designed to work with one another out of the box. Integrating separate but related apps helps organizations achieve greater levels of operational consistency, efficiency, and quality. This section describes the architecture, data flow and components for integration related components build in the system.</p>
         <p><strong>Security Integration:</strong><br/>

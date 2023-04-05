@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.9.1",
+	"version": "1.9.2",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -140,7 +140,7 @@
 		"posttest": "tsc -p test --noEmit && tslint -p test -t stylish",
 		"copyfiles": "copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib", 
 		"prepack": "rimraf lib && tsc && oclif-dev manifest && oclif-dev readme && copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib",
-		"prepare": "rimraf lib && tsc && oclif-dev manifest && oclif-dev readme && npm copyfiles",
+		"prepare": "rimraf lib && tsc && oclif-dev manifest && oclif-dev readme && copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib",
 		"release": "np",
 		"test": "nyc mocha --forbid-only \"test/**/*.test.ts\"",
 		"version": "oclif-dev readme && git add README.md",

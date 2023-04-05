@@ -2,6 +2,26 @@
 
 A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.
 
+# Table of Contents
+
+- [Pre-requisite](#pre-requisite)
+- [Install DXB-CLI](#install-dxb-cli)
+- [Setup SFDX Project for DXB-CLI](#setup-sfdx-project-for-dxb-cli)
+  - [Options](#options)
+  - [Sample Definition Output](#sample-definition-output)
+- [Topics](#topics)
+  - [Create DXB Scratch Org](#create-dxb-scratch-org)
+  - [Profile](#profile)
+  - [User Access Check](#user-access-check)
+  - [Clean your permission sets](#clean-your-permission-sets)
+  - [Data Transfer (Export & Import)](#data-transfer-export--import)
+    - [Setup](#setup)
+    - [Export](#export)
+    - [Import](#import)
+    - [Azure Pipeline](#azure-pipeline)
+  - [Delta Deployment](#delta-deployment)
+  - [Schema Doc Gen](#schema-doc-gen)
+
 ## Pre-requisite
 
 1. Install [SDFX CLI](https://developer.salesforce.com/tools/sfdxcli)
@@ -410,6 +430,11 @@ fi
 
 ### Schema Doc Gen
 
+```shell
+sfdx dxb:schema:doc:generate -c config/dxb-abc-docgen.json
+sfdx dxb:schema:doc:generate -c config/dxb-abc-docgen.json -x manifest/abc-package.xml
+```
+
 This command generate as-build technical design pdf document by pulling metadata such as standard object, custom objects, apex classes, triggers etc directly from an org.
 
 You will need to create a pdf document config json file as follow:
@@ -420,7 +445,3 @@ List of standard objects is quite big so we only limit to what you need be defin
 The html template & stylesheet are included in DXB but you can add your own if required:
 https://github.com/davidbrowaeys/DXB/blob/master/src/lib/schema-template.html
 https://github.com/davidbrowaeys/DXB/blob/master/src/lib/bootstrap.min.css
-
-Future Enhancements:
-
-- generate document based on a package.xml so that you can limit to only what you need.

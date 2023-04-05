@@ -247,7 +247,6 @@ export default class extends SfdxCommand {
    * @returns filtered array
    */
   private filterUniqueForceAppFiles(filePaths: string[]): string[] {
-    console.log('basedir',this.basedir, !!this.basedir);
     const filteredFiles = filePaths.filter((f) => 
       (
           (!!this.basedir && f.startsWith(this.basedir)) || 

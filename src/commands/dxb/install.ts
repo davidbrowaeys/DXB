@@ -1,7 +1,7 @@
 
 import { SfdxCommand } from '@salesforce/command';
-
-const fs = require('fs');
+import * as path from 'path';
+import * as fs from 'fs';
 
 export default class ProjectSetup extends SfdxCommand {
 
@@ -24,7 +24,7 @@ export default class ProjectSetup extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run() {
-      this.ux.startSpinner('Setting up your project');
+      this.ux.log('Setting up DXB in your project');
       var init = {
             "defaultdurationdays" : "30",
             "packages" : [],
@@ -94,7 +94,11 @@ export default class ProjectSetup extends SfdxCommand {
         if (!config.plugins) config["plugins"] = {};
         config["plugins"]["dxb"] = init;
         fs.writeFileSync('sfdx-project.json', JSON.stringify(config, null, 2));
-        this.ux.stopSpinner(`\n\nProject setup completed successfully. Welcome to DXB CLI 1.0!`);
+        this.ux.log('DXB added to sfdx-project.json');
+        const dxbSchemaGen = JSON.parse(fs.readFileSync(path.join(__dirname, '../../utils/documentinfo.json')).toString());
+        fs.writeFileSync('config/dxb-schemagen-def.json', JSON.stringify(dxbSchemaGen, null, 2));
+        this.ux.log('File added: config/dxb-schemagen-def.json');
+        this.ux.log('\x1b[34m\x1b[45m\x1b[5m%s', '\n\nWelcome to DXB CLI! Happy coding!\n\n');
         return {init};
   }
 }

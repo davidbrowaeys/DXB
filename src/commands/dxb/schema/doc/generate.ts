@@ -17,7 +17,7 @@ const NAMEDCREDQUERY = "SELECT Id, DeveloperName, Endpoint, PrincipalType, Langu
 const CONNECTEDAPPQUERY = "SELECT Id, Name, MobileStartUrl, RefreshTokenValidityPeriod, UvidTimeout, OptionsAllowAdminApprovedUsersOnly, OptionsRefreshTokenValidityMetric, MobileSessionTimeout, OptionsCodeCredentialGuestEnabled, OptionsFullContentPushNotifications, OptionsAllowExpiredUvidJWT, OptionsIsInternal, OptionsHasSessionLevelPolicy, PinLength, StartUrl FROM ConnectedApplication";
 export default class SchemaDocGen extends SfdxCommand {
 
-    public static description = 'This command-line can generate technical design documentation for a Salesforce org. The tool retrieves metadata information about standard and custom objects, Apex classes, triggers, REST resources, named credentials, and connected apps from the org and then creates a PDF document containing the collected information. The tool uses the pdfmake library to generate the PDF document based on an HTML template and a CSS stylesheet.';
+    public static description = 'This command-line can generate technical design documentation for a Salesforce org. The tool retrieves metadata information about standard and custom objects, Apex classes, triggers, REST resources, named credentials, and connected apps from the org and then creates a PDF document containing the collected information. The tool uses the pdfmake library to generate the PDF document based on an HTML template and a CSS stylesheet. To start using this command, run sfdx dxb:install or copy schema gen def json file from Github: https://github.com/davidbrowaeys/DXB/blob/master/src/lib/documentinfo.json.';
 
     public static examples = [
         'sfdx dxb:schema:generate:doc -u myenv -c config/documentinfo.json',

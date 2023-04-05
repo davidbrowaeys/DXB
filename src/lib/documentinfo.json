@@ -10,7 +10,7 @@
         "footer": {
             "height": "28mm",
             "contents": {
-                "default": "<div class=\"pdfheader\"><div class=\"left\">Tabcorp Separation Solution Design</div><div class=\"middle\"><span>{{page}}</span>/<span>{{pages}}</span></div><div class=\"right\">Deloitte Confidential</div></div>"
+                "default": "<div class=\"pdfheader\"><div class=\"left\">DXB Solution Design</div><div class=\"middle\"><span>{{page}}</span>/<span>{{pages}}</span></div><div class=\"right\">Deloitte Confidential</div></div>"
             }
         }
     },

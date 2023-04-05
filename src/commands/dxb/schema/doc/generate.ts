@@ -67,9 +67,6 @@ export default class SchemaDocGen extends SfdxCommand {
         if (!fs.existsSync(pdfconfig)) throw new Error(`PDF Metadata Config Json file not found: ${pdfconfig}`);
         // Parse PDF metadata configuration
         const documentMeta = JSON.parse(fs.readFileSync(pdfconfig, 'utf8'));
-        if (!documentMeta.metadata?.stdobjects || !Array.isArray(documentMeta.metadata.stdobjects)) {
-            throw new Error(`You must define list of standard objects as follow "metadata": { stdobjects: ["Account","Contact"]} in your pdf document:${pdfconfig}`);
-        }
         if(manifest){
             await this.getComponentsFromManifest(manifest);
         }
@@ -81,13 +78,22 @@ export default class SchemaDocGen extends SfdxCommand {
         const ssoSettings = await this.getSSOSettingMetadata();
         this.ux.stopSpinner(`Done`);
         this.ux.startSpinner('Retrieve standard object list');
-        let std_objects = await this.query(STDQUERY.split('{{stdobject}}').join(documentMeta.metadata.stdobjects.join("','")));
-        if (std_objects && this.packageCmps && this.packageCmps.CustomObject){
-            std_objects = std_objects.filter((e:any)=> this.packageCmps.CustomObject.includes(e.QualifiedApiName));
+        let std_objects;
+        if (this.packageCmps && this.packageCmps.CustomObject  && !this.packageCmps.CustomObject.includes('*')){
+            const stdObjectNames = this.packageCmps.CustomObject.filter( (o:any) => !o.endsWith('__c'));
+            if(stdObjectNames){
+                std_objects = await this.query(STDQUERY.split('{{stdobject}}').join(stdObjectNames.join("','")));
+            }
+        }else{
+            if (!documentMeta.metadata?.stdobjects || !Array.isArray(documentMeta.metadata.stdobjects)) {
+                throw new Error(`You must define list of standard objects as follow "metadata": { stdobjects: ["Account","Contact"]} in your pdf document:${pdfconfig}`);
+            }
+            std_objects = await this.query(STDQUERY.split('{{stdobject}}').join(documentMeta.metadata.stdobjects.join("','")));
         }
         this.ux.stopSpinner(`${std_objects.length} found!`);
         this.ux.startSpinner('Retrieve standard object metadata');
         std_objects = await this.getObjectDefinition(std_objects, 'CustomObject',documentMeta.metadata.stdobjects);
+        std_objects = std_objects.filter((sobject) =>!!sobject);
         this.ux.stopSpinner(`Done`);
         this.ux.startSpinner('Retrieve custom object list');
         let cust_objects = await this.query(CUSTOMQUERY);
@@ -98,6 +104,7 @@ export default class SchemaDocGen extends SfdxCommand {
         this.ux.stopSpinner(`${cust_objects.length} found!`);
         this.ux.startSpinner('Retrieve custom object metadata');
         cust_objects = await this.getObjectDefinition(cust_objects, 'CustomObject',cust_objects.map( (e:any) =>{ return e.QualifiedApiName;}));
+        cust_objects = cust_objects.filter((sobject) =>!!sobject);
         this.ux.stopSpinner(`Done`);
 
         this.ux.startSpinner('Retrieve flows and process builders');
@@ -326,23 +333,23 @@ export default class SchemaDocGen extends SfdxCommand {
         }, {});
     
         // Add trigger information to each sObject in the list
-        return sobjects.map((sobject) => {
-            const triggers = triggerMap[sobject.QualifiedApiName];
-            const triggerInfo = triggers
-                ? triggers.map((trigger) => {
-                    const operations = [];
-                    if (trigger.UsageBeforeInsert) operations.push({ name: 'Before Insert' });
-                    if (trigger.UsageAfterInsert) operations.push({ name: 'After Insert' });
-                    if (trigger.UsageBeforeUpdate) operations.push({ name: 'Before Update' });
-                    if (trigger.UsageAfterUpdate) operations.push({ name: 'After Update' });
-                    if (trigger.UsageBeforeDelete) operations.push({ name: 'Before Delete' });
-                    if (trigger.UsageAfterDelete) operations.push({ name: 'After Delete' });
-                    if (trigger.UsageAfterUndelete) operations.push({ name: 'After Undelete' });
-                    return { ...trigger, operation: operations };
-                })
-                : [];
-            return { ...sobject, triggers: triggerInfo, hasTriggers: triggers?.length > 0 };
-        });
+        return sobjects.filter((sobject) =>!!sobject)
+            .map((sobject) => {
+                const triggers = triggerMap[sobject.QualifiedApiName];
+                const triggerInfo = !!triggers
+                    ? triggers.map((trigger) => {
+                        const operations = [];
+                        if (trigger.UsageBeforeInsert) operations.push({ name: 'Before Insert' });
+                        if (trigger.UsageAfterInsert) operations.push({ name: 'After Insert' });
+                        if (trigger.UsageBeforeUpdate) operations.push({ name: 'Before Update' });
+                        if (trigger.UsageAfterUpdate) operations.push({ name: 'After Update' });
+                        if (trigger.UsageBeforeDelete) operations.push({ name: 'Before Delete' });
+                        if (trigger.UsageAfterDelete) operations.push({ name: 'After Delete' });
+                        if (trigger.UsageAfterUndelete) operations.push({ name: 'After Undelete' });
+                        return { ...trigger, operation: operations };
+                    }) : undefined;
+                return { ...sobject, triggers: triggerInfo, hasTriggers: triggers?.length > 0 };
+            });
     }  
     /**
      * Fetches the field definition for a list of sObjects in chunks of 10 using the provided SOQL query.
@@ -474,53 +481,64 @@ export default class SchemaDocGen extends SfdxCommand {
           }, new Map());
         //decorate object with other metadata
         return sobjects.map( o => {
-            let objectMeta = metadata.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
-            let sharingRules = sharingRulesArray.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
-            let autoflows = objectFlows.get(o.QualifiedApiName);
-            if (autoflows && this.packageCmps && this.packageCmps.Flow){
-                autoflows = autoflows?.filter((e:any)=> this.packageCmps.Flow.includes(e.fullName));
-            }
-            let fields = objectFields.get(o.QualifiedApiName);
-            objectMeta.fields = this.toArray(objectMeta.fields);
-            objectMeta.fields = objectMeta.fields.map( mf => {
-                let f = fields.find( e => mf.fullName === e.QualifiedApiName);
-                return {
-                    ...f,
-                    ...mf,
-                    summaryFilterItems: this.toArray(mf.summaryFilterItems)
-                };
-            });
-            objectMeta.hasValidations = !!objectMeta.validationRules;
-            if (objectMeta.hasValidations){
-                objectMeta.validationRules = this.toArray(objectMeta.validationRules);
-            }
-            objectMeta.hasRecordTypes = !!objectMeta.recordTypes;
-            if(objectMeta.hasRecordTypes){
-                objectMeta.recordTypes = this.toArray(objectMeta.recordTypes);
-                if (objectMeta.recordTypes && this.packageCmps && this.packageCmps.RecordType){
-                    objectMeta.recordTypes = objectMeta.recordTypes?.filter((e:any)=> this.packageCmps.RecordType.includes(`${o.QualifiedApiName}.${e.fullName}`));
-                }
-            }
-            objectMeta.hasListViews = !!objectMeta.listViews;
-            if (objectMeta.hasListViews){
-                if (!Array.isArray(objectMeta.listViews)){
-                    objectMeta.listViews = [{...objectMeta.listViews}];
-                }
-                objectMeta.listViews.forEach( lv => {
-                    lv.hasFilters = !!lv.filters;
-                    if (lv.hasFilters){
-                        lv.filters = this.toArray(lv.filters);
+            try{
+                let objectMeta = metadata.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
+                if (!!objectMeta){
+                    let sharingRules = sharingRulesArray.find( e => e && e.fullName && e.fullName === o.QualifiedApiName);
+                    let autoflows = objectFlows.get(o.QualifiedApiName);
+                    if (autoflows && this.packageCmps && this.packageCmps.Flow){
+                        autoflows = autoflows?.filter((e:any)=> this.packageCmps.Flow.includes(e.fullName));
                     }
-                    lv.hasShareTo = !!lv.sharedTo;
-                    if (lv.hasShareTo){
-                        lv.sharedTo = this.formatSharedInfo(this.toArray(lv.sharedTo));;
+                    let fields = objectFields.get(o.QualifiedApiName);
+                    if(objectMeta.fields){
+                        objectMeta.fields = this.toArray(objectMeta.fields);
+                        objectMeta.fields = objectMeta.fields.filter( mf => fields.find( e => mf.fullName === e.QualifiedApiName))
+                        .map( mf => {
+                            let f = fields.find( e => mf.fullName === e.QualifiedApiName);
+                            return {
+                                ...f,
+                                ...mf,
+                                summaryFilterItems: this.toArray(mf.summaryFilterItems)
+                            };
+                        });
                     }
-                });
+                    objectMeta.hasValidations = !!objectMeta.validationRules;
+                    if (objectMeta.hasValidations){
+                        objectMeta.validationRules = this.toArray(objectMeta.validationRules);
+                    }
+                    objectMeta.hasRecordTypes = !!objectMeta.recordTypes;
+                    if(objectMeta.hasRecordTypes){
+                        objectMeta.recordTypes = this.toArray(objectMeta.recordTypes);
+                        if (objectMeta.recordTypes && this.packageCmps && this.packageCmps.RecordType){
+                            objectMeta.recordTypes = objectMeta.recordTypes?.filter((e:any)=> this.packageCmps.RecordType.includes(`${o.QualifiedApiName}.${e.fullName}`));
+                        }
+                    }
+                    objectMeta.hasListViews = !!objectMeta.listViews;
+                    if (objectMeta.hasListViews){
+                        if (!Array.isArray(objectMeta.listViews)){
+                            objectMeta.listViews = [{...objectMeta.listViews}];
+                        }
+                        objectMeta.listViews.forEach( lv => {
+                            lv.hasFilters = !!lv.filters;
+                            if (lv.hasFilters){
+                                lv.filters = this.toArray(lv.filters);
+                            }
+                            lv.hasShareTo = !!lv.sharedTo;
+                            if (lv.hasShareTo){
+                                lv.sharedTo = this.formatSharedInfo(this.toArray(lv.sharedTo));;
+                            }
+                        });
+                    }
+                    const sharingCriteriaRules = sharingRules?.sharingCriteriaRules;
+                    const sharingOwnerRules = sharingRules?.sharingOwnerRules;
+                    const hasSharingRules = !!sharingCriteriaRules || !!sharingOwnerRules;
+                    return {...o,...objectMeta, hasAutoFlows:!!autoflows, autoflows, hasSharingRules, hasOwnerSharingRules: !!sharingOwnerRules, hasCriteriaSharingRules: !!sharingCriteriaRules, sharingCriteriaRules, sharingOwnerRules};
+                }else{
+                    console.warn(`${o.QualifiedApiName} ignored!`);    
+                }
+            }catch(err){
+                console.warn(`${o.QualifiedApiName} ignored!`,err.body.message);
             }
-            const sharingCriteriaRules = sharingRules?.sharingCriteriaRules;
-            const sharingOwnerRules = sharingRules?.sharingOwnerRules;
-            const hasSharingRules = !!sharingCriteriaRules || !!sharingOwnerRules;
-            return {...o,...objectMeta, hasAutoFlows:!!autoflows, autoflows, hasSharingRules, hasOwnerSharingRules: !!sharingOwnerRules, hasCriteriaSharingRules: !!sharingCriteriaRules, sharingCriteriaRules, sharingOwnerRules};
         });
     }
     /**

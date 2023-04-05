@@ -419,10 +419,10 @@
             <td class="text-start">
               <span class="symbol">
               {{#ifCond this.enableHistory '===' true}}
-              &#9745;
+              <span class="symbol">✓</span>
               {{/ifCond}}
               {{#ifCond this.enableHistory '===' false}}
-              &#9744;
+              <span class="symbol">✓</span>
               {{/ifCond}}
             </span>
             </td>
@@ -432,10 +432,10 @@
             <td class="text-start">
               <span class="symbol">
               {{#ifCond this.enableFeeds '===' true}}
-              &#9745;
+              <span class="symbol">✓</span>
               {{/ifCond}}
               {{#ifCond this.enableFeeds '===' false}}
-              &#9744;
+              <span class="symbol">✓</span>
               {{/ifCond}}
             </span>
             </td>
@@ -459,7 +459,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th class="bg-primary" scope="col style="width:5%">Label</th>
+              <th class="bg-primary" scope="col" style="width:5%">Label</th>
               <th class="bg-primary" scope="col" style="width:5%">Developer Name</th>
               <th class="bg-primary text-start" scope="col">Description</th>
             </tr>
@@ -497,12 +497,12 @@
             </td>
             <td style="width:20px;">
               {{#ifCond this.IsIndexed '===' true}}
-              <span class="symbol">&#9745;</span>
+              <span class="symbol">✓</span>
               {{/ifCond}}
             </td>
             <td style="width:20px;">
               {{#ifCond this.IsFieldHistoryTracked '===' true}}
-              <span class="symbol">&#9745;</span>
+              <span class="symbol">✓</span>
               {{/ifCond}}
             </td>
             <td class="text-start" style="width:100px;word-break: break-all;">{{this.Description}}</td>
@@ -772,7 +772,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th class="bg-primary" scope="col style="width:5%">Label</th>
+              <th class="bg-primary" scope="col" style="width:5%">Label</th>
               <th class="bg-primary" scope="col" style="width:5%">Developer Name</th>
               <th class="bg-primary text-start" scope="col">Description</th>
             </tr>
@@ -810,12 +810,12 @@
             </td>
             <td style="width:20px;">
               {{#ifCond this.IsIndexed '===' true}}
-              <span class="symbol">&#9745;</span>
+              <span class="symbol">✓</span>
               {{/ifCond}}
             </td>
             <td style="width:20px;">
               {{#ifCond this.IsFieldHistoryTracked '===' true}}
-              <span class="symbol">&#9745;</span>
+              <span class="symbol">✓</span>
               {{/ifCond}}
             </td>
             <td class="text-start" style="width:100px;word-break: break-all;">{{this.Description}}</td>

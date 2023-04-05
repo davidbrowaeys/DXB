@@ -31,10 +31,6 @@
         "title": "ABC Technical Design",
         "subtitle": "By David Browaeys",
         "documentOwner": "David Browaeys", 
-        "createdDate": "21/03/2023", 
-        "approvers": [{
-            "name": "David Browaeys",
-            "email": "davidbrowaeys@fakeemail.com"
-        }]
+        "createdDate": "21/03/2023"
     }
 }

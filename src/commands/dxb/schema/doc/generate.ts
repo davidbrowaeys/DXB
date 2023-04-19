@@ -4,7 +4,38 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as mime from 'mime';
 import * as pdf from 'pdf-creator-node';
+import * as Handlebars  from "handlebars";
+// import { NodeHtmlMarkdown } from 'node-html-markdown';
+import * as htmlDocx from 'html-docx-js';
+
+Handlebars.registerHelper("ifCond", function (v1, operator, v2, options) {
+  switch (operator) {
+    case "==":
+      return v1 == v2 ? options.fn(this) : options.inverse(this);
+    case "===":
+      return v1 === v2 ? options.fn(this) : options.inverse(this);
+    case "!=":
+      return v1 != v2 ? options.fn(this) : options.inverse(this);
+    case "!==":
+      return v1 !== v2 ? options.fn(this) : options.inverse(this);
+    case "<":
+      return v1 < v2 ? options.fn(this) : options.inverse(this);
+    case "<=":
+      return v1 <= v2 ? options.fn(this) : options.inverse(this);
+    case ">":
+      return v1 > v2 ? options.fn(this) : options.inverse(this);
+    case ">=":
+      return v1 >= v2 ? options.fn(this) : options.inverse(this);
+    case "&&":
+      return v1 && v2 ? options.fn(this) : options.inverse(this);
+    case "||":
+      return v1 || v2 ? options.fn(this) : options.inverse(this);
+    default:
+      return options.inverse(this);
+  }
+});
 import * as xml2js from 'xml2js';
+//constants
 const ORGQUERY = "SELECT WebToCaseDefaultOrigin, UsesStartDateAsFiscalYearName, UiSkin, TrialExpirationDate, TimeZoneSidKey, SystemModstamp, Street, State, SignupCountryIsoCode, ReceivesInfoEmails, ReceivesAdminInfoEmails, PrimaryContact, PreferencesTransactionSecurityPolicy, PreferencesTerminateOldestSession, PreferencesRequireOpportunityProducts, PreferencesOnlyLLPermUserAllowed, PreferencesLightningLoginEnabled, PreferencesConsentManagementEnabled, PreferencesAutoSelectIndividualOnMerge, PostalCode, Phone, OrganizationType, NumKnowledgeService, NamespacePrefix, Name, MonthlyPageViewsUsed, MonthlyPageViewsEntitlement, Longitude, Latitude, LastModifiedDate, LastModifiedById, LanguageLocaleKey, IsSandbox, IsReadOnly, InstanceName, Id, GeocodeAccuracy, FiscalYearStartMonth, Fax, Division, DefaultPricebookAccess, DefaultOpportunityAccess, DefaultLocaleSidKey, DefaultLeadAccess, DefaultContactAccess, DefaultCaseAccess, DefaultCampaignAccess, DefaultCalendarAccess, DefaultAccountAccess, CreatedDate, CreatedById, Country, ComplianceBccEmail, City, Address FROM Organization";
 const STDQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE QualifiedApiName IN ('{{stdobject}}') ORDER BY NamespacePrefix, QualifiedApiName LIMIT 2000";
 const CUSTOMQUERY = "SELECT Id, DurableId, LastModifiedDate, LastModifiedById, QualifiedApiName, NamespacePrefix, DeveloperName, MasterLabel, Label, PluralLabel, DefaultCompactLayoutId, IsCustomizable, IsApexTriggerable, IsWorkflowEnabled, IsProcessEnabled, IsCompactLayoutable, DeploymentStatus, KeyPrefix, IsCustomSetting, IsDeprecatedAndHidden, IsReplicateable, IsRetrieveable, IsSearchLayoutable, IsSearchable, IsTriggerable, IsIdEnabled, IsEverCreatable, IsEverUpdatable, IsEverDeletable, IsFeedEnabled, IsQueryable, IsMruEnabled, DetailUrl, EditUrl, NewUrl, EditDefinitionUrl, HelpSettingPageName, HelpSettingPageUrl, RunningUserEntityAccessId, PublisherId, IsLayoutable, RecordTypesSupported, InternalSharingModel, ExternalSharingModel, HasSubtypes, IsSubtype, IsAutoActivityCaptureEnabled, IsInterface, ImplementsInterfaces, ImplementedBy, ExtendsInterfaces, ExtendedBy, DefaultImplementation FROM EntityDefinition WHERE DeploymentStatus != null AND IsCustomizable = TRUE ORDER BY NamespacePrefix, QualifiedApiName";
@@ -15,6 +46,7 @@ const APEXCLSQUERY = "SELECT Id, Name, ApiVersion, Status, Body, IsValid, Length
 const APEXTRGQUERY = "SELECT UsageBeforeInsert, UsageAfterInsert, UsageBeforeUpdate, UsageAfterUpdate, UsageBeforeDelete, UsageAfterDelete, UsageIsBulk, UsageAfterUndelete, ApiVersion, Status, TableEnumOrId, Name, Id, Body FROM ApexTrigger where NamespacePrefix = null"
 const NAMEDCREDQUERY = "SELECT Id, DeveloperName, Endpoint, PrincipalType, Language, MasterLabel, AuthTokenEndpointUrl, JwtIssuer FROM NamedCredential";
 const CONNECTEDAPPQUERY = "SELECT Id, Name, MobileStartUrl, RefreshTokenValidityPeriod, UvidTimeout, OptionsAllowAdminApprovedUsersOnly, OptionsRefreshTokenValidityMetric, MobileSessionTimeout, OptionsCodeCredentialGuestEnabled, OptionsFullContentPushNotifications, OptionsAllowExpiredUvidJWT, OptionsIsInternal, OptionsHasSessionLevelPolicy, PinLength, StartUrl FROM ConnectedApplication";
+const AURAQUERY = "SELECT Id, Language, MasterLabel, ApiVersion, Description, IsDeleted, DeveloperName, NamespacePrefix FROM AuraDefinitionBundle WHERE NamespacePrefix = null ORDER BY MasterLabel";
 export default class SchemaDocGen extends SfdxCommand {
 
     public static description = 'This command-line can generate technical design documentation for a Salesforce org. The tool retrieves metadata information about standard and custom objects, Apex classes, triggers, REST resources, named credentials, and connected apps from the org and then creates a PDF document containing the collected information. The tool uses the pdfmake library to generate the PDF document based on an HTML template and a CSS stylesheet. To start using this command, run sfdx dxb:install or copy schema gen def json file from Github: https://github.com/davidbrowaeys/DXB/blob/master/src/lib/documentinfo.json.';
@@ -60,9 +92,10 @@ export default class SchemaDocGen extends SfdxCommand {
         const { pdfconfig, stylesheet, htmltemplate, manifest } = this.flags;
 
         // Ensure required files exist
-        const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../../lib/utils/schema-template.html');
+        const pdfPath = htmltemplate ?? path.join(__dirname, '../../../../../lib/utils/schema-template.html');
+        const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../../lib/utils/schema-template-html.html');
         const cssPath = stylesheet ?? path.join(__dirname, '../../../../../lib/utils/bootstrap.min.css');
-        if (!fs.existsSync(htmlPath)) throw new Error(`HTML Template not found: ${htmlPath}`);
+        if (!fs.existsSync(htmlPath)) throw new Error(`HTML Template not found: ${pdfPath}`);
         if (!fs.existsSync(cssPath)) throw new Error(`Stylesheet file not found: ${cssPath}`);
         if (!fs.existsSync(pdfconfig)) throw new Error(`PDF Metadata Config Json file not found: ${pdfconfig}`);
         // Parse PDF metadata configuration
@@ -137,6 +170,10 @@ export default class SchemaDocGen extends SfdxCommand {
         apexClasses = apexClasses?.filter(cls => !cls.Body.includes('@RestResource'))
         this.ux.stopSpinner(`${apexClasses.length} found!`);
 
+        this.ux.startSpinner('Retrieve aura components info');
+        let auracmps = await this.query(AURAQUERY);
+        this.ux.stopSpinner(`${auracmps.length} found!`);
+
         //retrieve integration settings
         this.ux.startSpinner('Retrieve name credentials');
         let namedCredentials = await this.query(NAMEDCREDQUERY);
@@ -158,10 +195,16 @@ export default class SchemaDocGen extends SfdxCommand {
             namedCredentials,
             documentMeta,
             cssPath,
+            pdfPath,
             htmlPath,
             flows
         });
     }
+    /**
+     * Get components from manifest(package.xml)
+     * @param {string} manifest - Manifest file path
+     * @returns {void}
+     */
     private async getComponentsFromManifest(manifest:string){
         const data = await fs.promises.readFile(manifest, "utf8");
         const result = (await xml2js.parseStringPromise(data, {
@@ -195,14 +238,16 @@ export default class SchemaDocGen extends SfdxCommand {
             namedCredentials,
             documentMeta,
             cssPath,
+            pdfPath,
             htmlPath,
             flows
         } = doc;
         this.ux.startSpinner('Create pdf document');
-        const html = fs.readFileSync(htmlPath, "utf8");
+        const htmlTemplate = fs.readFileSync(htmlPath, "utf8");
+        const pdfTemplate = fs.readFileSync(pdfPath, "utf8");
         const css = fs.readFileSync(cssPath, "utf8");
         const document = {
-            html: html,
+            html: pdfTemplate,
             data: {
                 orginfo,
                 ssoSettings,
@@ -222,6 +267,20 @@ export default class SchemaDocGen extends SfdxCommand {
             type: "",
           };
         await pdf.create(document, documentMeta.pdfOption);
+        // the below only generate html
+        const htmlFile = Handlebars.compile(htmlTemplate)(document.data);
+        fs.writeFileSync(`./${documentMeta.documentInfo.title ?? 'DXB Technical Design'}.html`, htmlFile);
+        // the below convert and create md file 
+        // const mdFile = NodeHtmlMarkdown.translate(
+        //     /* html */ htmlFile, 
+        //     /* options (optional) */ {}, 
+        //     /* customTranslators (optional) */ undefined,
+        //     /* customCodeBlockTranslators (optional) */ undefined
+        // );
+        // fs.writeFileSync(`./${documentMeta.documentInfo.title ?? 'DXB Technical Design'}.md`, mdFile);
+        //gen docx
+        var docx = htmlDocx.asBlob(htmlFile,{margins: {top: 720, right: 720, left: 720}});
+        fs.writeFileSync(`./${documentMeta.documentInfo.title ?? 'DXB Technical Design'}.docx`, docx);
         this.ux.stopSpinner(`Done`);
     }
     /**
@@ -234,6 +293,11 @@ export default class SchemaDocGen extends SfdxCommand {
                 return {... cls, Body: (cls.Body.length < 100 ? cls.Body : cls.Body.substring(0,100))
             }});
     }
+    /**
+     * Processes images and returns the diagrams object including based64 data src for each img
+     * @param {Object} diagrams - An object containing diagrams.
+     * @returns {Object} An object containing processed diagrams.
+     */
     private processImages(diagrams) {
         // read binary data
         let d = {...diagrams};
@@ -271,6 +335,10 @@ export default class SchemaDocGen extends SfdxCommand {
         });
         return Promise.all(usagePromises);
     }
+    /**
+     * Retrieves a list of Flow Definitions from the Salesforce Metadata API, split into chunks of 10 records. 
+     * @returns {Promise<any[]>} An array of Flow Definition records.
+     */
     private async getFlowDefinitions(): Promise<any[]> {
         const flows = await this.query(FLOWQUERY);
         if (flows){
@@ -291,9 +359,19 @@ export default class SchemaDocGen extends SfdxCommand {
         }
         return undefined;
     }
-    private processFlow(flows){
-        return flows.map( (f:any) => {
-            return {...f,recordCreateCount: f.recordCreates?.length | 0,recordLookupCount: f.recordLookups?.length | 0, recordUpdateCount: f.recordUpdate?.length | 0}
+    /**
+     * Process flow metadata to add dml counts
+     * @param {Object[]} flows - An array of flows
+     * @returns {Object[]} An array of processed flows
+     */
+    private processFlow(flows) {
+        return flows.map((f: any) => {
+            return {
+                ...f,
+                recordCreateCount: f.recordCreates?.length | 0,
+                recordLookupCount: f.recordLookups?.length | 0,
+                recordUpdateCount: f.recordUpdate?.length | 0
+            };
         });
     }
     private async getFlowDefinitionForSObject(sobjects: any[]): Promise<any[]> {
@@ -338,19 +416,28 @@ export default class SchemaDocGen extends SfdxCommand {
                 const triggers = triggerMap[sobject.QualifiedApiName];
                 const triggerInfo = !!triggers
                     ? triggers.map((trigger) => {
-                        const operations = [];
-                        if (trigger.UsageBeforeInsert) operations.push({ name: 'Before Insert' });
-                        if (trigger.UsageAfterInsert) operations.push({ name: 'After Insert' });
-                        if (trigger.UsageBeforeUpdate) operations.push({ name: 'Before Update' });
-                        if (trigger.UsageAfterUpdate) operations.push({ name: 'After Update' });
-                        if (trigger.UsageBeforeDelete) operations.push({ name: 'Before Delete' });
-                        if (trigger.UsageAfterDelete) operations.push({ name: 'After Delete' });
-                        if (trigger.UsageAfterUndelete) operations.push({ name: 'After Undelete' });
+                        const operations = this.processTrigger(trigger);
                         return { ...trigger, operation: operations };
                     }) : undefined;
                 return { ...sobject, triggers: triggerInfo, hasTriggers: triggers?.length > 0 };
             });
     }  
+    /**
+     * Processes the trigger object to create an array of user friendly operations name
+     * @param {any} trigger - The trigger object
+     * @returns {Array} - An array of operations
+     */
+    private processTrigger(trigger:any):any[]{
+        const operations = [];
+        if (trigger.UsageBeforeInsert) operations.push({ name: 'Before Insert' });
+        if (trigger.UsageAfterInsert) operations.push({ name: 'After Insert' });
+        if (trigger.UsageBeforeUpdate) operations.push({ name: 'Before Update' });
+        if (trigger.UsageAfterUpdate) operations.push({ name: 'After Update' });
+        if (trigger.UsageBeforeDelete) operations.push({ name: 'Before Delete' });
+        if (trigger.UsageAfterDelete) operations.push({ name: 'After Delete' });
+        if (trigger.UsageAfterUndelete) operations.push({ name: 'After Undelete' });
+        return operations;
+    }
     /**
      * Fetches the field definition for a list of sObjects in chunks of 10 using the provided SOQL query.
      * @param {Array} sobjects - List of sObject names to fetch field definition for.
@@ -422,6 +509,26 @@ export default class SchemaDocGen extends SfdxCommand {
         const fullNameList = list.map(e => e.fullName);
         return await this.toArray(await this.connection.metadata.readSync('SamlSsoConfig', fullNameList));
     }
+    // private async getLightningWebComponents(){
+    //     const types = [{ type: 'LightningComponentBundle', folder: null }];
+    //     const list = await this.toArray(await this.connection.metadata.list(types, '57.0'));
+    //     const fullNames = list.filter( (e) => e.manageableState === "unmanaged")
+    //         .map ( (e) => {
+    //             return e.fullNames;
+    //         });
+    //     const chunkSize = 10;
+    //     const chunks = [];
+        
+    //     // Split the array into chunks of 10 records
+    //     fullNames.forEach((name, index) => {
+    //       const chunk = fullNames.slice(index, index + chunkSize);
+    //       chunks.push(chunk);
+    //     });
+    //     return Promise.all(chunks.map(async (c) => {
+    //         const res = await this.connection.metadata.read('LightningComponentBundle', c);
+    //         console.log('read',JSON.stringify(res[0]));
+    //     }));
+    // }
     // private async getSettingMetadata(names: string[]){
     //     return await this.connection.metadata.read('CaseSettings', ['CaseSettings']);
     // }

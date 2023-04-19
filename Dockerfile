@@ -1,6 +1,8 @@
 # node > 14.6.0 is required for the SFDX-Git-Delta plugin
 FROM node:lts-alpine
 
+WORKDIR /usr/app
+
 #add usefull tools
 RUN apk add --update --no-cache  \
       git \
@@ -13,17 +15,19 @@ RUN apk add --update --no-cache  \
       openjdk11 \
       openssh-client \
       perl \
-      jq
+      jq \
+      chromium
 
 # install node packages
-RUN npm install sfdx-cli --global
-RUN npm install --global puppeteer
-RUN npm install --global vlocity
+RUN npm install @salesforce/sfdx-scanner --global
+      npm install --global dxb && \
+      npm install --global sfdx-cli --force && \
+      sfdx plugins:link $(npm root -g)/dxb && \
+      sfdx plugins:link $(npm root -g)/@salesforce/sfdx-scanner && \
+      npm install --global vlocity && \
+      export PUPPETEER_SKIP_DOWNLOAD=true && \
+      npm install --global puppeteer --unsafe-perm
 
-#install sfdx plugins
 RUN sfdx --version
-RUN echo 'y' | sfdx plugins:install dxb
-RUN echo 'y' | sfdx plugins:install @sfdx-plugins-lab/plugin-apex-coverage
-RUN sfdx plugins:install @salesforce/sfdx-scanner
-
-RUN sfdx plugins
+RUN sfdx dxb --help
+RUN vlocity help

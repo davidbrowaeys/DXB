@@ -2,12 +2,7 @@ import { flags, SfdxCommand } from '@salesforce/command';
 import * as fs from 'fs';
 import { SfdxError } from '@salesforce/core';
 import * as xml2js from 'xml2js';
-import * as Table from 'cli-table';
 
-const coverageResultTable = new Table({
-    head: ['Classname', 'Path', 'Time', 'Diff'], 
-    colWidths: [30, 50, 10, 10]
-});
 const SUCCESS_MESSAGE:string = 'Code coverage is looking good!';
 const ERROR_MESSAGE:string = 'Insufficient Code Coverage!';
 export default class CoverageCheck extends SfdxCommand {
@@ -53,11 +48,17 @@ export default class CoverageCheck extends SfdxCommand {
                 });
                 if (badClasses && badClasses.length >= 1 ){
                     console.log('Ooops, coverage seems a bit low! Each apex class is expected at least a coverage of '+threshold*100+'%.');
+                    result = [];
                     badClasses.forEach((item) => {
                         const coverage:number = parseFloat(item.$['line-rate']);
-                        coverageResultTable.push([item.$.name, item.$.filename,`${item.$['line-rate'] * 100}%`, `-${((threshold - coverage) * 100).toFixed(2)}%`]);
+                        result.push({
+                            name: item.$.name, 
+                            path: item.$.filename,
+                            Time: `${item.$['line-rate'] * 100}%`, 
+                            Diff: `-${((threshold - coverage) * 100).toFixed(2)}%`
+                        });
                     });
-                    console.log(coverageResultTable.toString());
+                    console.table(result);
                     throw new SfdxError(ERROR_MESSAGE);
                 }else{
                     console.log(SUCCESS_MESSAGE);

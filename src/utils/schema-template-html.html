@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{document.fileName}}</title>
+    <style>
+      html { 
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact; 
+      }
+      /*inject external css*/
+      {{style}}
+      /*custom css*/
+      body{
+        padding: 10px;
+      }
+      h2,h3,h4,h5{
+        color: rgb(90, 121, 184) !important;
+      }
+      .documentProp,.documentContent, .pdfheader{
+        max-width:100%;
+        width: 100%
+      }
+      .diagram{
+        text-align:center;
+      }
+      .diagram img{
+        max-width:75%;
+        margin-bottom: 20px;
+      }
+      .cover h1, .cover h2{
+        color: rgb(0, 5, 98) !important;
+      }
+      .coverLogo, .coverLogo svg{
+        width:300px !important;
+        max-width:300px !important;
+      }
+      .object-table{
+        margin-right: 10px;
+      }
+      .object-table th{
+        width:20%;
+      }
+      .table *, p, ul{
+        font-size: 10px;
+      }
+      .pdfheader{
+        color: #444;
+        font-size:8px;
+      }
+      .pdfheader .left {
+        float: left;
+        width: 33.33%;
+        height: 100%;
+        text-align: left;
+      }
+
+      .pdfheader .middle {
+        float: left;
+        width: 33.33%;
+        height: 100%;
+        text-align: center;
+      }
+
+      .pdfheader .right {
+        float: right;
+        width: 33.33%;
+        height: 100%;
+        text-align: right;
+      }
+      .symbol{
+        font-size: 17px;
+      }
+      .documentProp table th, .documentContent table th, .documentProp h2, .documentContent h2{
+        background: rgb(90, 121, 184) !important;
+        color: #FFF !important;
+      }
+      .documentProp h2, .documentContent h2{
+        padding: 7px !important;
+      }
+      .documentProp h4, .documentContent h4{
+        background: rgb(221,229,240) !important;
+        padding: 7px !important;
+      }
+      .documentProp h5, .documentContent h5{
+        border-bottom: rgb(90, 121, 184) !important;
+        padding: 5px !important;
+        margin-bottom: 7px !important;
+      }
+      #TableOfContent a::after { content: leader('.') target-counter(attr(href), page, decimal) }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <div class="coverLogo">
+        <svg
+          xmlns:dc="http://purl.org/dc/elements/1.1/"
+          xmlns:cc="http://creativecommons.org/ns#"
+          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+          xmlns:svg="http://www.w3.org/2000/svg"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+          xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+          width="920"
+          height="200"
+          viewBox="0 0 919.99995 200.00003"
+          id="svg2"
+          version="1.1"
+          inkscape:version="0.91 r13725"
+          sodipodi:docname="Deloitte_logo_2016.svg"
+          inkscape:export-filename="C:\Users\Daijin\Desktop\Deloitte.png"
+          inkscape:export-xdpi="90"
+          inkscape:export-ydpi="90">
+          <defs
+            id="defs4">
+            <clipPath
+              id="clipPath3350"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3352"
+         d="m 42.52,723.968 130.394,0 0,24.378 -130.394,0 0,-24.378 z" />
+    </clipPath>
+    <clipPath
+       id="clipPath3708"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3710"
+         d="m 335.433,531.507 135,0 0,51.596 -135,0 0,-51.596 z" />
+    </clipPath>
+    <clipPath
+       id="clipPath3862"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3864"
+         d="m 335.433,476.232 135,0 0,51.565 -135,0 0,-51.565 z" />
+    </clipPath>
+    <clipPath
+       id="clipPath3882"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3884"
+         d="m 335.433,420.927 135,0 0,51.564 -135,0 0,-51.564 z" />
+    </clipPath>
+    <clipPath
+       id="clipPath3936"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3938"
+         d="m 335.433,365.621 135,0 0,51.564 -135,0 0,-51.564 z" />
+    </clipPath>
+    <clipPath
+       id="clipPath3984"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3986"
+         d="m 335.433,310.315 135,0 0,51.564 -135,0 0,-51.564 z" />
+    </clipPath>
+    <clipPath
+       id="clipPath4038"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4040"
+         d="m 335.433,255.01 135,0 0,51.564 -135,0 0,-51.564 z" />
+    </clipPath>
+    <clipPath
+       id="clipPath3350-9"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3352-1"
+         d="m 42.52,723.968 130.394,0 0,24.378 -130.394,0 0,-24.378 z" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.6636812"
+     inkscape:cx="300.28476"
+     inkscape:cy="100"
+     inkscape:document-units="px"
+     inkscape:current-layer="g3359"
+     showgrid="false"
+     fit-margin-top="10"
+     fit-margin-left="10"
+     fit-margin-right="10"
+     fit-margin-bottom="10"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-2521.9698,-654.34261)">
+    <g
+       id="g3359"
+       transform="matrix(3.0676446,0,0,3.0676446,-6165.655,-2195.369)">
+      <g
+         id="g3371"
+         transform="matrix(1.7716542,0,0,1.7716542,-2301.0501,-745.37663)">
+        <path
+           inkscape:connector-curvature="0"
+           id="path3356"
+           style="fill:#86bc24;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 3054.8273,974.3862 c 0,-2.385 1.9363,-4.32 4.32,-4.32 2.385,0 4.3188,1.935 4.3188,4.32 0,2.385 -1.9338,4.31875 -4.3188,4.31875 -2.3837,0 -4.32,-1.93375 -4.32,-4.31875" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path3360"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 2917.0546,962.94557 c 0,-2.73625 -0.5287,-4.76625 -1.5862,-6.08875 -1.0588,-1.32125 -2.6626,-1.98125 -4.8188,-1.98125 l -2.2937,0 0,16.7325 1.755,0 c 2.395,0 4.15,-0.71 5.2675,-2.135 1.1162,-1.4225 1.6762,-3.59875 1.6762,-6.5275 m 8.18,-0.285 c 0,4.985 -1.34,8.82625 -4.02,11.5225 -2.68,2.6975 -6.4475,4.04625 -11.3038,4.04625 l -9.4362,0 0,-29.87125 10.095,0 c 4.6825,0 8.2975,1.22625 10.845,3.6775 2.5463,2.4525 3.82,5.9925 3.82,10.625" />
+        <path
+           d="m 2951.3731,978.22895 7.5087,0 0,-29.99625 -7.5087,0 0,29.99625 z"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           id="path3362"
+           inkscape:connector-curvature="0" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path3366"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 2969.4302,967.0402 c 0,1.9125 0.25,3.37125 0.7488,4.37375 0.5,1.00375 1.3374,1.505 2.5149,1.505 1.165,0 1.9888,-0.50125 2.4688,-1.505 0.48,-1.0025 0.7187,-2.46125 0.7187,-4.37375 0,-1.9025 -0.2425,-3.3375 -0.7287,-4.30625 -0.4875,-0.97125 -1.3188,-1.4575 -2.4975,-1.4575 -1.1525,0 -1.9762,0.48375 -2.4762,1.44625 -0.4988,0.96375 -0.7488,2.4025 -0.7488,4.3175 m 14.0937,0 c 0,3.64375 -0.955,6.48625 -2.87,8.52375 -1.9137,2.03875 -4.5925,3.05875 -8.0362,3.05875 -3.3025,0 -5.9313,-1.0425 -7.8825,-3.1275 -1.9537,-2.085 -2.93,-4.9025 -2.93,-8.455 0,-3.6325 0.9563,-6.455 2.8713,-8.4675 1.9149,-2.0125 4.5999,-3.01875 8.0574,-3.01875 2.1363,0 4.0263,0.46625 5.6638,1.3975 1.6387,0.93125 2.9038,2.265 3.7925,4.0025 0.89,1.735 1.3337,3.765 1.3337,6.08625" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path3370"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 2986.5059,978.22907 7.51,0 0,-11.48 0,-10.80125 -7.51,0 0,22.28125 z" />
+        <path
+           d="m 2986.5056,953.2527 7.51,0 0,-5.02125 -7.51,0 0,5.02125 z"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           id="path3372"
+           inkscape:connector-curvature="0" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path3376"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 3009.2307,972.54595 c 1.0138,0 2.2213,-0.2575 3.63,-0.76875 l 0,5.60625 c -1.0125,0.445 -1.975,0.76375 -2.89,0.9525 -0.915,0.19125 -1.9888,0.28625 -3.2175,0.28625 -2.5213,0 -4.3387,-0.63375 -5.455,-1.89875 -1.1112,-1.265 -1.6687,-3.2075 -1.6687,-5.82875 l 0,-9.185 -2.63,0 0,-5.76 2.63,0 0,-5.69 7.5675,-1.31625 0,7.00625 4.7912,0 0,5.76 -4.7912,0 0,8.6725 c 0,1.4425 0.6787,2.16375 2.0337,2.16375" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path3380"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 3026.6116,972.54595 c 1.0138,0 2.2213,-0.2575 3.63,-0.76875 l 0,5.60625 c -1.0112,0.445 -1.975,0.76375 -2.89,0.9525 -0.9162,0.19125 -1.9862,0.28625 -3.2175,0.28625 -2.5212,0 -4.3387,-0.63375 -5.4525,-1.89875 -1.1137,-1.265 -1.6712,-3.2075 -1.6712,-5.82875 l 0,-9.185 -2.6313,0 0,-5.76 2.6313,0 0,-5.77625 7.5662,-1.23 0,7.00625 4.7938,0 0,5.76 -4.7938,0 0,8.6725 c 0,1.4425 0.6788,2.16375 2.035,2.16375" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path3384"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 3039.7174,964.32582 c 0.1025,-1.22 0.4513,-2.11375 1.0462,-2.685 0.5976,-0.57 1.3351,-0.855 2.2176,-0.855 0.9625,0 1.7275,0.32 2.295,0.965 0.5712,0.64125 0.8687,1.5 0.8925,2.575 l -6.4513,0 z m 10.59,-6.145 c -1.785,-1.75 -4.3175,-2.62625 -7.5937,-2.62625 -3.4438,0 -6.0938,1.00625 -7.9513,3.01875 -1.8563,2.0125 -2.785,4.9 -2.785,8.6625 0,3.64375 1.0038,6.45375 3.0063,8.42625 2.0037,1.9725 4.8174,2.96 8.4412,2.96 1.74,0 3.2375,-0.11875 4.4925,-0.355 1.2475,-0.23375 2.455,-0.65625 3.6263,-1.26625 l -1.1538,-5.02125 c -0.8512,0.3475 -1.6612,0.615 -2.4262,0.79125 -1.105,0.25625 -2.3175,0.385 -3.6376,0.385 -1.4474,0 -2.5899,-0.35375 -3.4274,-1.06125 -0.8375,-0.70875 -1.2838,-1.68625 -1.335,-2.93125 l 13.4225,0 0,-3.42125 c 0,-3.29125 -0.8926,-5.8125 -2.6788,-7.56125" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path3388"
+           style="fill:#0f0b0b;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           d="m 2935.2007,964.32582 c 0.1025,-1.22 0.4513,-2.11375 1.0462,-2.685 0.5963,-0.57 1.335,-0.855 2.2188,-0.855 0.96,0 1.725,0.32 2.2938,0.965 0.5712,0.64125 0.8674,1.5 0.8937,2.575 l -6.4525,0 z m 10.5912,-6.145 c -1.7862,-1.75 -4.3175,-2.62625 -7.5949,-2.62625 -3.4451,0 -6.0938,1.00625 -7.9501,3.01875 -1.8562,2.0125 -2.7862,4.9 -2.7862,8.6625 0,3.64375 1.0025,6.45375 3.0075,8.42625 2.0025,1.9725 4.8162,2.96 8.44,2.96 1.74,0 3.2375,-0.11875 4.4925,-0.355 1.2475,-0.23375 2.455,-0.65625 3.6275,-1.26625 l -1.155,-5.02125 c -0.8513,0.3475 -1.6613,0.615 -2.425,0.79125 -1.1075,0.25625 -2.3187,0.385 -3.6388,0.385 -1.4462,0 -2.5899,-0.35375 -3.4274,-1.06125 -0.8388,-0.70875 -1.2838,-1.68625 -1.335,-2.93125 l 13.4225,0 0,-3.42125 c 0,-3.29125 -0.8926,-5.8125 -2.6776,-7.56125" />
+      </g>
+    </g>
+  </g>
+</svg>
+      </div>
+      <h1>{{document.title}}</h1>
+      <h2>{{document.subtitle}}</h2>
+    </div>
+    <div class="documentProp">
+      <h2 id="DocumentProperty">Document Properties</h2>
+      <table class="table object-table">
+        <tr>
+          <th class="text-bg-primary" scope="row" style="background: rgb(56, 56, 164)">File Name</th>
+          <td class="text-start">{{document.title}}</td>
+        </th>
+        <tr>
+          <th class="text-bg-primary"  scope="row" style="background: rgb(56, 56, 164)">Document Owner</th>
+          <td class="text-start">{{document.documentOwner}}</td>
+        </tr>
+        <tr>
+          <th class="text-bg-primary" scope="row" style="background: rgb(56, 56, 164)">Created Date</th>
+          <td class="text-start">{{document.createdDate}}</td>
+        </tr>
+      </table>
+      <h2>Document Sign-Off/Evidence of Review</h2>
+      <p>With this acknowledgement, the undersigned hereby agree to the form, content and overall integrity of the accompanying document.</p>
+      <p>Each section of this document has been thoroughly reviewed by technical, business leads and subject matter expert groups that have communicated their support for the document content to each of the signatories listed below.  Signatories, in turn, are those individuals that speak on behalf of their respective subject matter experts, technical and business leads.</p>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col" width="10%">Version</th>
+            <th scope="col" width="10%">Date</th>
+            <th scope="col" width="30%">Approved By</th>
+            <th scope="col" width="50%">Notes</th>
+          </tr>
+        </thead>
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+    </div>
+    <div id="TableOfContent" class="documentProp">
+      <h2>Table of Contents</h2>
+      <ol>
+        <li>
+          <a href="#DocumentProperty">Document Property</a>
+        </li>
+        <li>
+          <a href="#TableOfContent">Table of Contents</a>
+        </li>
+        <li>
+          <a href="#DocumentOverview">Document Overview & Description</a>
+        </li>
+        <li>
+          <a href="#StandardObjects">Standard Objects</a>
+          <ol>
+            {{#each std_objects}}
+            <li>
+              <a href="#{{this.QualifiedApiName}}">{{this.Label}}</a>
+            </li>
+            {{/each}}
+          </ol>
+        </li>
+        <li>
+          <a href="#CustomObjects">Custom Objects</a>
+          <ol>
+            {{#each cust_objects}}
+            <li>
+              <a href="#{{this.QualifiedApiName}}">{{this.Label}}</a>
+            </li>
+            {{/each}}
+          </ol>
+        </li>
+      </ol>
+    </div>
+    <div class="documentContent" style="page-break-after: always">
+        <h2 id="DocumentOverview">Document Overview & Description</h2>
+        <p>This document provides the configuration and customization settings that have been implemented. This configuration and customization will serve as the baseline for a full release.</p>
+        <ul>
+          <li>Only sections that have modifications over Salesforce out-of-the-box (OOB) settings are documented.</li>
+          <li>This document is laid out in a consistent manner with the Salesforce customize and configuration settings accessed from Setup | Customize in the Salesforce application.</li>
+          <li>This document does not detail standard Salesforce functionality unless such functionality is requested via a requirement.</li>
+        </ul>
+        <p>The document will provide an in-depth technical understanding of the customization and configuration made to the Salesforce application.  This section is intended to provide guidance to future developers by providing an understanding of the modifications that were made to the Salesforce objects, fields, profiles, roles, etc.  In addition, this section includes an understanding of how to execute the batch upload, with screen shots and troubleshooting tips for common errors that are encountered.<br/>  
+          There are five main sections in the document:
+        </p>
+        <ul>
+          <li>High-Level Data Model – defines the underlying data structure for CRM Implementation application.</li>
+          <li>Custom Functionality Detail Design – Provides the details of some custom components/functionalities that have been developed.</li>
+          <li>Customize – defines the application customizations in terms of labels, workflows, user management, apex, triggers, VisualForce components, reports and dashboards. This section will be defined in Phase </li>
+          <li>Security – defines the PCI compliance security configurations, Salesforce security settings and details of PCI Audit log configurations.</li>
+        </ul>
+        {{#ifCond diagrams '!==' undefined}}
+        <h2>High-Level Data Model</h2>
+        <p>The following high-level data model defines the underlying data structure for the Implementation application.  Detailed object structure (fields, data types, field lengths, and pick-list values) are detailed in the attached data dictionary.  In addition, the following data model does not include standard objects that are not being used by the Implementation prototype application. Please refer to the Salesforce ERD document.</p>
+        {{#ifCond diagrams.standard '!==' undefined}}
+        <h3>{{diagrams.standard.title}}</h3>
+        <div class="diagram">
+          <img src="{{diagrams.standard.src}}"/>
+        </div>
+        {{/ifCond}}
+        {{#ifCond diagrams.custom '!==' undefined}}
+        <h3>{{diagrams.custom.title}}</h3>
+        <div class="diagram">
+          <img src="{{diagrams.custom.src}}"/>
+        </div>
+        {{/ifCond}}
+        {{/ifCond}}
+        <h2>Objects</h2>
+        <h3 id="StandardObjects">Standard Objects</h3>
+        {{#each std_objects}}
+        <h4 id="{{this.QualifiedApiName}}">{{this.Label}}</h4>
+        <h5>Object Details</h5>
+        <table class="table object-table">
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:20%">Label</th>
+            <td class="text-start">{{this.Label}}</td>
+          </th>
+          <tr>
+            <th class="text-bg-primary"  scope="row">API Name</th>
+            <td class="text-start">{{this.QualifiedApiName}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">Key Prefix</th>
+            <td class="text-start">{{this.KeyPrefix}}</td>
+          </tr>
+          <!-- <tr>
+            <th class="text-bg-primary" scope="row">Enable History</th>
+            <td class="text-start">
+              <span class="symbol">
+              {{#ifCond this.enableHistory '===' true}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+              {{#ifCond this.enableHistory '===' false}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+            </span>
+            </td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">Enable Feed</th>
+            <td class="text-start">
+              <span class="symbol">
+              {{#ifCond this.enableFeeds '===' true}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+              {{#ifCond this.enableFeeds '===' false}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+            </span>
+            </td>
+          </tr> -->
+          <tr>
+            <th class="text-bg-primary" scope="row">Description</th>
+            <td>{{this.description}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">Internal Sharing Model</th>
+            <td class="text-start">{{this.InternalSharingModel}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">External Sharing Model</th>
+            <td class="text-start">{{this.ExternalSharingModel}}</td>
+          </tr>
+        </table>
+        {{#ifCond this.recordTypes '!==' undefined}}
+        <h5>Record Type Details</h5>
+        <p>A record type is a way to differentiate different kinds of records within an object. It allows users to customize the fields, page layouts, and other features related to a specific record type. This helps to create a more organized and streamlined user experience.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" style="width:5%">Label</th>
+              <th class="bg-primary" scope="col" style="width:5%">Developer Name</th>
+              <th class="bg-primary text-start" scope="col">Description</th>
+            </tr>
+          </thead>
+          {{#each this.recordTypes}}
+          <tr>
+            <td>{{this.label}}</td>
+            <td>{{this.fullName}}</td>
+            <td>{{this.description}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.fields '!==' undefined}}
+        <h5>Field Details</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary text-start" scope="col">Type</th>
+              <th scope="col">Indexed</th>
+              <th scope="col">Tracked</th>
+              <th class="bg-primary text-start" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Info</th>
+            </tr>
+          </thead>
+          {{#each this.fields}}
+          <tr>
+            <td style="width:150px;word-break: break-all;">{{this.Label}}&nbsp;({{this.QualifiedApiName}})</td>
+            <td class="text-start" style="width:150px;word-break: break-all;">
+              {{this.DataType}}
+              {{#ifCond this.required '===' true}}
+                &nbsp;*
+              {{/ifCond}}
+            </td>
+            <td style="width:20px;">
+              {{#ifCond this.IsIndexed '===' true}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+            </td>
+            <td style="width:20px;">
+              {{#ifCond this.IsFieldHistoryTracked '===' true}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+            </td>
+            <td class="text-start" style="width:100px;word-break: break-all;">{{this.Description}}</td>
+            <td class="text-start" style="word-break: break-all;">
+              {{#ifCond this.encryptionScheme '!==' undefined}}
+              {{#ifCond this.encryptionScheme '!==' 'None'}}
+              <strong>Encyrption Scheme</strong>
+              <p>{{this.encryptionScheme}}</p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.formula '!==' undefined}}
+              <strong>Formula</strong>
+              <p>{{this.formula}}</p>
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Picklist'}}
+              {{#ifCond this.valueSet '!==' undefined}}
+                <strong>Picklist Values</strong>
+                <p>
+                {{#each this.valueSet.valueSetDefinition.value}}
+                  {{this.label}};
+                {{/each}}
+                </p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Summary'}}
+              <strong>Aggregate Key</strong>:{{this.summaryForeignKey}}<br/>
+              <strong>Aggregate Function</strong>:{{this.summaryOperation}}<br/>
+              {{#ifCond this.summaryFilterItems '!==' undefined}}
+              <strong>Filters</strong>:
+              <ul>
+                {{#each this.summaryFilterItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+              {{/ifCond}}
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.validationRules '!==' undefined}}
+        <h5>Validation Rule Details</h5>
+        <p>Validation rules are used in Salesforce to ensure that the data entered into a record meets the standards set by the organization. Validation rules can be used to prevent users from entering incorrect data, or to ensure that certain fields are populated with accurate data. Validation rules can be set up to check for specific criteria and display an error message when a record does not meet the criteria. Validation rules can also be used to enforce data integrity and to ensure data is entered correctly.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" style="width:50px">Name</th>
+              <th class="bg-primary text-start" scope="col" style="width:150px">Description</th>
+              <th class="bg-primary text-start" scope="col" style="width:300px;word-break: break-all;">Error Formula</th>
+              <th class="bg-primary text-start" scope="col" style="width:200px">Error Message</th>
+            </tr>
+          </thead>
+          {{#each this.validationRules}}
+          <tr>
+            <td>{{this.fullName}}</td>
+            <td class="text-start">{{this.description}}</td>
+            <td class="text-start">{{this.errorConditionFormula}}</td>
+            <td class="text-start">{{this.errorMessage}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.listViews '!==' undefined}}
+        <h5>List View Details</h5>
+        <p>In order to view list of records satisfying certain criteria separately create a list view for each of them.</p>
+        <p>The users can update these views to further filter down to specific types of records as needed.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Filter Scope</th>
+              <th class="bg-primary text-start" scope="col">Filters</th>
+              <th class="bg-primary text-start" scope="col">Share To</th>
+            </tr>
+          </thead>
+          {{#each this.listViews}}
+          <tr>
+            <td style="width:50px;">{{this.label}}</td>
+            <td class="text-start" style="width:50px;">{{this.filterScope}}</td>
+            <td class="text-start" style="width:300px;word-break: break-all;">
+              {{#ifCond this.hasFilters '===' true}}
+              <ul>
+                {{#each this.filters}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+            </td>
+            <td class="text-start" style="word-break: break-all;">
+              {{#ifCond this.hasShareTo '===' true}}
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.hasSharingRules '===' true}}
+        <h5>Sharing Rules</h5>
+        <p>Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings for selected sets of users.</p>
+        {{#ifCond this.sharingOwnerRules '!==' undefined}}
+        <h6>Owner-Based Sharing</h6>
+        <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col">Access</th>
+              <th class="bg-primary text-start" scope="col" >Shared From</th>
+              <th class="bg-primary text-start" scope="col">Shared To</th>
+            </tr>
+          </thead>
+          {{#each this.sharingOwnerRules}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedFrom}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.sharingCriteriaRules '!==' undefined}}
+        <h6>Criteria-Based Sharing</h6>
+        <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary text-start" scope="col">Access</th>
+              <th class="bg-primary text-start" scope="col" >Criteria</th>
+              <th class="bg-primary text-start" scope="col">Shared To</th>
+            </tr>
+          </thead>
+          {{#each this.sharingCriteriaRules}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.criteriaItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{/ifCond}}
+        {{#ifCond this.hasAutoFlows '===' true}}
+        <h5>Autolaunched Flows</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
+              <th class="bg-primary text-start" scope="col">Subflows Dependencies</th>
+            </tr>
+          </thead>
+          {{#each this.autoflows}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:100px;word-break: break-all;">
+              {{this.interviewLabel}}
+            </td>
+            <td style="width:50px;">{{this.start.triggerType}}({{this.start.recordTriggerType}})</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.subflows}}
+                  <li>{{this.label}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.triggers '!==' undefined}}
+        <h5>Apex Triggers</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Status</th>
+              <th class="bg-primary text-start" scope="col">API Version</th>
+              <th class="bg-primary text-start" scope="col">Operations</th>
+            </tr>
+          </thead>
+          {{#each this.triggers}}
+          <tr>
+            <td style="width:50px;">{{this.Name}}</td>
+            <td class="text-start" style="width:50px;">{{this.Status}}</td>
+            <td class="text-start" style="width:50px;">{{this.ApiVersion}}</td>
+            <td class="text-start" style="width:50px;">
+              <ul>
+                {{#each this.operation}}
+                  <li>{{this.name}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{/each}}
+        <!--CUSTOM OBJECT-->
+        <h3 id="CustomObjects">Custom Objects</h3>
+        <p>Custom objects are custom database tables that allow you to store information unique to your organization. For custom objects, the custom flag—a Boolean field in the describe results—is true. Client applications with sufficient permissions can invoke API calls on existing custom objects. You can create custom objects with the user interface, or by using the metadata WSDL with a client application or using VS Code. This section will provide details for each custom object that is included in the solution.</p>
+        {{#each cust_objects}}
+        <h4>{{this.Label}}</h4>
+        <h5>Object Details</h5>
+        <table class="table object-table">
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:20%">Label</th>
+            <td class="text-start">{{this.Label}}</td>
+          </th>
+          <tr>
+            <th class="text-bg-primary"  scope="row">API Name</th>
+            <td class="text-start">{{this.QualifiedApiName}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">Key Prefix</th>
+            <td class="text-start">{{this.KeyPrefix}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">Description</th>
+            <td>{{this.description}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">Internal Sharing Model</th>
+            <td class="text-start">{{this.InternalSharingModel}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row">External Sharing Model</th>
+            <td class="text-start">{{this.ExternalSharingModel}}</td>
+          </tr>
+        </table>
+        {{#ifCond this.recordTypes '!==' undefined}}
+        <h5>Record Type Details</h5>
+        <p>A record type is a way to differentiate different kinds of records within an object. It allows users to customize the fields, page layouts, and other features related to a specific record type. This helps to create a more organized and streamlined user experience.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" style="width:5%">Label</th>
+              <th class="bg-primary" scope="col" style="width:5%">Developer Name</th>
+              <th class="bg-primary text-start" scope="col">Description</th>
+            </tr>
+          </thead>
+          {{#each this.recordTypes}}
+          <tr>
+            <td>{{this.label}}</td>
+            <td>{{this.fullName}}</td>
+            <td>{{this.description}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.fields '!==' undefined}}
+        <h5>Field Details</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary text-start" scope="col">Type</th>
+              <th scope="col">Indexed</th>
+              <th scope="col">Tracked</th>
+              <th class="bg-primary text-start" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Info</th>
+            </tr>
+          </thead>
+          {{#each this.fields}}
+          <tr>
+            <td style="width:150px;word-break: break-all;">{{this.Label}}&nbsp;({{this.QualifiedApiName}})</td>
+            <td class="text-start text-truncate" style="width:150px;word-break: break-all;">
+              {{this.DataType}}
+              {{#ifCond this.required '===' true}}
+                &nbsp;*
+              {{/ifCond}}
+            </td>
+            <td style="width:20px;">
+              {{#ifCond this.IsIndexed '===' true}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+            </td>
+            <td style="width:20px;">
+              {{#ifCond this.IsFieldHistoryTracked '===' true}}
+              <span class="symbol">✓</span>
+              {{/ifCond}}
+            </td>
+            <td class="text-start" style="width:100px;word-break: break-all;">{{this.Description}}</td>
+            <td class="text-start" style="word-break: break-all;">
+              {{#ifCond this.encryptionScheme '!==' undefined}}
+              {{#ifCond this.encryptionScheme '!==' 'None'}}
+              <strong>Encyrption Scheme</strong>
+              <p>{{this.encryptionScheme}}</p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.formula '!==' undefined}}
+              <strong>Formula</strong>
+              <p>{{this.formula}}</p>
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Picklist'}}
+              {{#ifCond this.valueSet '!==' undefined}}
+                <strong>Picklist Values</strong>
+                <p>
+                {{#each this.valueSet.valueSetDefinition.value}}
+                  {{this.label}};
+                {{/each}}
+                </p>
+              {{/ifCond}}
+              {{/ifCond}}
+              {{#ifCond this.type '===' 'Summary'}}
+              <strong>Aggregate Key</strong>:{{this.summaryForeignKey}}<br/>
+              <strong>Aggregate Function</strong>:{{this.summaryOperation}}<br/>
+              {{#ifCond this.summaryFilterItems '!==' undefined}}
+              <strong>Filters</strong>:
+              <ul>
+                {{#each this.summaryFilterItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+              {{/ifCond}}
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.validationRules '!==' undefined}}
+        <h5>Validation Rule Details</h5>
+        <p>Validation rules are used in Salesforce to ensure that the data entered into a record meets the standards set by the organization. Validation rules can be used to prevent users from entering incorrect data, or to ensure that certain fields are populated with accurate data. Validation rules can be set up to check for specific criteria and display an error message when a record does not meet the criteria. Validation rules can also be used to enforce data integrity and to ensure data is entered correctly.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" style="width:50px">Name</th>
+              <th class="bg-primary text-start" scope="col" style="width:150px">Description</th>
+              <th class="bg-primary text-start" scope="col" style="width:300px;word-break: break-all;">Error Formula</th>
+              <th class="bg-primary text-start" scope="col" style="width:200px">Error Message</th>
+            </tr>
+          </thead>
+          {{#each this.validationRules}}
+          <tr>
+            <td>{{this.fullName}}</td>
+            <td class="text-start">{{this.description}}</td>
+            <td class="text-start">{{this.errorConditionFormula}}</td>
+            <td class="text-start">{{this.errorMessage}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.listViews '!==' undefined}}
+        <h5>List View Details</h5>
+        <p>In order to view list of records satisfying certain criteria separately create a list view for each of them.</p>
+        <p>The users can update these views to further filter down to specific types of records as needed.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Filter Scope</th>
+              <th class="bg-primary text-start" scope="col">Filters</th>
+              <th class="bg-primary text-start" scope="col">Share To</th>
+            </tr>
+          </thead>
+          {{#each this.listViews}}
+          <tr>
+            <td style="width:50px;">{{this.label}}</td>
+            <td class="text-start" style="width:50px;">{{this.filterScope}}</td>
+            <td class="text-start" style="width:300px;word-break: break-all;">
+              {{#ifCond this.hasFilters '===' true}}
+              <ul>
+                {{#each this.filters}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+            </td>
+            <td class="text-start" style="word-break: break-all;">
+              {{#ifCond this.hasShareTo '===' true}}
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+              {{/ifCond}}
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.hasSharingRules '===' true}}
+        <h5>Sharing Rules</h5>
+        <p>Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings for selected sets of users.</p>
+        {{#ifCond this.hasOwnerSharingRules '===' true}}
+        <h6>Owner-Based Sharing</h6>
+        <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col">Access</th>
+              <th class="bg-primary text-start" scope="col" >Shared From</th>
+              <th class="bg-primary text-start" scope="col">Shared To</th>
+            </tr>
+          </thead>
+          {{#each this.sharingOwnerRules}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedFrom}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.hasCriteriaSharingRules '===' true}}
+        <h6>Criteria-Based Sharing</h6>
+        <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary text-start" scope="col">Access</th>
+              <th class="bg-primary text-start" scope="col" >Criteria</th>
+              <th class="bg-primary text-start" scope="col">Shared To</th>
+            </tr>
+          </thead>
+          {{#each this.sharingCriteriaRules}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:50px;">{{this.accessLevel}}</td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.criteriaItems}}
+                  <li>{{this.field}}<strong style="margin-left:10px;font-style: bold; margin-right:10px;">{{this.operation}}</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.sharedTo}}
+                  <li><strong style="margin-right:10px;">{{this.label}}:</strong>{{this.value}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{/ifCond}}
+        {{#ifCond this.hasAutoFlows '===' true}}
+        <h5>Autolaunched Flows</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
+            </tr>
+          </thead>
+          {{#each this.autoflows}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:100px;word-break: break-all;">{{this.interviewLabel}}</td>
+            <td style="width:100px;">{{this.start.triggerType}}-{{this.start.recordTriggerType}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.triggers '!==' undefined}}
+        <h5>Apex Triggers</h5>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Status</th>
+              <th class="bg-primary text-start" scope="col">API Version</th>
+              <th class="bg-primary text-start" scope="col">Operations</th>
+            </tr>
+          </thead>
+          {{#each this.triggers}}
+          <tr>
+            <td style="width:50px;">{{this.Name}}</td>
+            <td class="text-start" style="width:50px;">{{this.Status}}</td>
+            <td class="text-start" style="width:50px;">{{this.ApiVersion}}</td>
+            <td class="text-start" style="width:50px;">
+              <ul>
+                {{#each this.operation}}
+                  <li>{{this.name}}</li>
+                {{/each}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{/each}}
+      </div>
+      <div class="documentContent" style="page-break-after: always">
+        <h2>Flows</h2>
+        <p>Flows allows to quickly build automated processes without writing code. It uses a graphical, drag-and-drop interface to create processes that can include multiple steps, conditions, and decisions. Flows can be used to automate processes such as creating records, updating records, sending emails, creating tasks, and more.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col">Name</th>
+              <th class="bg-primary" scope="col">Description</th>
+              <th class="bg-primary text-start" scope="col">Subflows Dependencies</th>
+              <th class="bg-primary text-start" scope="col">Operations Count</th>
+            </tr>
+          </thead>
+          {{#each this.flows}}
+          <tr>
+            <td style="width:100px;word-break: break-all;">{{this.label}}</td>
+            <td style="width:100px;word-break: break-all;">
+              {{this.interviewLabel}}
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#each this.subflows}}
+                  <li>{{this.label}}</li>
+                {{/each}}
+              </ul>
+            </td>
+            <td class="text-start" style="width:200px;word-break: break-all;">
+              <ul>
+                {{#ifCond this.recordLookupCount ">" 0}}
+                <li><strong style="margin-right:10px;">Total Record Lookup:</strong>{{this.recordLookupCount}}</li>
+                {{/ifCond}}
+                {{#ifCond this.recordCreateCount ">" 0}}
+                <li><strong style="margin-right:10px;">Total Record Creation:</strong>{{this.recordCreateCount}}</li>
+                {{/ifCond}}
+                {{#ifCond this.recordUpdateCount ">" 0}}
+                <li><strong style="margin-right:10px;">Total Record Update:</strong>{{this.recordUpdateCount}}</li>
+                {{/ifCond}}
+              </ul>
+            </td>
+          </tr>
+          {{/each}}
+        </table>
+        <h2>Apex Classes</h2>
+        <p>Apex classes sections describes the Apex class created and the purpose of the functions are included.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Status</th>
+              <th class="bg-primary text-start" scope="col">API Version</th>
+              <th class="bg-primary text-start" scope="col">Content</th>
+            </tr>
+          </thead>
+          {{#each this.apexClasses}}
+          <tr>
+            <td style="width:50px;">{{this.Name}}</td>
+            <td class="text-start" style="width:50px;">{{this.Status}}</td>
+            <td class="text-start" style="width:50px;">{{this.ApiVersion}}</td>
+            <td class="text-start" style="width:50px;">{{this.Body}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{#ifCond this.apexRestResource '!==' undefined}}
+        <h2>Apex Rest Resources</h2>
+        <p>an Apex REST resource is a class in Apex that is annotated with the <strong>@RestResource</strong> annotation. It is used to expose custom REST APIs that can be accessed by external systems, such as web and mobile applications, to perform CRUD (create, read, update, delete) operations on Salesforce data.</p>
+        <p>The @RestResource annotation allows you to specify various properties of the REST API, such as the URI mapping, HTTP methods, request and response formats, and authentication requirements.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Status</th>
+              <th class="bg-primary text-start" scope="col">API Version</th>
+              <th class="bg-primary text-start" scope="col">URL Mapping</th>
+              <th class="bg-primary text-start" scope="col">Content</th>
+            </tr>
+          </thead>
+          {{#each this.apexRestResource}}
+          <tr>
+            <td style="width:50px;">{{this.Name}}</td>
+            <td class="text-start" style="width:50px;">{{this.Status}}</td>
+            <td class="text-start" style="width:50px;">{{this.ApiVersion}}</td>
+            <td class="text-start" style="width:50px;">{{this.urlMappingValue}}</td>
+            <td class="text-start" style="width:50px;">{{this.Body}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        {{#ifCond this.apexTestClasses '!==' undefined}}
+        <h2>Apex Test Classes</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Status</th>
+              <th class="bg-primary text-start" scope="col">API Version</th>
+              <th class="bg-primary text-start" scope="col">Content</th>
+            </tr>
+          </thead>
+          {{#each apexTestClasses}}
+          <tr>
+            <td style="width:50px;">{{this.Name}}</td>
+            <td class="text-start" style="width:50px;">{{this.Status}}</td>
+            <td class="text-start" style="width:50px;">{{this.ApiVersion}}</td>
+            <td class="text-start" style="width:50px;">{{this.Body}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        {{/ifCond}}
+        <h2>Integrations</h2>
+        <p>A typical enterprise uses many applications, many or most of which are not designed to work with one another out of the box. Integrating separate but related apps helps organizations achieve greater levels of operational consistency, efficiency, and quality. This section describes the architecture, data flow and components for integration related components build in the system.</p>
+        <p><strong>Security Integration:</strong><br/>
+          Integrate authentication mechanisms across applications to improve the user experience and minimize user administration. 
+        </p>
+        <p><strong>UI Integration:</strong><br/>
+          Combine the UIs of two or more apps to create composite apps with little or no rework on the UI of each individual app. 
+        </p>
+        <p><strong>Logic Integration:</strong><br/> 
+          Business logic often spans multiple application systems. Extending related business logic from one app to another helps to implement complete end to end business processes. 
+        </p>
+        <p><strong>Data Integration:</strong><br/> 
+          Integrating applications at the data layer is a common scenario. For example, multiple apps written in different programming languages can all use an open API and manage related data in one shared database.</p>
+        </p>
+        <h3>Single Sign-On</h3>
+        <p>Single Sign-On (SSO) is an authentication process that allows users to access multiple applications such as Salesforce with a single set of credentials. This is done by creating a single identity that can be used across multiple applications and websites. In Salesforce, SSO allows users to access Salesforce with credentials from other identity providers such as ADFS, Google, Microsoft, or any SAML-based identity provider. This simplifies the user experience, as they don't need to remember multiple sets of credentials.</p>
+        {{#each ssoSettings}}
+        <h4>{{this.name}}</h4>
+        <table class="table object-table">
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:100px">Name</th>
+            <td class="text-start">{{this.name}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:100px">API Name</th>
+            <td class="text-start">{{this.fullName}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:100px">Issuer</th>
+            <td class="text-start">{{this.issuer}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:100px">Identity Location</th>
+            <td class="text-start">{{this.identityLocation}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:100px">Identity Mapping</th>
+            <td class="text-start">{{this.identityMapping}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:100px">Login URL</th>
+            <td class="text-start">{{this.loginUrl}}</td>
+          </tr>
+          <tr>
+            <th class="text-bg-primary" scope="row" style="width:100px">Logout URL</th>
+            <td class="text-start">{{this.logoutUrl}}</td>
+          </tr>
+        </table>
+        {{/each}}
+        <h3>Named Credentials</h3>
+        <p>A Named Credential is a record that stores authentication information that can be referenced when making callouts from Salesforce. It can be used to authenticate with external systems by using a named user, certificates, or OAuth.</p>
+        <p>Named Credentials are defined in Salesforce and can be referenced when making callouts from Apex, Lightning Components, and Visualforce pages. They can be used to authenticate with external systems by using a named user, certificates, or OAuth.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col" >Endpoint</th>
+              <th class="bg-primary text-start" scope="col">Principal Type</th>
+            </tr>
+          </thead>
+          {{#each namedCredentials}}
+          <tr>
+            <td style="width:50px;">{{this.DeveloperName}}</td>
+            <td class="text-start" style="width:50px;">{{this.Endpoint}}</td>
+            <td class="text-start" style="width:50px;">{{this.PrincipalType}}</td>
+          </tr>
+          {{/each}}
+        </table>
+        <h3>Connected Applications</h3>
+        <p>A connected app is an application that connects with Salesforce using APIs and standard protocols to authenticate, provide single sign-on, and provide tokens for use in API calls. Connected apps use the OAuth protocol to authenticate users and authorize access to Salesforce data and APIs. Connected apps are integrated with Salesforce using APIs and they allow users to access Salesforce data and functionality from outside the Salesforce environment.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="bg-primary" scope="col" >Name</th>
+              <th class="bg-primary text-start" scope="col">Permitted Users</th>
+              <th class="bg-primary text-start" scope="col">Usage</th>
+            </tr>
+          </thead>
+          {{#each connectedApps}}
+          <tr>
+            <td style="width:50px;">{{this.Name}}</td>
+            <td class="text-start" style="width:50px;">
+              {{#ifCond this.OptionsAllowAdminApprovedUsersOnly '===' true}}
+              Admin approved users are pre-authorized
+              {{/ifCond}}
+              {{#ifCond this.OptionsAllowAdminApprovedUsersOnly '===' false}}
+              All users may self-authorize
+              {{/ifCond}}
+            </td>
+            <td scope="col">{{this.usage}}</td>
+          </tr>
+          {{/each}}
+        </table>
+      </div>
+  </body>
+</html>

@@ -142,7 +142,7 @@ export default class SchemaDocGen extends SfdxCommand {
         let namedCredentials = await this.query(NAMEDCREDQUERY);
         this.ux.stopSpinner(`${namedCredentials.length} found!`);
         this.ux.startSpinner('Retrieve connected apps');
-        let connectedApps:any = await this.getConnectedAppUsage( await this.query(CONNECTEDAPPQUERY) );
+        let connectedApps:any;// = await this.getConnectedAppUsage( await this.query(CONNECTEDAPPQUERY) );
         this.ux.stopSpinner(`${connectedApps.length} found!`);
         
         // finalizing and create actual documet

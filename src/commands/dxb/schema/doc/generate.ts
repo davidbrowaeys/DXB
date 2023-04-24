@@ -179,7 +179,7 @@ export default class SchemaDocGen extends SfdxCommand {
         let namedCredentials = await this.query(NAMEDCREDQUERY);
         this.ux.stopSpinner(`${namedCredentials.length} found!`);
         this.ux.startSpinner('Retrieve connected apps');
-        let connectedApps:any;// = await this.getConnectedAppUsage( await this.query(CONNECTEDAPPQUERY) );
+        let connectedApps:any = await this.getConnectedAppUsage( await this.query(CONNECTEDAPPQUERY) );
         this.ux.stopSpinner(`${connectedApps.length} found!`);
         
         // finalizing and create actual documet
@@ -325,6 +325,8 @@ export default class SchemaDocGen extends SfdxCommand {
      * @returns {Promise<any[]>} An array of objects containing the app and its usage count.
      */
     private async getConnectedAppUsage(apps: any[]): Promise<any[]> {
+        if (!apps) return undefined;
+
         const usagePromises = apps.map(async (app) => {
           try {
             const result: any = await this.connection.query(`SELECT COUNT() FROM OauthToken where AppName = '${app.Name}'`);
@@ -685,6 +687,10 @@ export default class SchemaDocGen extends SfdxCommand {
      * @returns {Promise} The records returned from the query
      */
     private async query(soql:string){
-        return (await this.connection.query(soql)).records; 
+        try{
+            return (await this.connection.query(soql)).records; 
+        }catch(err){
+            return [];
+        }
     }
 }

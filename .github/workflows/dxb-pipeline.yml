@@ -35,7 +35,7 @@ jobs:
       run: npm run prepack
 
     - name: Audit packages
-      run: npm audit --audit-level=high
+      run: npm audit
 
   publish:
     if: github.event_name != 'pull_request'

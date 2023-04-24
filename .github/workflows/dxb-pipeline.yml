@@ -18,5 +18,16 @@ jobs:
           node-version: '14.x'
       - name: Authenticate with private NPM package
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-      - run: npm install
-      - run: npm publish
+      - name: NPM Install
+        run: npm install
+      - name: Upgrade Package version"
+        run: node dxbpackagecalc.js
+      - name: NPM Publish DXB
+        run: npm publish
+      - name: Commit report
+        run: |
+          git config --global user.name 'David Browaeys'
+          git config --global user.email 'david.browaeys@gmail.com'
+          git add 'package.json'
+          git commit -am "DXB Auto Update package version"
+          git push

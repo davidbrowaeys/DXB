@@ -10,7 +10,7 @@ on:
   pull_request:
       types: [assigned, opened, synchronize, reopened, edited]
       branches:
-        - feature/*
+        - master/*
       paths:
       - 'src/**'
       - 'package.json'

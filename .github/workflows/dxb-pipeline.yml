@@ -7,9 +7,38 @@ on:
     paths:
       - 'src/**'
       - 'package.json'
+  pull_request:
+      types: [assigned, opened, synchronize, reopened, edited]
+      branches:
+        - feature/*
+      paths:
+      - 'src/**'
+      - 'package.json'
 
 jobs:
+  validate:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14.x
+
+    - name: Install dependencies
+      run: npm ci --ignore-scripts
+
+    - name: Build
+      run: npm run prepack
+
+    - name: Audit packages
+      run: npm audit --audit-level=high
+
   publish:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

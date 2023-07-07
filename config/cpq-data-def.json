@@ -1,0 +1,198 @@
+{
+  "dataPath":"offer-cpq-data",
+  "pollingTimeout": 120000,
+  "objects": [
+    {
+      "active": true,
+      "objectName": "APXT_Redlining__Clause__c",
+      "filename": "ISCA_INT_CongaClauses.csv",
+      "externalField": "External_Id__c",
+      "fields": "Name,APXT_Redlining__Clause_Type__c,APXT_Redlining__Restrict__c,APXT_Redlining__Text_Rich__c,APXT_Redlining__Text__c,Active__c,Always_Display__c,External_Id__c,Location_in_Offer__c,Notes__c,Selection_Type__c,Streamline_Clause_ID__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "Clause_Filtering_Criteria__c",
+      "filename": "ISCA_INT_ClauseCriteria.csv",
+      "externalField": "External_Id__c",
+      "fields": "Clause__r.External_Id__c,Active__c,Field__c,Filtered_Value__c,Object_Type__c,Operator__c,External_Id__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "Course_Duration__c",
+      "filename": "Course_Duration__c.csv",
+      "externalField": "External_ID__c",
+      "fields": "RecordType.DeveloperName,Course_Code__c,External_ID__c,Unit_Set_Code__c,Active__c,Notes__c,Duration_Unit__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "Product2",
+      "filename": "Product2.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,RecordType.DeveloperName,Name,ProductCode,IsActive,Family,SBQQ__AssetAmendmentBehavior__c,SBQQ__ConfigurationEvent__c,SBQQ__ConfigurationType__c,Document_Generation_Spec__c,SBQQ__ExcludeFromOpportunity__c,SBQQ__HidePriceInSearchResults__c,SBQQ__QuantityEditable__c,SBQQ__BlockPricingField__c,SBQQ__Component__c,SBQQ__Optional__c,SBQQ__PricingMethod__c,SBQQ__OptionSelectionMethod__c,Sub_Family__c,Reference_Product__c,Description,Face_Value__c,Value_Deductable__c,Product_Review_Required__c,Expiry_days__c,Quota_Original__c,Quota_Accepted__c,Keywords__c,Dynamic_Product_Option_Filter__c,Type__c,Description__c",
+      "where": "Family in ('Admin Fee','Bundle','OSHC','Grant','Scholarship','Gov Sponsorship')"
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__CustomAction__c",
+      "filename": "SBQQ__CustomAction__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "Name,SBQQ__Action__c,SBQQ__Active__c,SBQQ__BrandButton__c,SBQQ__Class__c,SBQQ__ConditionsMet__c,SBQQ__Default__c,SBQQ__Description__c,SBQQ__DisplayOrder__c,SBQQ__EventHandlerName__c,SBQQ__IconClass__c,SBQQ__Icon__c,SBQQ__Label__c,SBQQ__Location__c,SBQQ__PageHandlerName__c,SBQQ__Page__c,SBQQ__ReturnURL__c,SBQQ__TargetObject__c,SBQQ__Type__c,SBQQ__URLTarget__c,SBQQ__URL__c,External_Id__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__SearchFilter__c",
+      "filename": "SBQQ__SearchFilter__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "Name,External_Id__c,SBQQ__Action__r.External_Id__c,SBQQ__DisplayOrder__c,SBQQ__FilterSourceField__c,SBQQ__FilterSourceObject__c,SBQQ__FilterValue__c,SBQQ__HiddenSourceField__c,SBQQ__HiddenSourceObject__c,SBQQ__Hidden__c,SBQQ__Operator__c,SBQQ__TargetField__c,SBQQ__TargetObject__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__CustomActionCondition__c",
+      "filename": "SBQQ__CustomActionCondition__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "Name,SBQQ__CustomAction__r.External_Id__c,SBQQ__Field__c,SBQQ__FilterValue__c,SBQQ__Operator__c,SBQQ__TargetObject__c,External_Id__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "PriceBook2",
+      "filename": "PriceBook2.csv",
+      "externalField": "External_ID__c",
+      "fields": "Name,IsActive,Description,External_ID__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "PriceBookEntry",
+      "filename": "PriceBookEntrySTD.csv",
+      "externalField": "External_ID__c",
+      "fields": "UnitPrice,IsActive,External_ID__c,Pricebook2.External_ID__c,Product2.External_Id__c",
+      "where": "Product2.Family in ('Admin Fee','Bundle','OSHC','Grant','Scholarship','Gov Sponsorship') AND Pricebook2.name = 'Standard Price Book'"
+    },
+    {
+      "active": true,
+      "objectName": "PriceBookEntry",
+      "filename": "PriceBookEntryCustom.csv",
+      "externalField": "External_ID__c",
+      "fields": "UnitPrice,IsActive,External_ID__c,Pricebook2.External_ID__c,Product2.External_Id__c",
+      "where": "Product2.Family in ('Admin Fee','Bundle','OSHC','Grant','Scholarship','Gov Sponsorship') AND Pricebook2.name != 'Standard Price Book'"
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__ProductRule__c",
+      "filename": "SBQQ__ProductRule__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,Name,SBQQ__Active__c,SBQQ__AdvancedCondition__c,SBQQ__ConditionsMet__c,SBQQ__ErrorMessage__c,SBQQ__EvaluationEvent__c,SBQQ__EvaluationOrder__c,SBQQ__LookupMessageField__c,SBQQ__LookupObject__c,SBQQ__LookupProductField__c,SBQQ__LookupRequiredField__c,SBQQ__LookupTypeField__c,SBQQ__Scope__c,SBQQ__Type__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__ProductFeature__c",
+      "filename": "SBQQ__ProductFeature__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "Name,External_Id__c,SBQQ__ConfiguredSKU__c,SBQQ__MaxOptionCount__c,SBQQ__MinOptionCount__c,SBQQ__Number__c,SBQQ__OptionSelectionMethod__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__ConfigurationAttribute__c",
+      "filename": "SBQQ__ConfigurationAttribute__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "Name,External_Id__c,RecordType.DeveloperName,SBQQ__AppliedImmediately__c,SBQQ__ApplyToProductOptions__c,SBQQ__AutoSelect__c,SBQQ__ColumnOrder__c,SBQQ__DefaultField__c,SBQQ__DefaultObject__c,SBQQ__DisplayOrder__c,SBQQ__Feature__r.External_ID__c,SBQQ__HiddenValues__c,SBQQ__Hidden__c,SBQQ__Position__c,SBQQ__Product__c,SBQQ__Required__c,SBQQ__ShownValues__c,SBQQ__TargetField__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__ProductOption__c",
+      "filename": "SBQQ__ProductOption__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,SBQQ__Selected__c,SBQQ__Type__c,SBQQ__UnitPrice__c,SBQQ__Quantity__c,SBQQ__Number__c,SBQQ__MaxQuantity__c,SBQQ__MinQuantity__c,SBQQ__OptionalSKU__r.External_Id__c,SBQQ__ConfiguredSKU__r.External_Id__c,SBQQ__Feature__r.External_Id__c",
+      "where": "SBQQ__ConfiguredSKU__r.Family != 'Diploma'"
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__SummaryVariable__c",
+      "filename": "SBQQ__SummaryVariable__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,Name,SBQQ__AggregateField__c,SBQQ__AggregateFunction__c,SBQQ__CombineWith__c,SBQQ__CompositeOperator__c,SBQQ__ConstraintField__c,SBQQ__FilterField__c,SBQQ__FilterValue__c,SBQQ__Operator__c,SBQQ__Scope__c,SBQQ__TargetObject__c,SBQQ__ValueElement__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__ErrorCondition__c",
+      "filename": "SBQQ__ErrorCondition__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,SBQQ__FilterType__c,SBQQ__FilterValue__c,SBQQ__Operator__c,SBQQ__Rule__r.External_Id__c,SBQQ__TestedField__c,SBQQ__TestedObject__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__PriceRule__c",
+      "filename": "SBQQ__PriceRule__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,Name,SBQQ__Active__c,SBQQ__AdvancedCondition__c,SBQQ__ConditionsMet__c,SBQQ__ConfiguratorEvaluationEvent__c,SBQQ__EvaluationEvent__c,SBQQ__EvaluationOrder__c,SBQQ__LookupObject__c,SBQQ__Product__c,SBQQ__TargetObject__c",
+      "where": "SBQQ__ConditionsMet__c <> 'Custom'"
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__LookupQuery__c",
+      "filename": "SBQQ__LookupQuery__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,SBQQ__LookupField__c,SBQQ__MatchType__c,SBQQ__Operator__c,SBQQ__PriceRule2__r.External_Id__c,SBQQ__TestedConfigurationAttribute__c,SBQQ__TestedField__c,SBQQ__TestedObject__c,SBQQ__TestedValue__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__PriceCondition__c",
+      "filename": "SBQQ__PriceCondition__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,SBQQ__Rule__r.External_Id__c,SBQQ__Object__c,SBQQ__Field__c,SBQQ__Operator__c,SBQQ__FilterFormula__c,SBQQ__FilterType__c,SBQQ__FilterVariable__r.External_Id__c,SBQQ__Index__c,SBQQ__TestedFormula__c,SBQQ__TestedVariable__r.External_Id__c,SBQQ__Value__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__PriceAction__c",
+      "filename": "SBQQ__PriceAction__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,SBQQ__Field__c,SBQQ__Formula__c,SBQQ__Order__c,SBQQ__Rule__r.External_Id__c,SBQQ__SourceLookupField__c,SBQQ__SourceVariable__c,SBQQ__TargetObject__c,SBQQ__ValueField__c,SBQQ__Value__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "Product_Fee__c",
+      "filename": "Product_Fee__c.csv",
+      "externalField": "Migration_Id__c",
+      "fields": "Migration_Id__c,RecordType.DeveloperName,Discount__c,Fee_Year__c,Healthcare_Provider__c,Healthcare_Type__c,Period_Cover__c,Prov_Amount__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__ProductAction__c",
+      "filename": "SBQQ__ProductAction__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "SBQQ__Rule__r.External_Id__c,SBQQ__FilterField__c,SBQQ__FilterValue__c,SBQQ__Operator__c,SBQQ__Required__c,SBQQ__Type__c,SBQQ__ValueAttribute__c,SBQQ__ValueField__c,SBQQ__ValueObject__c,External_Id__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "SBQQ__ConfigurationRule__c",
+      "filename": "SBQQ__ConfigurationRule__c.csv",
+      "externalField": "External_Id__c",
+      "fields": "External_Id__c,SBQQ__ProductRule__r.External_Id__c,SBQQ__Active__c,SBQQ__ProductFeature__r.External_Id__c,SBQQ__Product__r.External_Id__c",
+      "where": ""
+    },
+    {
+      "active": true,
+      "objectName": "OrgUnitBundleMapping__c",
+      "filename": "OrgUnitBundleMapping__c.csv",
+      "externalField": "External_ID__c",
+      "fields": "Name,External_ID__c,Org_Unit_Code__c,Product_Bundle__c,Product_Family__c,Product_Options__c,Product_Sub_Family__c",
+      "where": ""
+    }
+  ]
+}

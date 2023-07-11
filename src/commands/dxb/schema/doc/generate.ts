@@ -1,5 +1,5 @@
 import { SfdxCommand, flags } from "@salesforce/command";
-import { Connection } from "@salesforce/core";
+import { Connection, SfdxError } from "@salesforce/core";
 import * as path from "path";
 import * as fs from "fs";
 import * as mime from "mime";
@@ -91,6 +91,12 @@ export default class SchemaDocGen extends SfdxCommand {
       char: "x",
       description:
         " File path of manifest(package.xml) to generate the PDF document for. If not specified, DXB will consider all custom objects (except managed packages)."
+    }),
+    format: flags.string({
+      char: "r",
+      description:
+        "Format of the generated doc, options : pdf, html, docx.",
+      default: "pdf"
     })
   };
   // Comment this out if your command does not require an org username
@@ -105,7 +111,7 @@ export default class SchemaDocGen extends SfdxCommand {
   protected connection: Connection;
 
   public async run(): Promise<void> {
-    const { pdfconfig, stylesheet, htmltemplate, manifest } = this.flags;
+    const { pdfconfig, stylesheet, htmltemplate, manifest, format } = this.flags;
 
     // Ensure required files exist
     const pdfPath =
@@ -277,6 +283,7 @@ export default class SchemaDocGen extends SfdxCommand {
 
     // finalizing and create actual documet
     await this.createPdfDocument({
+      format,
       orginfo,
       ssoSettings,
       std_objects,
@@ -337,10 +344,12 @@ export default class SchemaDocGen extends SfdxCommand {
       htmlPath,
       flows
     } = doc;
-    this.ux.startSpinner("Create pdf document");
+    this.ux.startSpinner(`Create ${doc.format} document`);
+    //load resources
     const htmlTemplate = fs.readFileSync(htmlPath, "utf8");
     const pdfTemplate = fs.readFileSync(pdfPath, "utf8");
     const css = fs.readFileSync(cssPath, "utf8");
+    //init doc metadata
     const document = {
       html: pdfTemplate,
       data: {
@@ -363,13 +372,30 @@ export default class SchemaDocGen extends SfdxCommand {
       }.pdf`,
       type: ""
     };
-    await pdf.create(document, documentMeta.pdfOption);
-    // the below only generate html
-    const htmlFile = Handlebars.compile(htmlTemplate)(document.data);
-    fs.writeFileSync(
-      `./${documentMeta.documentInfo.title ?? "DXB Technical Design"}.html`,
-      htmlFile
-    );
+    if (doc.format === 'pdf'){
+      await pdf.create(document, documentMeta.pdfOption);
+    }else if (doc.format === 'html'){
+      const htmlFile = Handlebars.compile(htmlTemplate)(document.data);
+      fs.writeFileSync(
+        `./${documentMeta.documentInfo.title ?? "DXB Technical Design"}.html`,
+        htmlFile
+      );
+    }else if (doc.format === 'docx'){
+      const htmlFile = Handlebars.compile(htmlTemplate)(document.data);
+      const optDocX: any = {
+        margin: {
+          top: 100
+        },
+        orientation: "landscape" // type error: because typescript automatically widen this type to 'string' but not 'Orient' - 'string literal type'
+      };
+      var docx: any = await asBlob(htmlFile, optDocX);
+      fs.writeFileSync(
+        `./${documentMeta.documentInfo.title ?? "DXB Technical Design"}.docx`,
+        docx
+      );
+    }else{
+      throw new SfdxError(`Invalid format: ${doc.format}`);
+    }
     // the below convert and create md file
     // const mdFile = NodeHtmlMarkdown.translate(
     //     /* html */ htmlFile,
@@ -379,17 +405,6 @@ export default class SchemaDocGen extends SfdxCommand {
     // );
     // fs.writeFileSync(`./${documentMeta.documentInfo.title ?? 'DXB Technical Design'}.md`, mdFile);
     //gen docx
-    const optDocX: any = {
-      margin: {
-        top: 100
-      },
-      orientation: "landscape" // type error: because typescript automatically widen this type to 'string' but not 'Orient' - 'string literal type'
-    };
-    var docx: any = await asBlob(htmlFile, optDocX);
-    fs.writeFileSync(
-      `./${documentMeta.documentInfo.title ?? "DXB Technical Design"}.docx`,
-      docx
-    );
     this.ux.stopSpinner(`Done`);
   }
   /**

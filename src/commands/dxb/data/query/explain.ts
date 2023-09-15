@@ -51,8 +51,6 @@ export default class QueryExplain extends SfdxCommand {
     }
 
     public async queryPlan(query, accessToken, instanceUrl){
-        const queryJson = this.parseQuery(query);
-        console.log(queryJson);
         const url = `${instanceUrl}/services/data/v57.0/query/?explain=${encodeURIComponent(query)}`;
         const headers = new Headers();
         headers.append('Authorization',  'Bearer ' + accessToken);
@@ -79,37 +77,6 @@ export default class QueryExplain extends SfdxCommand {
         console.error(error);
         return undefined;
       }
-    }
-
-    public parseQuery(query) {
-      // Split query by keywords
-      const selectIndex = query.indexOf('SELECT');
-      const fromIndex = query.indexOf('FROM');
-      const whereIndex = query.indexOf('WHERE');
-    
-      // Extract fields
-      const fieldsString = query.substring(selectIndex + 7, fromIndex).trim();
-      const fields = fieldsString.split(',').map(field => field.trim());
-    
-      // Extract object
-      const objectString = query.substring(fromIndex + 4, whereIndex).trim();
-      const object = objectString.trim();
-    
-      // Extract conditions
-      const conditionsString = query.substring(whereIndex + 5).trim();
-      const conditions = conditionsString.trim();
-
-      // Split conditions by 'AND' or 'OR'
-      const conditionList = conditions.split(/\s+(AND|OR|and|or)\s+/).map(condition => condition.trim());
-    
-      // Create structured JSON
-      const structuredQuery = {
-        fields,
-        object,
-        conditions: conditionList
-      };
-    
-      return structuredQuery;
     }
 
     public displayAsTable(body){

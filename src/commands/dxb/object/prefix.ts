@@ -41,7 +41,7 @@ export default class SObjectPrefix extends SfdxCommand {
     public static description = 'Retrieve key prefix of specified sobject.';
   
     public static examples = [
-    `$ sfdx dxb:object:prefix -o Account
+    `$ sfdx dxb:object:prefix -s Account
     Retrieving Account schema...
     ==== Object Prefix:      001
     `,
@@ -54,7 +54,7 @@ export default class SObjectPrefix extends SfdxCommand {
     public static args = [{name: 'file'}];
   
     protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'API Name of custom object'}),
+        objectname: flags.string({char:'s',description:'API Name of custom object'}),
         prefix: flags.string({char:'p', description: 'prefix of the object'})
     };
     // Comment this out if your command does not require an org username

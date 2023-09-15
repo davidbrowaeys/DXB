@@ -394,7 +394,7 @@ export default class SchemaDocGen extends SfdxCommand {
         docx
       );
     }else{
-      throw new SfdxError(`Invalid format: ${doc.format}`);
+      throw new SfdxError(`Invalid format: ${doc.format}. We support only html, pdf and docx.`);
     }
     // the below convert and create md file
     // const mdFile = NodeHtmlMarkdown.translate(

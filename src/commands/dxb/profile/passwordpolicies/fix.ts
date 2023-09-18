@@ -50,6 +50,11 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
             // remove the source directory and it's content, recreate it after as an empty directory
             await fsPromises.rm(sourcepath, { force: true, recursive: true });
             await fsPromises.mkdir(sourcepath);
+            sourceFiles = await fsPromises.readdir('targetOrgPolicies/profilePasswordPolicies');
+            for (const file of sourceFiles) { // copy every file in the target org dir to the source dir, it will have the file name of the target org's policy but the content of the source org.
+                console.log(`copy targetOrgPolicies/profilePasswordPolicies/${file} to ${sourcepath}/${file}`);
+                fsPromises.copyFile(`targetOrgPolicies/profilePasswordPolicies/${file}`, `${sourcepath}/${file}`);
+            }
         } catch (e: unknown){
             const err = e as Error;
             console.log(err.message);

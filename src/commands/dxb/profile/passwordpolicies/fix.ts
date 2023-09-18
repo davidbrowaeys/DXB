@@ -15,7 +15,7 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
     public static args = [{ name: 'file' }];
 
     protected static flagsConfig = {
-        profilename: flags.string({ char: 'p', description: 'Profile name to be converted' }),
+        sourcepath: flags.string({ char: 'r', description: 'Path to profile files', default: 'force-app/main/default/profilePasswordPolicies' })
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;
@@ -29,19 +29,11 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
     protected orgname:string;
 
     public async run() {
-        let profilename = this.flags.profilename;
-        let sourcepath = this.flags.sourcepath;
-        this.orgname = this.org.getUsername();
-        if (profilename) {
-            try {
-                //do something
-            } catch (err) {
-                console.log(`Could not convert ${profilename}`);
-            }
-        } else {
-            fs.readdirSync(sourcepath).forEach(file => {
-                //sfdx force:source:retrieve -mProfilePasswordPolicy -u wavmsst --json
-            });
+        const sourcepath = this.flags.sourcepath;
+        try {
+        } catch (e: unknown){
+            const err = e as Error;
+            console.log(err.message);
         }
     }
     /**

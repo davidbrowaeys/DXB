@@ -43,7 +43,7 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
                 // find the profile password policy from the target org that starts with the same profile name as the source file
                 const targetOrgPolicyToReplace:string = (
                     targetOrgPolicies.find(targetOrgPolicy => targetOrgPolicy.fullName.startsWith(file.split('profilePasswordPolicy')[0])) ||
-                    { filePath: '' }
+                    { filePath: `targetOrgPolicies/profilePasswordPolicies/${file}` } // if profile policy does not exist in target, ensure it is copied over
                 ).filePath;
                 if (targetOrgPolicyToReplace) {
                     // copy the content of the source file to the target org profile password policy. This will only copy content and not the file name from the target

@@ -42,6 +42,10 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
                     targetOrgPolicies.find(targetOrgPolicy => targetOrgPolicy.fullName.startsWith(file.split('profilePasswordPolicy')[0])) ||
                     { filePath: '' }
                 ).filePath;
+                if (targetOrgPolicyToReplace) {
+                    // copy the content of the source file to the target org profile password policy. This will only copy content and not the file name from the target
+                    await fsPromises.copyFile(`${sourcepath}/${file}`, targetOrgPolicyToReplace);
+                }
             }
         } catch (e: unknown){
             const err = e as Error;

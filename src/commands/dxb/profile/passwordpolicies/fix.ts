@@ -1,8 +1,6 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import {execSync as exec} from 'child_process';
-//import { SfdxError } from '@salesforce/core';
-//import * as path from 'path';
-import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 
 export default class PasswordPoliciesMerge extends SfdxCommand {
 
@@ -31,6 +29,8 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
     public async run() {
         const sourcepath = this.flags.sourcepath;
         try {
+            // check if sourcepath exists and continue
+            await fsPromises.access(sourcepath, fsPromises.constants.F_OK);
         } catch (e: unknown){
             const err = e as Error;
             console.log(err.message);

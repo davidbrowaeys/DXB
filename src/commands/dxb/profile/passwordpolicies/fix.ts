@@ -31,6 +31,8 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
         try {
             // check if sourcepath exists and continue
             await fsPromises.access(sourcepath, fsPromises.constants.F_OK);
+            // retrieve all password policies from target org, these have a different timestamp appended to the file name than the source files
+            const targetOrgPolicies: { filePath: string, fullName: string }[] = this.getAllPasswordPolicies();
         } catch (e: unknown){
             const err = e as Error;
             console.log(err.message);

@@ -36,6 +36,13 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
 
             // get the file names for the source files from the source directory
             let sourceFiles:string[] = await fsPromises.readdir(sourcepath);
+            for (const file of sourceFiles) {
+                // find the profile password policy from the target org that starts with the same profile name as the source file
+                const targetOrgPolicyToReplace:string = (
+                    targetOrgPolicies.find(targetOrgPolicy => targetOrgPolicy.fullName.startsWith(file.split('profilePasswordPolicy')[0])) ||
+                    { filePath: '' }
+                ).filePath;
+            }
         } catch (e: unknown){
             const err = e as Error;
             console.log(err.message);

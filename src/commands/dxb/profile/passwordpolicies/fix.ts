@@ -47,6 +47,9 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
                     await fsPromises.copyFile(`${sourcepath}/${file}`, targetOrgPolicyToReplace);
                 }
             }
+            // remove the source directory and it's content, recreate it after as an empty directory
+            await fsPromises.rm(sourcepath, { force: true, recursive: true });
+            await fsPromises.mkdir(sourcepath);
         } catch (e: unknown){
             const err = e as Error;
             console.log(err.message);

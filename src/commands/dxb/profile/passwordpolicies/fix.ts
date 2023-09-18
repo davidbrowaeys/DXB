@@ -32,10 +32,13 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
             // check if sourcepath exists and continue
             await fsPromises.access(sourcepath, fsPromises.constants.F_OK);
             // retrieve all password policies from target org, these have a different timestamp appended to the file name than the source files
+            await fsPromises.mkdir('targetOrgPolicies/main/default', { recursive: true });
             const targetOrgPolicies: { filePath: string, fullName: string }[] = this.getAllPasswordPolicies();
 
             // get the file names for the source files from the source directory
-            let sourceFiles:string[] = await fsPromises.readdir(sourcepath);
+            if (sourceFiles.length === 0) {
+                throw new Error(`No source files were found in ${sourcepath}`);
+            }
             for (const file of sourceFiles) {
                 // find the profile password policy from the target org that starts with the same profile name as the source file
                 const targetOrgPolicyToReplace:string = (

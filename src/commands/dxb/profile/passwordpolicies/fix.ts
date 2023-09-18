@@ -61,9 +61,10 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
         }
     }
     /**
-     * name
+     * Retrieve all profile password policies from an org
      */
     public getAllPasswordPolicies() {
+        console.log(`sfdx force:source:retrieve -m ProfilePasswordPolicy -u ${this.org.getUsername()} --json -r targetOrgPolicies`);
         const metadata = JSON.parse(exec(`sfdx force:source:retrieve -m ProfilePasswordPolicy -u ${this.org.getUsername()} --json -r targetOrgPolicies`).toString());
         return metadata.result.inboundFiles;
     }

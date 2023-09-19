@@ -16,7 +16,7 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
     public static args = [{ name: 'file' }];
 
     protected static flagsConfig = {
-        sourcepath: flags.string({ char: 'r', description: 'Path to profile files', default: 'force-app/main/default/profilePasswordPolicies' })
+        sourcepath: flags.string({ char: 'r', description: 'Path to profile password policy files', default: 'force-app/main/default/profilePasswordPolicies' })
     };
     // Comment this out if your command does not require an org username
     protected static requiresUsername = true;

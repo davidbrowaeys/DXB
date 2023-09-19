@@ -1,6 +1,9 @@
 import { flags, SfdxCommand } from '@salesforce/command';
 import {execSync as exec} from 'child_process';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
+
+const TARGET_MAIN_DIR = 'targetOrgPolicies';
+const TARGET_POLICY_DIR = 'profilePasswordPolicies';
 
 export default class PasswordPoliciesMerge extends SfdxCommand {
 
@@ -52,12 +55,13 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
                 fs.copyFileSync(`${sourcepath}/${file}`, targetOrgPolicyToReplace);
             }
             // remove the source directory and it's content, recreate it after as an empty directory
-            fs.rmSync(`${sourcepath}`, { force: true, recursive: true });
-            fs.mkdirSync(`${sourcepath}`);
-            sourceFiles = fs.readdirSync('targetOrgPolicies/profilePasswordPolicies');
-            for (const file of sourceFiles) { // copy every file in the target org dir to the source dir, it will have the file name of the target org's policy but the content of the source org.
-                console.log(`copy targetOrgPolicies/profilePasswordPolicies/${file} to ${sourcepath}/${file}`);
-                fs.copyFileSync(`targetOrgPolicies/profilePasswordPolicies/${file}`, `${sourcepath}/${file}`);
+            fs.emptyDirSync(sourcepath);
+            sourceFiles = fs.readdirSync(`${TARGET_MAIN_DIR}/${TARGET_POLICY_DIR}`);
+
+            // copy every file in the target org dir to the source dir, it will have the file name of the target org's policy but the content of the source org.
+            for (const file of sourceFiles) {
+                console.log(`copy ${TARGET_MAIN_DIR}/${TARGET_POLICY_DIR}/${file} to ${sourcepath}/${file}`);
+                fs.copyFileSync(`${TARGET_MAIN_DIR}/${TARGET_POLICY_DIR}/${file}`, `${sourcepath}/${file}`);
             }
         } catch (e: unknown){
             const err = e as Error;

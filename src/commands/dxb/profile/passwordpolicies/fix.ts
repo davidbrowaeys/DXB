@@ -38,7 +38,8 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
             // get the file names for the source files from the source directory
             let sourceFiles:string[] = fs.readdirSync(sourcepath);
             if (sourceFiles.length === 0) {
-                throw new Error(`No source files were found in ${sourcepath}`);
+                console.warn(`No source files were found in ${sourcepath}`);
+                return undefined;
             }
             for (const file of sourceFiles) {
                 // find the profile password policy from the target org that starts with the same profile name as the source file

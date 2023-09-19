@@ -29,31 +29,64 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
 
     protected orgname:string;
 
+    /**
+     * 
+     * @param sourcepath The path where the source profile password policies are stored
+     * @returns string[]
+     */
+    public getSourceFiles(sourcepath:string) : string[] {
+        // check if sourcepath exists and continue
+        fs.ensureDirSync(sourcepath);
+
+        // get the file names for the source files from the source directory
+        return fs.readdirSync(sourcepath);
+    }
+
+    /**
+     * 
+     * @param sourcepath The path where the source profile password policies are stored
+     * @returns { filePath: string, fullName: string }[]
+     */
+    public getTargetFiles(): { filePath: string, fullName: string }[] {
+        // retrieve all password policies from target org, these have a different timestamp appended to the file name than the source files
+        fs.ensureDirSync(`${TARGET_MAIN_DIR}/main/default`);
+        return this.getAllPasswordPolicies();
+    }
+
+    /**
+     * Retrieve all profile password policies from an org
+     */
+    public getAllPasswordPolicies() {
+        console.log(`sfdx force:source:retrieve -m ProfilePasswordPolicy -u ${this.org.getUsername()} --json -r ${TARGET_MAIN_DIR}`);
+        const metadata = JSON.parse(exec(`sfdx force:source:retrieve -m ProfilePasswordPolicy -u ${this.org.getUsername()} --json -r ${TARGET_MAIN_DIR}`).toString());
+        return metadata.result.inboundFiles;
+    }
+
     public async run() {
         const sourcepath = this.flags.sourcepath;
         try {
-            // check if sourcepath exists and continue
-            fs.accessSync(sourcepath);
-            // retrieve all password policies from target org, these have a different timestamp appended to the file name than the source files
-            fs.mkdirSync('targetOrgPolicies/main/default', { recursive: true });
-            const targetOrgPolicies: { filePath: string, fullName: string }[] = this.getAllPasswordPolicies();
-
-            // get the file names for the source files from the source directory
-            let sourceFiles:string[] = fs.readdirSync(sourcepath);
+            let sourceFiles:string[] = this.getSourceFiles(sourcepath);
             if (sourceFiles.length === 0) {
                 console.warn(`No source files were found in ${sourcepath}`);
                 return undefined;
             }
+
+            const targetOrgPolicies = this.getTargetFiles();
+            if (targetOrgPolicies.length === 0) { // if there are no profile password policies on target, the dir targetOrgPolicies/profilePasswordPolicies needs to be created manually
+                fs.ensureDirSync(`${TARGET_MAIN_DIR}/${TARGET_POLICY_DIR}`);
+            }
+
             for (const file of sourceFiles) {
                 // find the profile password policy from the target org that starts with the same profile name as the source file
                 const targetOrgPolicyToReplace:string = (
                     targetOrgPolicies.find(targetOrgPolicy => targetOrgPolicy.fullName.startsWith(file.split('profilePasswordPolicy')[0])) ||
-                    { filePath: `targetOrgPolicies/profilePasswordPolicies/${file}` } // if profile policy does not exist in target, ensure it is copied over
+                    { filePath: `${TARGET_MAIN_DIR}/${TARGET_POLICY_DIR}/${file}` } // if profile policy does not exist in target, ensure it is copied over
                 ).filePath;
 
                 // copy the content of the source file to the target org profile password policy. This will only copy content and not the file name from the target
                 fs.copyFileSync(`${sourcepath}/${file}`, targetOrgPolicyToReplace);
             }
+
             // remove the source directory and it's content, recreate it after as an empty directory
             fs.emptyDirSync(sourcepath);
             sourceFiles = fs.readdirSync(`${TARGET_MAIN_DIR}/${TARGET_POLICY_DIR}`);
@@ -67,13 +100,5 @@ export default class PasswordPoliciesMerge extends SfdxCommand {
             const err = e as Error;
             console.log(err.message);
         }
-    }
-    /**
-     * Retrieve all profile password policies from an org
-     */
-    public getAllPasswordPolicies() {
-        console.log(`sfdx force:source:retrieve -m ProfilePasswordPolicy -u ${this.org.getUsername()} --json -r targetOrgPolicies`);
-        const metadata = JSON.parse(exec(`sfdx force:source:retrieve -m ProfilePasswordPolicy -u ${this.org.getUsername()} --json -r targetOrgPolicies`).toString());
-        return metadata.result.inboundFiles;
     }
 }

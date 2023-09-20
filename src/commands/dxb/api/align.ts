@@ -15,6 +15,10 @@ export default class ApiAlign extends SfdxCommand {
 
     // for every package directory, find all XML files that have a tag <apiVersion> and return the full path
     packageDirs.forEach(( packageDir : PackageDir ) => {
+      const filesWithApi : string[] = this.findFilesWithTag(packageDir.path, 'apiVersion');
+      // for every file with the required tag, read it and update the value of the tag to the project api
+      filesWithApi.forEach(( f:string ) => {
+      });
     });
   }
 

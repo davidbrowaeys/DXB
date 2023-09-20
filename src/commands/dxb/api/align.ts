@@ -8,6 +8,12 @@ import * as path from 'path';
 
 export default class ApiAlign extends SfdxCommand {
 
+  public static description = 'Align the API version of components with the API version defined in sfdx-project.json';
+
+  public static examples = [
+    `$ sfdx dxb api align`
+  ];
+
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = true;
 

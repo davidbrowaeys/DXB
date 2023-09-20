@@ -9,5 +9,7 @@ export default class ApiAlign extends SfdxCommand {
   protected projectConfig;
 
   public async run() {
+    this.projectConfig = await  (await SfdxProject.resolve()).resolveProjectConfig();
+    const projectApi = this.projectConfig.sourceApiVersion;
   }
 }

@@ -9,7 +9,23 @@ export default class ApiAlign extends SfdxCommand {
   protected projectConfig;
 
   public async run() {
-    this.projectConfig = await  (await SfdxProject.resolve()).resolveProjectConfig();
-    const projectApi = this.projectConfig.sourceApiVersion;
+    this.projectConfig = await (await SfdxProject.resolve()).resolveProjectConfig();
+    const projectApi: string = this.projectConfig.sourceApiVersion;
+  }
+
+  /**
+   * Recursive search for XML files with specific tag
+   * @param filePath The path to a file or directory
+   * @param tag The tag that an xml file must contain to be selected
+   * @returns string[]: an Array containing file paths to xml files that contain a specific tags
+   */
+  public findFilesWithTag(filePath: string, tag: string) {
+    if (fs.lstatSync(filePath).isDirectory()) {
+      return fs.readdirSync(filePath).flatMap((entry : string) => this.findFilesWithTag(`${filePath}/${entry}`, tag)).filter((e : string) => e !== undefined);
+    } else if (path.extname(filePath) === '.xml' && fs.readFileSync(filePath, { encoding: 'utf-8'}).indexOf(tag) !== -1) {
+      return filePath;
+    } else {
+      return;
+    }
   }
 }

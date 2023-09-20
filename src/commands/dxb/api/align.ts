@@ -11,6 +11,11 @@ export default class ApiAlign extends SfdxCommand {
   public async run() {
     this.projectConfig = await (await SfdxProject.resolve()).resolveProjectConfig();
     const projectApi: string = this.projectConfig.sourceApiVersion;
+    const packageDirs: PackageDir[] = this.projectConfig.packageDirectories;
+
+    // for every package directory, find all XML files that have a tag <apiVersion> and return the full path
+    packageDirs.forEach(( packageDir : PackageDir ) => {
+    });
   }
 
   /**

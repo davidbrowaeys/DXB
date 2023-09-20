@@ -1,5 +1,10 @@
 import { SfdxCommand } from "@salesforce/command";
-import { SfdxProject } from "@salesforce/core";
+import { SfdxProject, PackageDir} from "@salesforce/core";
+
+import * as xml2js from "xml2js";
+import * as js2xmlparser from "js2xmlparser";
+import * as fs from "fs-extra";
+import * as path from 'path';
 
 export default class ApiAlign extends SfdxCommand {
 
@@ -18,6 +23,31 @@ export default class ApiAlign extends SfdxCommand {
       const filesWithApi : string[] = this.findFilesWithTag(packageDir.path, 'apiVersion');
       // for every file with the required tag, read it and update the value of the tag to the project api
       filesWithApi.forEach(( f:string ) => {
+        const fileContent : string = fs.readFileSync(f, { encoding: 'utf-8'});
+        const parser = new xml2js.Parser({ explicitArray : false });
+        parser.parseString(fileContent, function (err, result) {
+          if (err) {
+            console.error(err);
+          } else if (result) {
+            const root = Object.keys(result)[0];
+            delete result[root]["$"];
+            result[root]["@"] = {
+              xmlns: "http://soap.sforce.com/2006/04/metadata"
+            };
+            console.log(`Change API Version of ${f} from ${result[root].apiVersion} to ${projectApi}`);
+            result[root].apiVersion = projectApi;
+            const xml = js2xmlparser.parse(
+              root,
+              result[root],
+              { 
+                declaration: { encoding: 'UTF-8' },
+                format: {
+                  doubleQuotes: true
+                }
+              });
+            fs.writeFileSync(f, xml);
+          }
+        });
       });
     });
   }

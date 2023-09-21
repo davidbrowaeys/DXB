@@ -1,4 +1,4 @@
-import { SfdxCommand } from "@salesforce/command";
+import { SfdxCommand, flags } from "@salesforce/command";
 import { SfdxProject, PackageDir} from "@salesforce/core";
 
 import * as xml2js from "xml2js";
@@ -11,8 +11,20 @@ export default class ApiAlign extends SfdxCommand {
   public static description = 'Align the API version of components with the API version defined in sfdx-project.json';
 
   public static examples = [
-    `$ sfdx dxb api align`
+    `$ sfdx dxb api align`,
+    `$ sfdx dxb api align -m ApexClass`,
+    `$ sfdx dxb api align --metadata-type ApexClass --metadata-type ApexTrigger`
   ];
+
+  public static args = [{ name: 'file' }];
+
+  protected static flagsConfig = {
+    'metadata-type': flags.string({
+      char: 'm',
+      description: 'Select specific metadata type to align, value is the name of the root tag of the XML file holding the apiVersion tag i.e. <ApexClass ...',
+      multiple: true
+    })
+  };
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
   protected static requiresProject = true;
@@ -23,7 +35,7 @@ export default class ApiAlign extends SfdxCommand {
     this.projectConfig = await (await SfdxProject.resolve()).resolveProjectConfig();
     const projectApi: string = this.projectConfig.sourceApiVersion;
     const packageDirs: PackageDir[] = this.projectConfig.packageDirectories;
-
+    const metadataTypes: string[] = this.flags['metadata-type'];
     // for every package directory, find all XML files that have a tag <apiVersion> and return the full path
     packageDirs.forEach(( packageDir : PackageDir ) => {
       const filesWithApi : string[] = this.findFilesWithTag(packageDir.path, 'apiVersion');
@@ -36,6 +48,9 @@ export default class ApiAlign extends SfdxCommand {
             console.error(err);
           } else if (result) {
             const root = Object.keys(result)[0];
+            if (metadataTypes?.includes(root) === false) { // in case specific metadata types are wanted, skip if this type is not one of them
+              return;
+            }
             delete result[root]["$"];
             result[root]["@"] = {
               xmlns: "http://soap.sforce.com/2006/04/metadata"

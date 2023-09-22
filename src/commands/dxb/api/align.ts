@@ -36,7 +36,8 @@ export default class ApiAlign extends SfdxCommand {
     const projectApi: string = this.projectConfig.sourceApiVersion;
     const packageDirs: PackageDir[] = this.projectConfig.packageDirectories;
     const metadataTypes: string[] = this.flags['metadata-type'];
-    const apiAlignmentExclusion: string[] = this.projectConfig.plugins.dxb.apiAlignmentExclusion;
+    const apiAlignmentExclusion: string[] = this.projectConfig.plugins.dxb.apiAlignmentExclusion || [];
+
     // for every package directory, find all XML files that have a tag <apiVersion> and return the full path
     packageDirs.forEach(( packageDir : PackageDir ) => {
       const filesWithApi : string[] = this.findFilesWithTag(packageDir.path, 'apiVersion').filter((f:string) => !apiAlignmentExclusion.includes(f));

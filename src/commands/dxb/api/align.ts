@@ -8,7 +8,7 @@ import * as path from 'path';
 
 export default class ApiAlign extends SfdxCommand {
 
-  public static description = 'Align the API version of components with the API version defined in sfdx-project.json';
+  public static description = 'Align the API version of components with the API version defined in sfdx-project.json. Add full file paths to plugins.dxb.apiAlignmentExclusion to exclude specific files.';
 
   public static examples = [
     `$ sfdx dxb api align`,

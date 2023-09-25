@@ -13,7 +13,9 @@ export default class ApiAlign extends SfdxCommand {
   public static examples = [
     `$ sfdx dxb api align`,
     `$ sfdx dxb api align -m ApexClass`,
-    `$ sfdx dxb api align --metadata-type ApexClass --metadata-type ApexTrigger`
+    `$ sfdx dxb api align --metadata-type ApexClass --metadata-type ApexTrigger`,
+    `$ sfdx dxb api align --directory src/main --directory force-app/main/default/classes/ClassName.meta-xml`,
+    `$ sfdx dxb api align -d force-app/main/default/triggers`
   ];
 
   public static args = [{ name: 'file' }];
@@ -22,6 +24,11 @@ export default class ApiAlign extends SfdxCommand {
     'metadata-type': flags.string({
       char: 'm',
       description: 'Select specific metadata type to align, value is the name of the root tag of the XML file holding the apiVersion tag i.e. <ApexClass ...',
+      multiple: true
+    }),
+    'directory': flags.string({
+      char: 'd',
+      description: 'Path to one or multiple directories that need to be updated instead of package directories',
       multiple: true
     })
   };
@@ -34,13 +41,13 @@ export default class ApiAlign extends SfdxCommand {
   public async run() {
     this.projectConfig = await (await SfdxProject.resolve()).resolveProjectConfig();
     const projectApi: string = this.projectConfig.sourceApiVersion;
-    const packageDirs: PackageDir[] = this.projectConfig.packageDirectories;
+    const directories: string[] = this.flags.directory || this.projectConfig.packageDirectories.map((packageDir : PackageDir) => packageDir.path);
     const metadataTypes: string[] = this.flags['metadata-type'];
     const apiAlignmentExclusion: string[] = this.projectConfig.plugins.dxb.apiAlignmentExclusion || [];
 
     // for every package directory, find all XML files that have a tag <apiVersion> and return the full path
-    packageDirs.forEach(( packageDir : PackageDir ) => {
-      const filesWithApi : string[] = this.findFilesWithTag(packageDir.path, 'apiVersion').filter((f:string) => !apiAlignmentExclusion.includes(f));
+    directories.forEach( (rootPath:string) => {
+      const filesWithApi : string[] = !fs.lstatSync(rootPath).isDirectory() ? [rootPath]: this.findFilesWithTag(rootPath, 'apiVersion').filter((f:string) => !apiAlignmentExclusion.includes(f));
       // for every file with the required tag, read it and update the value of the tag to the project api
       filesWithApi.forEach(( f:string ) => {
         this.processFile(f, projectApi, metadataTypes);

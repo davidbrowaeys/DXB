@@ -1,0 +1,93 @@
+{
+    "dataPath":"monash-core",
+    "pollingTimeout": 10000000,
+    "objects": [
+      {
+        "active": false,
+        "objectName": "Country_Attribute__c",
+        "filename": "Countries.csv",
+        "externalField": "Name",
+        "fields": "Name,Callista_Code__c,Callista_Country__c,Country__c,GTE_Risk_Rating__c,ISO_Alpha_2__c,ISO_Alpha_3__c,Numeric_Country_Code__c,PD_Shared__c,Time_Zone__c",
+        "where": ""
+      },
+      {
+        "active": true,
+        "objectName": "Account",
+        "filename": "Account-Faculties.csv",
+        "externalField": "Callista_Org_Unit_Code__c",
+        "fields": "Name,Callista_Org_Unit_Code__c,Agent_Portal_Access_Is_Enabled__c,Agent_Portal_Access_Is_Suspended__c,Callista_Integration_Status__c,Headquarters__c,IB__c,Is_COO_Account__c,Is_Insurance_Stakeholder__c,Monash_AM_Web_Status__c,Monash_AM_Contract_Issue_Date__c,Monash_AM_End_Date__c,Monash_AM_Start_Date__c,Monash_Scholars__c,Record_Type_Dup__c,RecordType.DeveloperName,URS_School__c,VTAC_ID__c,Year_10__c,Year_11__c,Year_12__c,Year_7__c,Year_8__c,Year_9__c",
+        "where": "RecordType.DeveloperName = 'Faculty'"
+      },
+      {
+        "active": false,
+        "objectName": "List_of_Values__c",
+        "filename": "List_of_Values__c.csv",
+        "externalField": "Unique_Key__c",
+        "fields": "Applicant_Use__c,Applicant_Value__c,Description__c,Government_Code__c,Is_Active__c,Is_Active_System_Code__c,Name,System_Code__c,System_Code_Description__c,System_Default__c,Type__c,Unique_Key__c,Value__c",
+        "where": ""
+      },{
+        "active": false,
+        "objectName": "List_Of_Values_Rel__c",
+        "filename": "List_Of_Values_Rel__c.csv",
+        "externalField": "Id",
+        "fields": "Child__r.Unique_Key__c,Parent__r.Unique_Key__c",
+        "where": ""
+      },{
+        "active": false,
+        "objectName": "Institution__c",
+        "filename": "Institution__c.csv",
+        "externalField": "Id",
+        "fields": "Country__c,Institution_Code__c,Institution_Name__c,State__c,Type__c",
+        "where": ""
+      },{
+        "active": false,
+        "objectName": "Qualification__c",
+        "filename": "Qualification__c.csv",
+        "externalField": "Callista_Code__C",
+        "fields": "Available_on_Portal__c,Callista_Code__c,English_Type_Test__c,Overseas__c,Qualification_Name__c,RecordType.DeveloperName,State__c,Sub_score_Type__c",
+        "where": ""
+      },{
+        "active": false,
+        "objectName": "Calendar__c",
+        "filename": "Calendar__c.csv",
+        "externalField": "Calendar_Code__c",
+        "fields": "Name,Category__c,Calendar_Code__c,Description__c,Calendar_Name_Alternate__c,Type__c,Type_Alt__c,Type_Description__c,Year__c,Closed__c,End_Date__c,Sequence_Number__c,Sequence_Number_Year__c,Start_Date__c,Status__c",
+        "where": ""
+      },{
+        "active": false,
+        "objectName": "Calendar_Dates__c",
+        "filename": "Calendar_Dates__c.csv",
+        "externalField": "Calendar_Date_Unique_Key__c",
+        "fields": "Calendar_Code__c,Calendar_Date_Unique_Key__c,CalendarId__r.Calendar_Code__c,Date_Sequence_Nbr__c,Name,Date_Type_Description__c,Date_Value__c",
+        "where": ""
+      },{
+        "active": false,
+        "objectName": "Course__c",
+        "filename": "Courses.csv",
+        "externalField": "Course_code__c",
+        "fields": "Abbreviation__c,ACAD_Year__c,Admission_Category__c,APST_Standards__c,Australian_Accreditation__c,Broad_Area_Of_Study__c,Broad_Area_of_Study_Import_Field__c,Career_Outlook__c,Concession_Fee__c,Cost_Centre__c,Name,Course_Code__c,Course_Description__c,Course_Detail_Page__c,pw_Course_Duration__c,Course_Type__c,CRICOS__c,Depreciated__c,Duration_FT__c,End_Date__c,Expiry_Date__c,Faculty__r.Callista_Org_Unit_Code__c,Faculty_Code__c,Faculty_Description__c,Fee__c,FormstackURL__c,Fund__c,GL_Account__c,Hours_of_Attendance__c,Inactive__c,International_Accreditation__c,Is_Selective__c,Job_Code__c,Job_Run_Code__c,Legacy_Course_ID__c,Level__c,Level_Description__c,Managing_Faculty__c,Mapped_Browse_Categories__c,Mapped_Categories__c,Mode_and_Location__c,Original_ID__c,Partner_Faculty__r.Callista_Org_Unit_Code__c,Partner_Faculty_Code__c,Partner_Faculty_Description__c,Payment_Received__c,Payment_Refund__c,Points__c,Pre_requisite__c,Product2__r.External_Id__c,Review_Date__c,Short_Marketing_Description__c,Short_Title__c,Specialisation__c,Specialisation_Code__c,Start_Date__c,Status__c,Sub_Level__c,Sub_Level_Description__c,Title__c,Type__c,Version__c",
+        "where": "" 
+      },{
+        "active": false,
+        "objectName": "Course_Group__c",
+        "filename": "Course_Group__c.csv",
+        "externalField": "Course_Group__c",
+        "fields": "Course_Group__c,Description__c,Is_Active__c,Name,Responsible_Org_Unit_Code__c,Responsible_Org_Unit_Start_Date__c,Type__c",
+        "where": ""
+      },{
+        "active": false,
+        "objectName": "CRICOS_Code__c",
+        "filename": "CRICOS_Code__c.csv",
+        "externalField": "Unique_Key__c",
+        "fields": "Course__r.Course_code__c,Course_Version_Key__c,Name,Expiry_Date__c,Notes__c,Type__c,Unique_Key__c,Unit_Set__r.Course_code__c,Unit_Set_Version_Key__c",
+        "where": ""
+      },{
+        "active" : true,
+        "objectName" : "Course_Offering__c", 
+        "filename" : "Course_Offering__c.csv",
+        "externalField" : "Mix_Unique_Id__c",
+        "fields" : "Academic_Calendar_Type__c,Academic_CI_Sequence_Number__c,Academic_Year__c,Active__c,Admission_Alternate_Code__c,Admission_Calendar_Description__c,Admission_Calendar_Type__c,Admission_Category__c,Admission_Category_Desc__c,Admission_CI_Sequence_Number__c,Apply_GST__c,Attendance_Mode__c,Attendance_Mode_Description__c,Attendance_Type__c,Attendance_Type_Description__c,Calendar__r.Calendar_Code__c,Campus__c,Citizenship_Type__c,Concession_Fee__c,Confirmed__c,Correspondence_Category__c,Course__r.Course_code__c,Course_Abbreviation__c,Course_Code__c,Course_Presenter_Name__c,Course_Title__c,Course_Type__c,Course_Type_Group__c,Course_Version_Number__c,Cricos_Code__c,Customised_course_offering__c,Date_Cancelled_Postponed__c,Default_Admission_Category_Ind__c,Derived_Closing_Date__c,End_Date__c,Enrolment_Category__c,Faculty__c,Fee__c,Fee_Category__c,Hecs_Payment_Option__c,Legacy_Cancellation__c,Legacy_Course_ID__c,Location_Code__c,Location_Description__c,Mix_Unique_Id__c,Override_Duration__c,Override_Duration_Unit__c,Override_End_Date__c,Override_Reviewed__c,Part_of_the_Day__c,Pay_by_Invoice__c,Portal_Available__c,Start_Date__c,Status__c,Student_Status__c,System_Citizenship_Type__c,Type_of_Place_Code__c,Type_of_Place_Description__c,Unit_Set_Code__c,Unit_Set_Version__c",
+        "where" : ""
+      }
+    ]
+  }

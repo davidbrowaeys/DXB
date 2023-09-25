@@ -274,13 +274,13 @@ You will need to create a data definition json file (data-def.json) anywhere in 
 #### Export
 
 ```shell
-sfdx dxb:data:transfer:export -f data/data-def.json -d data/dev -u <sourceEnv>
+sfdx dxb:data:export -f data/data-def.json -d data/dev -u <sourceEnv>
 ```
 
 #### Import
 
 ```shell
-sfdx dxb:data:transfer:import -f data/data-def.json -d data/dev -u <targetEnv>
+sfdx dxb:data:import -f data/data-def.json -d data/dev -u <targetEnv>
 ```
 
 #### Azure Pipeline
@@ -289,8 +289,8 @@ How does it looks like in your yaml ? Reference data are usually store in your r
 
 ```yaml
 - script: |
-    sfdx dxb:data:transfer:export -f data/data-def.json -d data/dev -u <sourceEnv>
-    sfdx dxb:data:transfer:import -f data/data-def.json -d data/dev -u <targetEnv>
+    sfdx dxb:data:export -f data/data-def.json -d data/dev -u <sourceEnv>
+    sfdx dxb:data:import -f data/data-def.json -d data/dev -u <targetEnv>
   condition: succeeded()
   displayName: "DataLoad to targetEnv"
 ```

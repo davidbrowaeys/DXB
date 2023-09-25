@@ -1,7 +1,7 @@
 {
 	"name": "dxb",
 	"description": "A set of utility for sfdx",
-	"version": "1.9.4",
+	"version": "2.0.0",
 	"author": "David Browaeys",
 	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
 	"bin": {
@@ -19,7 +19,7 @@
 		"csv-split-stream": "^1.0.2",
 		"csv-writer": "^1.6.0",
 		"handlebars": "^4.7.7",
-		"html-docx-js": "^0.3.1",
+		"html-docx-js-typescript": "^0.1.5",
 		"js2xmlparser": "^4.0.1",
 		"pdf-creator-node": "^2.3.5",
 		"salesforce-alm": "^53.6.0",
@@ -37,15 +37,18 @@
 		"@types/jsforce": "^1.11.0",
 		"@types/mocha": "^5.2.7",
 		"@types/node": "^14.18.38",
+		"@typescript-eslint/eslint-plugin": "^6.7.2",
+		"@typescript-eslint/parser": "^6.7.2",
 		"cli-table": "0.3.1",
 		"copyfiles": "^2.4.1",
+		"eslint": "^8.49.0",
 		"js2xmlparser": "^4.0.1",
 		"prettier": "^2.8.4",
 		"readline-sync": "^1.4.10",
 		"rimraf": "^4.4.1",
 		"ts-node": "^10.8.1",
 		"tslint": "^5.20.1",
-		"typescript": "^4.6.3",
+		"typescript": "^4.9.5",
 		"xml2js": "^0.4.23"
 	},
 	"engines": {
@@ -72,6 +75,14 @@
 			"dxb": {
 				"description": "A CLI plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
 				"subtopics": {
+					"api": {
+						"description": "A set of commands to manipulate api versioning.",
+						"subtopics": {
+							"align": {
+								"description": "This command aligns the API version of components with the API version defined in sfdx-project.json."
+							}
+						}
+					},
 					"apex": {
 						"description": "A set of command to manipulate apex.",
 						"subtopics": {

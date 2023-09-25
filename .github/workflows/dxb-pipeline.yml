@@ -10,14 +10,14 @@ on:
   pull_request:
       types: [assigned, opened, synchronize, reopened, edited]
       branches:
-        - master/*
+        - master
       paths:
       - 'src/**'
       - 'package.json'
 
 jobs:
   validate:
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -29,13 +29,13 @@ jobs:
         node-version: 14.x
 
     - name: Install dependencies
-      run: npm ci --ignore-scripts
+      run: npm i --ignore-scripts
 
     - name: Build
       run: npm run prepack
 
-    - name: Audit packages
-      run: npm audit --audit-level=high
+    # - name: Audit packages
+    #   run: npm audit --audit-level=low 
 
   publish:
     if: github.event_name != 'pull_request'

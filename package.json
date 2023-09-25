@@ -37,8 +37,8 @@
 		"@types/jsforce": "^1.11.0",
 		"@types/mocha": "^5.2.7",
 		"@types/node": "^14.18.38",
-		"@typescript-eslint/eslint-plugin": "^6.7.0",
-		"@typescript-eslint/parser": "^6.7.0",
+		"@typescript-eslint/eslint-plugin": "^6.7.2",
+		"@typescript-eslint/parser": "^6.7.2",
 		"cli-table": "0.3.1",
 		"copyfiles": "^2.4.1",
 		"eslint": "^8.49.0",
@@ -75,6 +75,14 @@
 			"dxb": {
 				"description": "A CLI plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
 				"subtopics": {
+					"api": {
+						"description": "A set of commands to manipulate api versioning.",
+						"subtopics": {
+							"align": {
+								"description": "This command aligns the API version of components with the API version defined in sfdx-project.json."
+							}
+						}
+					},
 					"apex": {
 						"description": "A set of command to manipulate apex.",
 						"subtopics": {

@@ -4,6 +4,8 @@
 /dist
 /lib
 /package-lock.json
+/yarn.lock
+/oclif.manifest.json
 /tmp
 node_modules
 git push -u origin master

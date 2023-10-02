@@ -4,24 +4,22 @@ const fs = require("fs");
 fs.readFile("package.json", (err, data) => {
   if (err) throw err;
 
+  const releaseBranch = process.argv.length >= 2 ? process.argv[2] : undefined;
+  const releaseType = process.argv.length >= 2 ? process.argv[3] : undefined;
+
   //Parse the file contents
   let packageJSON = JSON.parse(data);
 
   console.log("DXB Current Version: ", packageJSON.version);
-  //Increment the version attribute
-  let version = packageJSON.version.split(".");
-  if (version[2] == 9) {
-    version[2] = 0;
-    if (version[1] == 9) {
-      version[1] = 0;
-      version[0]++;
-    } else {
-      version[1]++;
-    }
-  } else {
-    version[2]++;
+  
+  //if release type is beta then increment and add beta other
+  let releaseVersion = releaseBranch.split("release/")[1];
+  if (releaseType === 'beta'){
+    releaseVersion += '-beta';
+    packageJSON.version = releaseVersion;
+  }else{
+    packageJSON.version = packageJSON.version.split('-beta')[0];
   }
-  packageJSON.version = version.join(".");
   console.log("DXB New Version: ", packageJSON.version);
 
   //Write the updated package.json file

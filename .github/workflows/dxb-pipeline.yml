@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - release/*
+      - 'release/**'
     paths:
       - 'src/**'
       - 'package.json'
@@ -12,7 +12,7 @@ on:
       types: [assigned, opened, synchronize, reopened, edited]
       branches:
         - master
-        - release/*
+        - 'release/**'
       paths:
       - 'src/**'
       - 'package.json'

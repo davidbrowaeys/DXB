@@ -21,23 +21,18 @@ Align the API version of components with the API version defined in sfdx-project
   <%= config.bin %> <%= command.id %> --directory src/main --directory force-app/main/default/classes/ClassName.meta-xml
   
 
-# flags.sobject.summary
+# flags.metadata-type.summary
 
-API name of the SObject
+The types defined as the 'root' of the XML you want to target 
 
-# flags.source-api-version.summary
+# flags.metadata-type.description
 
-Set the API version of the specified class and trigger
+Select specific metadata type to align, value is the name of the root tag of the XML file holding the apiVersion tag i.e. <ApexClass ...
 
-# error.templateNotExist
+# flags.directory.summary
 
-Specified template 'trigger' doesn't exist
+The directories that you want to target
 
-# error.defJsonNotFound
+# flags.directory.description
 
-def.json not found
-
-# error.defJSONVars
-
-The following variables are required: %s. Specify them like: -v className=myclass,apiName=40.0
-
+Path to one or multiple directories that need to be updated instead of package directories

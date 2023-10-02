@@ -1,70 +1,82 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import * as fs from 'fs';
-import { SfdxError } from '@salesforce/core';
 import * as xml2js from 'xml2js';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { Messages, SfError } from '@salesforce/core';
+import { existsSync, readFileSync } from 'fs-extra';
 
-const SUCCESS_MESSAGE:string = 'Code coverage is looking good!';
-const ERROR_MESSAGE:string = 'Insufficient Code Coverage!';
-export default class CoverageCheck extends SfdxCommand {
+type CoverageCheckResult = {
+  success: boolean;
+};
+type Coverage = {
+  name: string;
+  path: string;
+  Time: string;
+  Diff: string;
+}
 
-    public static description = 'This method read cobertura xml file and check if any class coverage is below the minumum threshold. ';
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'apex.coverage.check');
 
-    public static examples = [
-        `$ sfdx dxb:apex:coverage:check -f tests/coverage/cobertura.xml`,
-        `$ sfdx dxb:apex:coverage:check -f tests/coverage/cobertura.xml -c 99`
-    ];
+export default class CoverageCheck extends SfCommand<CoverageCheckResult> {
 
-    public static args = [{ name: 'file' }];
+  public static readonly summary = messages.getMessage('summary');
+  public static readonly description = messages.getMessage('description');
 
-    protected static flagsConfig = {
-        filepath: flags.string({ char: 'f', description: 'Path of junit file', required: true }),
-        mincoverage: flags.number({ char: 'c', description: 'Minimum apex coverage in %', default: 95})
-    };
-    // Comment this out if your command does not require an org username
-    protected static requiresUsername = false;
+  public static readonly examples = messages.getMessages('examples');
 
-    // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = false;
+  public static readonly flags = {
+    'file-path': Flags.string({ char: 'f', summary: messages.getMessage('flags.file-path.summary'), required: true }),
+    'min-coverage': Flags.integer({ char: 'c', summary: messages.getMessage('flags.min-coverage.summary'), default: 95})
+  };
 
-    // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = true;
+  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
+  public static readonly requiresProject = true;
 
-    public async run() {
-        const filePath:string = this.flags.filepath;
-        const threshold:number = parseFloat(this.flags.mincoverage) / 100;
-        var data = fs.readFileSync(filePath,{encoding: 'utf-8'}); 
-        if (!fs.existsSync(filePath)) {
-            throw new SfdxError('Coverage file not found: '+ filePath);
-        }
-        xml2js.parseString(data, function (err, result) {
-            if (err){
-                console.error(err);
-            }else if (result){
-                let badClasses = [];
-                result.coverage.packages[0].package[0].classes[0].class.forEach( apex => {
-                    if (parseFloat(apex.$['line-rate']) < threshold){
-                        badClasses.push(apex);
-                    }
-                });
-                if (badClasses && badClasses.length >= 1 ){
-                    console.log('Ooops, coverage seems a bit low! Each apex class is expected at least a coverage of '+threshold*100+'%.');
-                    result = [];
-                    badClasses.forEach((item) => {
-                        const coverage:number = parseFloat(item.$['line-rate']);
-                        result.push({
-                            name: item.$.name, 
-                            path: item.$.filename,
-                            Time: `${item.$['line-rate'] * 100}%`, 
-                            Diff: `-${((threshold - coverage) * 100).toFixed(2)}%`
-                        });
-                    });
-                    console.table(result);
-                    throw new SfdxError(ERROR_MESSAGE);
-                }else{
-                    console.log(SUCCESS_MESSAGE);
-                }
-            }
-        });
+  public async run(): Promise<CoverageCheckResult> {
+    const {flags} = await this.parse(CoverageCheck);
+    const filePath: string = flags['file-path'];
+    const threshold: number = flags['min-coverage'] / 100;
+    const data = readFileSync(filePath,{encoding: 'utf-8'});
+    if (!existsSync(filePath)) {
+      throw new SfError('Coverage file not found: '+ filePath);
     }
-    
+    try {
+      const result: unknown = await xml2js.parseStringPromise(data);
+
+      const badClasses: unknown[] = [];
+      result.coverage.packages[0].package[0].classes[0].class.forEach( (apex: unknown) => {
+        if (parseFloat(apex.$['line-rate']) < threshold){
+          badClasses.push(apex);
+        }
+      });
+      if (badClasses && badClasses.length > 0 ){
+        this.log(messages.getMessage('coverageTooLow', [threshold*100] ));
+        const tableArray: Coverage[] = [];
+        badClasses.forEach((item) => {
+          const coverage: number = parseFloat(item.$['line-rate']);
+          tableArray.push({
+            name: item.$.name,
+            path: item.$.filename,
+            Time: `${item.$['line-rate'] * 100}%`,
+            Diff: `-${((threshold - coverage) * 100).toFixed(2)}%`
+          });
+        });
+        this.table(
+          tableArray,
+          {
+            name: { header: 'NAME' },
+            path: { header: 'PATH' },
+            Time: { header: 'TIME' },
+            Diff: { header: 'DIFF' },
+          },
+        );
+        throw new SfError(messages.getMessage('insufficientCoverage'));
+      } else {
+        this.log(messages.getMessage('coverageIsOk'));
+      }
+      return { success:true };
+    } catch (e: unknown) {
+      const err = e as Error;
+      throw new SfError(err.message);
+    }
+  }
 }

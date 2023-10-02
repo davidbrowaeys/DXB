@@ -10,7 +10,6 @@
 node_modules
 git push -u origin master
 /.sonarlint
-/messages
 .vscode/*
 backup/cycle-1/delta/1/Account.csv
 backup/cycle-1/delta/1/Contact.csv

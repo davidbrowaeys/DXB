@@ -4,7 +4,8 @@ const fs = require("fs");
 fs.readFile("package.json", (err, data) => {
   if (err) throw err;
 
-  const releaseType = process.argv.length >= 2 ? process.argv[2] : undefined;
+  const releaseBranch = process.argv.length >= 2 ? process.argv[2] : undefined;
+  const releaseType = process.argv.length >= 2 ? process.argv[3] : undefined;
 
   //Parse the file contents
   let packageJSON = JSON.parse(data);
@@ -12,38 +13,12 @@ fs.readFile("package.json", (err, data) => {
   console.log("DXB Current Version: ", packageJSON.version);
   
   //if release type is beta then increment and add beta other
-  let fullversion = packageJSON.version.split("-");
-  let isbeta = fullversion[1];
-  let version = fullversion[0].split(".");
+  let releaseVersion = releaseBranch.split("release/")[1];
   if (releaseType === 'beta'){
-    if (version[2] == 9) {
-      version[2] = 0;
-      if (version[1] == 9) {
-        version[1] = 0;
-        version[0]++;
-      } else {
-        version[1]++;
-      }
-    } else {
-      version[2]++;
-    }
-    packageJSON.version = version.join(".");
-    packageJSON.version += '-beta';
-  }else if (isbeta === 'beta'){
-      packageJSON.version = fullversion[0];
+    releaseVersion += '-beta';
+    packageJSON.version = releaseVersion;
   }else{
-      if (version[2] == 9) {
-        version[2] = 0;
-        if (version[1] == 9) {
-          version[1] = 0;
-          version[0]++;
-        } else {
-          version[1]++;
-        }
-      } else {
-        version[2]++;
-      }
-      packageJSON.version = version.join(".");
+    packageJSON.version = packageJSON.version.split('-beta')[0];
   }
   console.log("DXB New Version: ", packageJSON.version);
 

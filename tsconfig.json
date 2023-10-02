@@ -1,12 +1,13 @@
 {
-  "extends": "./node_modules/@salesforce/dev-config/tsconfig",
+  "extends": "@salesforce/dev-config/tsconfig-strict",
   "compilerOptions": {
     "outDir": "./lib",
     "rootDir": "./src",
-    "lib" : [
+    "lib": [
       "dom",
       "esnext"
-    ]
+    ],
+    "types": ["fs-extra"]
   },
-  "include": ["./src/**/*", "lib/lib", "/src/utils/*"]
+  "include": ["./src/**/*.ts", "/src/utils/*"]
 }

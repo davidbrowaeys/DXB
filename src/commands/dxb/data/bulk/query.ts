@@ -1,120 +1,123 @@
+import * as fs from 'fs-extra';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { SfError,Connection, Messages} from '@salesforce/core';
+type BulkExportResult = {
+  outputFile: string;
+}
 
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError,Connection} from '@salesforce/core';
-import * as fs from 'fs';
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'data.bulk.query');
+export default class BulkExport extends SfCommand<BulkExportResult> {
 
-export default class BulkExport extends SfdxCommand {
+  public static readonly summary = messages.getMessage('summary');
 
-    public static description = 'Export salesforce data using bulk api';
-  
-    public static examples = [
-    `$ sfdx dxb:data:bulk:query -q "select id from Account" -u dev2`,
-    `$ sfdx dxb:data:bulk:query -q "select id from Account" -u dev2 -d ./dataoutputdir -i 10000`,
-    ];
-  
-    public static args = [{name: 'file'}];
-  
-    protected static flagsConfig = {
-        objectname: flags.string({char:'o', description: 'object name'}),  
-        query: flags.string({char:'q', description: 'soql query'}),
-        allfields: flags.boolean({default:false, description: 'retrieve all fields from specified object.'}),  
-        outputdir: flags.string({char:'d', description: 'bulk data output directory', default : 'bulk_output'}),
-        filename: flags.string({char:'f', description: 'name of the csv file generated. if not specified, it will default to "<objeectname>_<timestamp>.csv"'})
-    };
-    // Comment this out if your command does not require an org username
-    protected static requiresUsername = true;
-  
-    // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = false;
-  
-    // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = false;
+  public static readonly examples = messages.getMessages('examples')
 
-    protected fields:string[] = [];
-    protected query:string;
-    protected objectname:string;
-    protected connection:Connection;
-    protected outputdir:string;
-  
-    public async run() {
-        this.outputdir   = this.flags.outputdir;
-        this.query  = this.flags.query;
-        this.objectname  = this.flags.objectname;
-        //do we have a proper connections ? 
-        this.connection = this.org.getConnection();
-        if (!this.connection || !this.connection.accessToken || !this.connection.instanceUrl){
-            throw new SfdxError(`No configuration found for this org.`, "Invalid Connection");
-        }
-        //handle query
-        if (!this.query && !this.objectname){ //invalid arguments
-          throw new SfdxError("You must use either --query or --objectname.", "Invalid Flags");
-        }else if (this.query){ 
-          this.objectname = this.query.toUpperCase().replace(/\([\s\S]+\)/g, '').match(/FROM\s+(\w+)/i)[1];
-          if (!this.objectname) {
-            throw new SfdxError("No sobject type found in query, maybe caused by invalid SOQL.", "Invalid SOQL");
-          }
-          const fieldSelector = this.query.replace(/\([\s\S]+\)/g, '').match(/SELECT(.*?)FROM/i)[1].trim();
-          if (fieldSelector === '*'){
-            this.fields = await this.getObjectFields();
-            this.query = this.query.replace('*',this.fields.join(','));
-          }
-        }else if (this.objectname){
-          this.query = await this.generateQuery(this.org.getConnection(), this.flags.allfields);
-        }
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    'object-name': Flags.string({char:'s', summary: messages.getMessage('flags.object-name.summary')}),
+    query: Flags.string({char:'q', summary: messages.getMessage('flags.query.summary')}),
+    'all-fields': Flags.boolean({default:false, summary: messages.getMessage('flags.all-fields.summary')}),
+    'output-dir': Flags.string({char:'d', summary: messages.getMessage('flags.output-dir.summary'), default : 'bulk_output'}),
+    'file-name': Flags.string({char:'f', summary: messages.getMessage('flags.file-name.summary')})
+  };
 
-        let filename = this.flags.filename || (this.objectname + '.csv');
-        var outputFile = `${this.outputdir}/${filename}`;
+  protected fields: string[] = [];
+  protected query: string | undefined;
+  protected objectname: string | undefined;
+  protected connection: Connection | undefined;
+  protected outputdir: string | undefined;
 
-        this.ux.startSpinner('Processing...');
-        var result = await this.execute(outputFile);
-        this.ux.stopSpinner('Done');
-        console.log(result);
-        return { outputFile};
+  public async run(): Promise<BulkExportResult> {
+    const {flags} = await this.parse(BulkExport);
+    this.outputdir   = flags['output-dir'];
+    this.query  = flags.query;
+    this.objectname  = flags['object-name'];
+    // do we have a proper connections ?
+    this.connection = flags['target-org']?.getConnection();
+    if (!this.connection?.accessToken || !this.connection.instanceUrl){
+      throw new SfError(messages.getMessage('error.message.noConfiguration'), messages.getMessage('error.name.invalidConnection'));
     }
-    /**
-     * @description Build soql query for selected object
-     */
-    private async generateQuery(connection, allfields){
-        let soql = ['SELECT'];
-        if (allfields){
-          this.fields = await this.getObjectFields();
-        }else{
-          this.fields.push('Id');
-        }
-        soql.push(this.fields.join(","));
-        soql.push('FROM');
-        soql.push(this.objectname);
-        return soql.join(" ");
+    // handle query
+    if (!this.query && !this.objectname) { // invalid arguments
+      throw new SfError(messages.getMessage('error.message.queryOrObject'), messages.getMessage('error.name.invalidFlags'));
+    } else if (this.query) {
+      this.objectname = this.query.toUpperCase().replace(/\([\s\S]+\)/g, '').match(/FROM\s+(\w+)/i)![1];
+      if (!this.objectname) {
+        throw new SfError(messages.getMessage('error.message.invalidSOQL'), messages.getMessage('error.name.invalidSOQL'));
+      }
+      const fieldSelector = this.query.replace(/\([\s\S]+\)/g, '').match(/SELECT(.*?)FROM/i)![1].trim();
+      if (fieldSelector === '*') {
+        this.fields = await this.getObjectFields();
+        this.query = this.query.replace('*',this.fields.join(','));
+      }
+    } else if (this.objectname) {
+      this.query = await this.generateQuery(flags.allfields);
     }
-    /**
-     * @description Create bulk job
-     */
-    private async execute(outputFile):Promise<string>{
-      return new Promise((resolve, reject) => {
-        var csvFileOut = fs.createWriteStream(outputFile);
-        this.connection.bulk.query(this.query)
+
+    const filename = flags.filename ?? (this.objectname + '.csv');
+    const outputFile = `${this.outputdir}/${filename}`;
+
+    this.spinner.start('Processing...');
+    const result = await this.execute(outputFile);
+    this.spinner.stop('Done');
+    this.log(result);
+    return { outputFile };
+  }
+
+  /**
+   * @description Build soql query for selected object
+   */
+  private async generateQuery(allfields: boolean): Promise<string> {
+    const soql = ['SELECT'];
+    if (allfields){
+      this.fields = await this.getObjectFields();
+    } else{
+      this.fields.push('Id');
+    }
+    soql.push(this.fields.join(','));
+    soql.push('FROM');
+    soql.push(this.objectname!);
+    return soql.join(' ');
+  }
+
+  /**
+   * @description Create bulk job
+   */
+  private async execute(outputFile: string): Promise<string>{
+    return new Promise((resolve, reject) => {
+      try {
+        const csvFileOut = fs.createWriteStream(outputFile);
+        this.connection!.bulk.query(this.query!)
         .stream() // Convert to Node.js's usual readable stream.
         .pipe(csvFileOut)
         .on('end',() => {
           resolve('success');
         });
-      });
-    }
-    /**
-     * @description Retrieve Object fields 
-     */
-    private async getObjectFields():Promise<string[]>{
-      return new Promise((resolve, reject) => {
-        this.connection.sobject(this.objectname).describe(function(err, meta) {
-          if (err) { reject(err); }
-          let t:string[] = [];
-          meta.fields.forEach( (f) => {
-            if (f.type !== 'address' && !f.calculated){
-              t.push(f.name);
-            }
-          });
-          resolve(t);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  /**
+   * @description Retrieve Object fields
+   */
+  private async getObjectFields(): Promise<string[]>{
+    return new Promise((resolve, reject) => {
+      this.connection!.sobject(this.objectname!).describe()
+      .then(meta => {
+        const t: string[] = [];
+        meta.fields.forEach( (f) => {
+          if (f.type !== 'address' && !f.calculated){
+            t.push(f.name);
+          }
         });
+        resolve(t);
+      })
+      .catch(err => {
+        reject(err)
       });
-    }
+    });
+  }
 }

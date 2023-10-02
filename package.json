@@ -149,7 +149,7 @@
 	},
 	"repository": "davidbrowaeys/DXB",
 	"scripts": {
-		"postpack": "rm -f oclif.manifest.json npm-shrinkwrap.json",
+		"postpack": "rimraf oclif.manifest.json npm-shrinkwrap.json",
 		"posttest": "tsc -p test --noEmit && tslint -p test -t stylish",
 		"copyfiles": "copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib",
 		"prepack": "rimraf lib && tsc && oclif-dev manifest && oclif-dev readme && copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib",

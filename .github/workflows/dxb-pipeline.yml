@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - release/*
     paths:
       - 'src/**'
       - 'package.json'
@@ -11,6 +12,7 @@ on:
       types: [assigned, opened, synchronize, reopened, edited]
       branches:
         - master
+        - release/*
       paths:
       - 'src/**'
       - 'package.json'
@@ -36,9 +38,27 @@ jobs:
 
     # - name: Audit packages
     #   run: npm audit --audit-level=low 
-
-  publish:
-    if: github.event_name != 'pull_request'
+  publish_beta:
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/heads/release/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+      - name: Authenticate with private NPM package
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+      - name: NPM Install
+        run: npm install
+      - name: Upgrade Package version"
+        run: node dxbpackagecalc.js
+      - name: NPM Publish DXB
+        run: npm publish --tag beta
+      - name: Commit report
+        run: |
+          cat package.json
+  publish_prod:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

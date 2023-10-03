@@ -1,138 +1,137 @@
-import { flags, SfdxCommand } from "@salesforce/command";
-import { Connection } from "@salesforce/core";
-import * as fs from "fs";
+import * as fs from 'fs-extra';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { Connection, Messages } from '@salesforce/core';
+import { Record, SObject, SObjectFieldType, Schema } from 'jsforce';
 
-function sanitizeFileName(fileName) {
+function sanitizeFileName(fileName: string): string {
   // List of invalid characters in Windows file names
-  const invalidCharsRegex = /[<>:"\/\\|?*\x00-\x1F]/g;
+  const invalidCharsRegex = /[<>:"/\\|?*\x20-\u{20}/u]/g;
 
   // Replace invalid characters with an empty string
-  const sanitizedFileName = fileName.replaceAll(invalidCharsRegex, "");
+  const sanitizedFileName = fileName.replaceAll(invalidCharsRegex, '');
 
   return sanitizedFileName;
 }
 
-// import * as path from 'path';
-// import {createObjectCsvWriter as createCsvWriter} from 'csv-writer';
+function delay(ms: number): Promise<any> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-export default class DataTransferExport extends SfdxCommand {
-  public static description =
-    "Export data from an org base on dxb data plan definition file.";
+type DataTransferExportResult = {
+  failedDownloads: string[];
+}
 
-  public static examples = [`$ sfdx dxb:data:file:export -o myorg`];
+type SObjectResult = {
+  [name: string]: SObjectFieldType | null;
+} & Record;
 
-  public static args = [{ name: "file" }];
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'data.file.export');
+export default class DataTransferExport extends SfCommand<DataTransferExportResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-  protected static flagsConfig = {
-    filepath: flags.string({
-      char: "f",
-      description: "path to file containing all content document id's",
-      default: "."
+  public static readonly examples = messages.getMessages('examples');
+
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    'file-path': Flags.file({
+      exists: true,
+      char: 'f',
+      summary: messages.getMessage('flags.file-path.summary'),
+      default: './input.csv',
     }),
-    min: flags.number({
-      char: "m",
-      description: "minimum offset"
+    min: Flags.integer({
+      char: 'm',
+      summary: messages.getMessage('flags.min.summary')
     }),
-    max: flags.number({
-      char: "t",
-      description: "maximum offset"
+    max: Flags.integer({
+      char: 't',
+      summary: messages.getMessage('flags.max.summary')
     })
   };
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
 
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
+  public failedDownloads: string[] = [];
+  protected connection: Connection | undefined;
 
-  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
-
-  protected connection: Connection;
-  protected outputdir: string;
-  protected csvWriter: any;
-  protected querylimit: number;
-  public failedDownloads = [];
-  public async run() {
-    const min = this.flags.min;
-    const max = this.flags.max;
-    const file = fs.readFileSync(this.flags.filepath).toString();
+  public async run(): Promise<DataTransferExportResult> {
+    const {flags} = await this.parse(DataTransferExport);
+    const min = flags.min;
+    const max = flags.max;
+    const file = fs.readFileSync(flags['file-path']).toString();
     const regex = /[,\n\r]+/;
     const contentDocumentIds = file.split(regex);
-    console.log("Number of files to extract:", contentDocumentIds.length);
-    this.connection = this.org.getConnection();
+    this.log(messages.getMessage('log.numberToExtract', [contentDocumentIds.length]));
+    this.connection = flags['target-org']!.getConnection();
 
-    this.downloadFiles(
+    await this.downloadFiles(
       min && max ? contentDocumentIds.slice(min, max) : contentDocumentIds
     );
-    console.log(this.failedDownloads);
+    return { failedDownloads: this.failedDownloads };
   }
-  public async downloadFiles(fileBodyIds: string[]) {
+
+  public async downloadFiles(fileBodyIds: string[]): Promise<void> {
     const downloadPromises = fileBodyIds.map((fileBodyId) =>
       this.downloadFile(fileBodyId, 3)
     );
 
     try {
       await Promise.all(downloadPromises);
-      console.log("All files downloaded successfully.");
+      this.log(messages.getMessage('log.successful'));
     } catch (error) {
-      console.error("Failed to download files:", error);
+      this.log(messages.getMessage('error.failedDownloads', [ (error as Error).message ]));
     }
   }
-  public docResult;
-  public async downloadFile(contentDocumentId, retry) {
+
+  public async downloadFile(contentDocumentId: string, retry: number): Promise<void> {
     try {
-      await this.delay(500);
-      const contentDocument: any = this.connection.sobject("ContentDocument");
-      this.docResult = await contentDocument.retrieve(contentDocumentId, [
-        "LatestPublishedVersionId",
-        "Title"
-      ]);
-      console.log(this.docResult.Title);
-      const contentVersion: any = this.connection.sobject("ContentVersion");
-      const result = await contentVersion.retrieve(
-        this.docResult.LatestPublishedVersionId,
-        ["PathOnClient", "VersionDataUrl", "VersionDataUrl"]
+      await delay(500);
+      const contentDocument: SObject<Schema, 'ContentDocument'> = this.connection!.sobject('ContentDocument');
+      const docResult: SObjectResult = await contentDocument.retrieve(
+        contentDocumentId,
+        { fields: ['LatestPublishedVersionId','Title'] }
       );
-      console.log(result.PathOnClient);
-      console.log(result.VersionData);
-      const response: any = await fetch(
-        this.connection.instanceUrl + "/" + result.VersionData,
+      this.log(docResult.Title);
+      const contentVersion: SObject<Schema, 'ContentVersion'> = this.connection!.sobject('ContentVersion');
+      const contentVersionId: string = docResult.LatestPublishedVersionId;
+      const result: SObjectResult = await contentVersion.retrieve(
+        contentVersionId,
+        { fields: [ 'PathOnClient', 'VersionDataUrl' ] }
+      );
+      this.log(result.PathOnClient);
+      this.log(result.VersionData);
+       const response: Response = await fetch(
+        this.connection!.instanceUrl + '/' + result.VersionData,
         {
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${this.connection.accessToken}`
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.connection!.accessToken}`
           }
         }
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to download file. Status code: ${response.status}`
-        );
+        messages.createError('error.failedToDownload', [response.status]);
       }
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers.get('content-type');
       const fileBuffer = await response.arrayBuffer();
 
-      const blob = new Blob([fileBuffer], { type: contentType });
-      const fileStream: any = fs.createWriteStream(
+      const blob = new Blob([fileBuffer], { type: contentType! });
+      const fileStream: fs.WriteStream = fs.createWriteStream(
         `./files/${contentDocumentId}_${sanitizeFileName(result.PathOnClient)}`
       );
       fileStream.write(Buffer.from(await new Response(blob).arrayBuffer()));
 
-      return new Promise((resolve, reject) => {
-        fileStream.on("finish", resolve);
-        fileStream.on("error", reject);
+      return await new Promise((resolve, reject) => {
+        fileStream.on('finish', resolve);
+        fileStream.on('error', reject);
       });
     } catch (err) {
-      console.log(`Content Version Error for ${contentDocumentId}!`);
+      this.log(messages.getMessage('error.contentVersionError', [contentDocumentId]));
       if (retry >= 0) {
         return await this.downloadFile(contentDocumentId, retry - 1);
       }
       this.failedDownloads.push(contentDocumentId); // Store the failed contentDocumentId;
     }
-    return null;
-  }
-  public delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return;
   }
 }

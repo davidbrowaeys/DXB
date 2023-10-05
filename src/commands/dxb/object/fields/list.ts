@@ -2,12 +2,7 @@ import { execSync as exec } from 'child_process';
 import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
 import * as Table from 'cli-table3';
 import { Messages } from '@salesforce/core';
-
-function retrievesobjectfields(orgname: string | undefined, sobject: string): string{
-  this.log(messages.getMessage('log.retrieveSchema', [sobject]));
-  orgname = orgname ? ('-u '+ orgname) : '';
-  return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
-}
+ 
 type FieldListResult = {
   table: string;
 }
@@ -32,7 +27,7 @@ export default class FieldList extends SfCommand<FieldListResult> {
     const filter = flags.filter;
 
     try{
-      const objectschema = retrievesobjectfields(orgname,sobject);
+      const objectschema = this.retrievesobjectfields(orgname,sobject);
       let fields: any[] = JSON.parse(objectschema).result.fields;
       if (filter){
         const tmp = [];
@@ -56,5 +51,11 @@ export default class FieldList extends SfCommand<FieldListResult> {
     }catch(err: any){
       this.error(err);
     }
+  }
+
+  private retrievesobjectfields(orgname: string | undefined, sobject: string): string{
+    this.log(messages.getMessage('log.retrieveSchema', [sobject]));
+    orgname = orgname ? ('-u '+ orgname) : '';
+    return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
   }
 }

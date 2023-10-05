@@ -1,6 +1,6 @@
 
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
+import { SfError } from '@salesforce/core';
 
 const fs = require('fs');
 const exec = require('child_process').exec;
@@ -30,7 +30,7 @@ async function push_source(orgname){
           });
       });
     }catch(err){
-      throw new SfdxError('Unable to push source to scratch org!');
+      throw new SfError('Unable to push source to scratch org!');
     }
 }
 
@@ -40,13 +40,13 @@ async function retrievesobjectfields(orgname, sobject){
       return new Promise(async function (resolve, reject) {
           await exec('sfdx force:schema:sobject:describe -s '+sobject+' '+(orgname ? '-u '+ orgname : '') +' --json', (error, stdout, stderr) => {
             if (error){
-                throw new SfdxError('Unable to retrieve sobject fields from scratch org!');
+                throw new SfError('Unable to retrieve sobject fields from scratch org!');
             }
             resolve(stdout? stdout : stderr);
           });
       });
     }catch(err){
-      throw new SfdxError('Unable to retrieve sobject fields from scratch org!');
+      throw new SfError('Unable to retrieve sobject fields from scratch org!');
     }
 }
 

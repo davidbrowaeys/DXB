@@ -1,78 +1,67 @@
+import { execSync as exec } from 'child_process';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import * as Table from 'cli-table3';
+import { Messages } from '@salesforce/core';
 
-import { flags, SfdxCommand } from '@salesforce/command';
-
-const exec = require('child_process').execSync;
-
-function retrievesobjectchildrelationship(orgname, sobject){
-    console.log(`Retrieving ${sobject} child relationships from schema...`); 
-    orgname = orgname ? ('-u '+ orgname) : '';
-    return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
+type ChildRelationshipListResult = {
+  table: string;
 }
 
-export default class ChildRelationshipList extends SfdxCommand {
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'object.relationships.list');
+export default class ChildRelationshipList extends SfCommand<ChildRelationshipListResult> {
 
-    public static description = 'Retrieve list of child relationships of a specified object.';
-  
-    public static examples = [
-    `$ sfdx dxb:object:relationships:list --targetusername myOrg@example.com --objectname Account`
-    ];
-  
-    public static args = [{name: 'file'}];
-  
-    protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object',required:true}),
-        filter: flags.string({char:'f',description:'Search filter'})
-    };
-    // Comment this out if your command does not require an org username
-    protected static requiresUsername = true;
-  
-    // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = false;
-  
-    // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = false;
-  
-    public async run() {
-        let orgname = this.org.getUsername();
-        let sobject = this.flags.objectname;
-        let filter = this.flags.filter;
+  public static readonly summary = messages.getMessage('summary');
 
-        try{
-            var objectschema = retrievesobjectchildrelationship(orgname,sobject);
-            objectschema = JSON.parse(objectschema).result.childRelationships;
+  public static readonly examples = messages.getMessages('examples');
 
-            var Table = require('tty-table');
 
-            var tmp = [];
-            for (var x in objectschema){
-                console.log(objectschema[x].relationshipName);
-                if (objectschema[x].relationshipName && ( !filter || (filter && objectschema[x].relationshipName.toLowerCase().indexOf(filter.toLowerCase()) >=0 ))){
-                    tmp.push(objectschema[x]);
-                }
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    'object-name': Flags.string({char:'s',summary: messages.getMessage('flags.object-name.summary'),required:true}),
+    filter: Flags.string({char:'f',summary: messages.getMessage('flags.filter.summary')})
+  };
+
+  public async run(): Promise<ChildRelationshipListResult> {
+    const {flags} = await this.parse(ChildRelationshipList);
+    const orgname = flags['target-org']!.getUsername();
+    const sobject = flags.objectname;
+    const filter = flags.filter;
+
+    try{
+      const objectschema = this.retrievesobjectchildrelationship(orgname,sobject);
+      let relationShips: any[] = JSON.parse(objectschema).result.childRelationships;
+
+      const tmp = [];
+      for (const relationShip of relationShips) {
+        if (relationShip.relationshipName &&
+          ( !filter ||
+            (filter && relationShip.relationshipName.toLowerCase().includes(filter.toLowerCase()))
+            )
+            ) {
+              tmp.push(relationShip);
             }
-            objectschema = tmp;
+      }
+      relationShips = tmp;
 
-            var rows = [];
-            for (var i = 0; i < objectschema.length; i=i+4){
-                rows.push([
-                    objectschema[i]   ? objectschema[i].relationshipName   + '(' + objectschema[i].childSObject   + ')' : '',
-                    objectschema[i+1] ? objectschema[i+1].relationshipName + '(' + objectschema[i+1].childSObject + ')' : '',
-                    objectschema[i+2] ? objectschema[i+2].relationshipName + '(' + objectschema[i+2].childSObject + ')' : '',
-                    objectschema[i+3] ? objectschema[i+3].relationshipName + '(' + objectschema[i+3].childSObject + ')' : ''
-                ]);
-            }
-            var t1 = Table([],rows,null,{
-                borderStyle : 1,
-                borderColor : "blue",
-                paddingBottom : 0,
-                headerAlign : "center",
-                align : "left",
-                color : "white",
-                truncate: "..."
-            });
-            console.log(t1.render());
-        }catch(err){
-            console.log(err);
-        }
+      const table = new Table();
+      for (let i = 0; i < relationShips.length; i=i+4){
+        table.push([
+          relationShips[i]   ? relationShips[i].relationshipName   + '(' + relationShips[i].childSObject   + ')' : '',
+          relationShips[i+1] ? relationShips[i+1].relationshipName + '(' + relationShips[i+1].childSObject + ')' : '',
+          relationShips[i+2] ? relationShips[i+2].relationshipName + '(' + relationShips[i+2].childSObject + ')' : '',
+          relationShips[i+3] ? relationShips[i+3].relationshipName + '(' + relationShips[i+3].childSObject + ')' : ''
+        ]);
+      }
+      return { table: table.toString() };
+    }catch(err: any){
+      this.error(err);
     }
+  }
+
+  private retrievesobjectchildrelationship(orgname: string | undefined, sobject: string): string{
+    this.log(messages.getMessage('log.retrieveSchema', [sobject]));
+    orgname = orgname ? ('-u '+ orgname) : '';
+    return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
+  }
 }

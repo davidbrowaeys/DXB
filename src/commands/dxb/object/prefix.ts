@@ -1,6 +1,6 @@
 
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
+import { SfError } from '@salesforce/core';
 
 const exec = require('child_process').execSync;
 const request = require('request');
@@ -26,13 +26,13 @@ async function retrievesglobalschema(accessToken, instanceUrl){
             };
             await request(options, function (error, response, body) {
                 if (error || response.statusCode !== 200){
-                    throw new SfdxError(error ? error : response.statusMessage);
+                    throw new SfError(error ? error : response.statusMessage);
                 }
                 resolve(body.sobjects);
             });
         });
     }catch(err){
-        throw new SfdxError(`Unable to access ${instanceUrl}`);
+        throw new SfError(`Unable to access ${instanceUrl}`);
     }
 }
 
@@ -70,11 +70,11 @@ export default class SObjectPrefix extends SfdxCommand {
         let sobject = this.flags.objectname;
         let prefix = this.flags.prefix;
         if (!sobject && !prefix){
-            throw new SfdxError('You must specify either objectname or prefix.');
+            throw new SfError('You must specify either objectname or prefix.');
         }
 
         if (sobject && prefix){
-            throw new SfdxError('You can only specify either objectname or prefix.');
+            throw new SfError('You can only specify either objectname or prefix.');
         }
         try{
             if (sobject){
@@ -87,7 +87,7 @@ export default class SObjectPrefix extends SfdxCommand {
                 let instanceUrl = this.org.getConnection().instanceUrl;
 
                 if (!accessToken || !instanceUrl){
-                    throw new SfdxError(`Connection not valid.`);
+                    throw new SfError(`Connection not valid.`);
                 }
 
                 var objectName;

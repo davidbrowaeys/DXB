@@ -1,5 +1,5 @@
 import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
+import { SfError } from '@salesforce/core';
 
 const fs = require('fs');
 const exec = require('child_process').exec;
@@ -87,7 +87,7 @@ async function push_source(orgname){
           });
       });
     }catch(err){
-      throw new SfdxError('Unable to push source to scratch org!');
+      throw new SfError('Unable to push source to scratch org!');
     }
 }
 

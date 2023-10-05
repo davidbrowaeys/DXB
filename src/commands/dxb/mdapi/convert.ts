@@ -1,51 +1,52 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-const fs = require('fs');
-const exec = require('child_process').execSync;
+import { execSync as exec } from 'child_process';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import * as fs from 'fs-extra';
+import { Messages } from '@salesforce/core';
+type MDAPIConvertResult = {
+  success: boolean;
+}
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'mdapi.convert');
+export default class MDAPIConvert extends SfCommand<MDAPIConvertResult> {
 
-export default class MDAPIConvert extends SfdxCommand {
+  public static readonly summary = messages.getMessage('summary');
+  public static readonly description = messages.getMessage('description');
 
-  public static description = 'Override mdapi convert standard behavior that create a dup file if file exist already. Instead it delete old file and remame .dup by actual file';
+  public static readonly examples = messages.getMessages('examples');
 
-  public static examples = [
-  	`$ sfdx dxb:mdapi:convert -r tmp`
-  ];
-
-  public static args = [{name: 'file'}];
-
-  protected static flagsConfig = {
-    outputdir :flags.string({
+  public static readonly flags = {
+    'output-dir' :Flags.directory({
       char: 'd',
-      description: 'the output directory to store the source–formatted files'
+      summary: messages.getMessage('flags.output-dir.summary'),
+      exists: true,
+      default: '.'
     }),
-    rootdir :flags.boolean({
+    'root-dir' :Flags.directory({
       char: 'r',
       required:true,
-      description: '(required) the root directory containing the Metadata API–formatted metadata'
+      summary: messages.getMessage('flags.root-dir.summary'),
+      exists: true
     })
   };
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
 
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
+  public async run(): Promise<MDAPIConvertResult> {
+    const {flags} = await this.parse(MDAPIConvert);
+    const rootdir = flags['root-dir'];
+    const outputdir = flags['output-dir'];
 
-  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
-
-  public async run() {
-    var rootdir = this.flags.rootdir;
-    var outputdir = this.flags.outputdir ? '-d ' + this.flags.outputdir : '';
-
-    var output = JSON.parse(exec(`sfdx force:mdapi:convert -r ${rootdir} ${outputdir} --json`).toString());
-    output.result.forEach(elem => {
-        if (elem.filePath.indexOf('.dup') >= 0){
-          var oldPath = elem.filePath.substring(0,elem.filePath.length - 4);
-          fs.unlinkSync(oldPath);
-          fs.renameSync(elem.filePath, oldPath);
-          console.log(oldPath);
-        }else{
-          console.log(elem.filePath);
-        }
+    this.log(`sf project convert mdapi --root-dir ${rootdir} --output-dir ${outputdir} --json`);
+    const output: any = JSON.parse(exec(`sf project convert mdapi --root-dir ${rootdir} --output-dir ${outputdir} --json`).toString());
+    const result: any[] = output.result;
+    result.forEach((elem) => {
+      if (elem.filePath.includes('.dup')){
+        const oldPath = elem.filePath.substring(0,elem.filePath.length - 4);
+        fs.unlinkSync(oldPath);
+        fs.renameSync(elem.filePath, oldPath);
+        this.log(oldPath);
+      } else {
+        this.log(elem.filePath);
+      }
     });
+    return { success: true };
   }
 }

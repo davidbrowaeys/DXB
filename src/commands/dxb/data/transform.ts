@@ -1,84 +1,87 @@
 
-import { flags, SfdxCommand } from '@salesforce/command';
+import {execSync as exec} from 'child_process';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { JsonMap } from '@salesforce/ts-types';
+import * as fs from 'fs-extra';
+import * as csvp from 'csv-parser';
+import { createObjectCsvWriter as createCsvWriter } from 'csv-writer';
+import { Messages } from '@salesforce/core';
 
-const fs = require('fs');
-const exec = require('child_process').execSync;
-const csvp = require('csv-parser'); 
-const createCsvWriter = require('csv-writer').createObjectCsvWriter; 
+type Header = {
+  id: string;
+  title: string;
+}
+type GenericObject = {
+  [key: string]: any;
+}
+type DataTransformResult = {
+  success: boolean;
+}
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'data.transform');
+export default class DataTransform extends SfCommand<DataTransformResult> {
 
+  public static readonly summary = messages.getMessage('summary');
 
-export default class DataTransform extends SfdxCommand {
+  public static readonly examples = messages.getMessages('examples');
 
-    public static description = 'Create fieldset for specified object and push to scratch org.';
-  
-    public static examples = [
-        `$ sfdx dxb:data:transform -u sit -o Account -q "select id from Account where Phone_Country__c = 'Australia' limit 10"`
-    ];
-  
-    public static args = [{name: 'file'}];
-  
-    protected static flagsConfig = {
-        query: flags.string({char:'q',description:'query',required:true}),
-        objectname: flags.string({char: 'o',description: 'Object Name'}),
-        transform: flags.string({char: 't',description: 'transforming mapping, i.e.: "{\"Phone_Country__pc\":\"Australia_61\",\"Mobile_Country__pc\":\"Australia_61\",\"Home_Phone_Country__pc\":\"Australia_61\"}"'})
-        //retrievefields: flags.boolean({char: 'f',description: 'retrieve and display sobject fields in terminal'})
-    };
-    // Comment this out if your command does not require an org username
-    protected static requiresUsername = true;
-  
-    // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = false;
-  
-    // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = false;
-  
-    public async run() {
-        let orgname = this.org.getUsername();
-        let sobject = this.flags.objectname;
-        let transform = this.flags.transform;
-        let query = this.flags.query;
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    query: Flags.string({char:'q',summary: messages.getMessage('flags.query.summary'),required:true}),
+    'object-name': Flags.string({char: 's',summary: messages.getMessage('flags.object-name.summary'), required: true}),
+    'transform-file': Flags.file({
+      char: 'f',
+      summary: messages.getMessage('flags.transform-file.summary'),
+      exists: true,
+    })
+  };
 
-        console.log(`sfdx force:data:soql:query -q "${query}" --json -u ${orgname}`);
-        //var output = JSON.parse(exec(`sfdx force:data:soql:query -q "${query}" --json -u ${orgname}`).toString());
-        exec(`sfdx force:data:soql:query -q "${query}" -r csv -u ${orgname} > ${sobject}_in.csv `);
+  public async run(): Promise<DataTransformResult> {
+    const {flags} = await this.parse(DataTransform);
+    const orgname = flags['target-org']!.getUsername();
+    const sobject = flags['object-name'];
+    const transform: JsonMap = JSON.parse(fs.readFileSync(flags['transform-file']!).toString());
+    const query = flags.query;
 
-        transform = JSON.parse(transform);
+    this.log(`sf data query --query "${query}" --json --target-org ${orgname}`);
+    exec(`sf data query --query "${query}" --result-format csv --target-org ${orgname} > ${sobject}_in.csv `);
 
-        // const record = [
-        //     {id: "Id",  phone_country__c: "Phone_Country__c"}
-        // ];
+    // const record = [
+    //     {id: "Id",  phone_country__c: "Phone_Country__c"}
+    // ];
 
-        var record = [{id:'Id'}];
-        var headers = [{id: 'id', title: 'Id'}];
-        Object.keys(transform).forEach(function(key) {
-            record[0][key] = key;
-            headers.push({id: key, title: key});
-        });
-        console.log(record);
+    const record: GenericObject[] = [{id:'Id'}];
+    const headers: Header[] = [{id: 'id', title: 'Id'}];
+    Object.keys(transform).forEach((key) => {
+      record[0][key] = key;
+      headers.push({id: key, title: key});
+    });
+    this.log(record.toString());
 
-        const csvWriter = createCsvWriter({  
-            path: `${sobject}_out.csv`,
-            header: headers,
-            append: true
-          });
-        csvWriter.writeRecords(record);
+    const csvWriter = createCsvWriter({
+      path: `${sobject}_out.csv`,
+      header: headers,
+      append: true
+    });
+    await csvWriter.writeRecords(record);
 
-        fs.createReadStream(`${sobject}_in.csv`)  
-        .pipe(csvp())
-        .on('data', (row) => 
-        {
-            //console.log(row["Id"]);
-            // var record = [
-            //     {id: row["Id"],  phone_country__c: "Australia_61"}
-            // ];
-            var record = [{id: row["Id"]}];
-            Object.keys(transform).forEach(function(key) {
-                record[0][key] = transform[key];
-            });
-            csvWriter.writeRecords(record);
-        })
-        .on('end', () => {
-            console.log('CSV file successfully processed');
-        });
-    }
+    fs.createReadStream(`${sobject}_in.csv`)
+    .pipe(csvp())
+    .on('data', (row) =>
+    {
+      // console.log(row["Id"]);
+      // var record = [
+      //     {id: row["Id"],  phone_country__c: "Australia_61"}
+      // ];
+      const r: GenericObject[] = [{id: row['Id']}];
+      Object.keys(transform).forEach((key) => {
+        r[0][key] = transform[key];
+      });
+      void csvWriter.writeRecords(r);
+    })
+    .on('end', () => {
+      this.log(messages.getMessage('log.success'));
+    });
+    return { success: true };
+  }
 }

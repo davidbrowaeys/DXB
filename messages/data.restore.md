@@ -1,6 +1,6 @@
 # summary
 
-Extract certificates from partner community. You must have access to parner commuunity in order to use this command.
+Restore records to Salesforce
 
 # examples
 

@@ -40,10 +40,10 @@ export default class CoverageCheck extends SfCommand<CoverageCheckResult> {
       throw new SfError('Coverage file not found: '+ filePath);
     }
     try {
-      const result: unknown = await xml2js.parseStringPromise(data);
+      const result: any = await xml2js.parseStringPromise(data);
 
-      const badClasses: unknown[] = [];
-      result.coverage.packages[0].package[0].classes[0].class.forEach( (apex: unknown) => {
+      const badClasses: any[] = [];
+      result.coverage.packages[0].package[0].classes[0].class.forEach( (apex: any) => {
         if (parseFloat(apex.$['line-rate']) < threshold){
           badClasses.push(apex);
         }
@@ -67,7 +67,7 @@ export default class CoverageCheck extends SfCommand<CoverageCheckResult> {
             path: { header: 'PATH' },
             Time: { header: 'TIME' },
             Diff: { header: 'DIFF' },
-          },
+          }
         );
         throw new SfError(messages.getMessage('insufficientCoverage'));
       } else {

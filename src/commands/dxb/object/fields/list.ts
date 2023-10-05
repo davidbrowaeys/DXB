@@ -1,79 +1,60 @@
+import { execSync as exec } from 'child_process';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import * as Table from 'cli-table3';
+import { Messages } from '@salesforce/core';
 
-import { flags, SfdxCommand } from '@salesforce/command';
-
-const exec = require('child_process').execSync;
-
-function retrievesobjectfields(orgname, sobject){
-    console.log(`Retrieving ${sobject} fields from schema...`); 
-    orgname = orgname ? ('-u '+ orgname) : '';
-    return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
+function retrievesobjectfields(orgname: string | undefined, sobject: string): string{
+  this.log(messages.getMessage('log.retrieveSchema', [sobject]));
+  orgname = orgname ? ('-u '+ orgname) : '';
+  return exec(`sfdx force:schema:sobject:describe -s ${sobject} ${orgname} --json`).toString();
 }
+type FieldListResult = {
+  table: string;
+}
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'object.fields.list');
+export default class FieldList extends SfCommand<FieldListResult> {
 
-export default class FieldList extends SfdxCommand {
+  public static readonly summary = messages.getMessage('summary');
 
-    public static description = 'Retrieve list of fields of specified object.';
-  
-    public static examples = [
-    `$ sfdx dxb:object:fields:list --targetusername myOrg@example.com --objectname Account`
-    ];
-  
-    public static args = [{name: 'file'}];
-  
-    protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object',required:true}),
-        filter: flags.string({char:'f',description:'Search filter'})
-    };
-    // Comment this out if your command does not require an org username
-    protected static requiresUsername = true;
-  
-    // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = false;
-  
-    // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = false;
-  
-    public async run() {
-        let orgname = this.org.getUsername();
-        let sobject = this.flags.objectname;
-        let filter = this.flags.filter;
-        
-        try{
-            var objectschema = retrievesobjectfields(orgname,sobject);
-            objectschema = JSON.parse(objectschema).result.fields;
+  public static readonly examples = messages.getMessages('examples');
 
-            var Table = require('tty-table');
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    'object-name': Flags.string({char:'s',summary: messages.getMessage('flags.object-name.summary'),required:true}),
+    filter: Flags.string({char:'f',summary: messages.getMessage('flags.filter.summary')})
+  };
 
-            if (filter){
-                var tmp = [];
-                for (var x in objectschema){
-                    if (objectschema[x].name.toLowerCase().indexOf(filter.toLowerCase()) >=0 ){
-                        tmp.push(objectschema[x]);
-                    }
-                }
-                objectschema = tmp;
-            }
+  public async run(): Promise<FieldListResult> {
+    const {flags} = await this.parse(FieldList);
+    const orgname = flags['target-org']!.getUsername();
+    const sobject = flags['object-name'];
+    const filter = flags.filter;
 
-            var rows = [];
-            for (var i = 0; i < objectschema.length; i=i+4){
-                rows.push([
-                    objectschema[i]   ? objectschema[i].name   + '(' + objectschema[i].type   + ')' : '',
-                    objectschema[i+1] ? objectschema[i+1].name + '(' + objectschema[i+1].type + ')' : '',
-                    objectschema[i+2] ? objectschema[i+2].name + '(' + objectschema[i+2].type + ')' : '',
-                    objectschema[i+3] ? objectschema[i+3].name + '(' + objectschema[i+3].type + ')' : ''
-                ]);
-            }
-            var t1 = Table([],rows,null,{
-                borderStyle : 1,
-                borderColor : "blue",
-                paddingBottom : 0,
-                headerAlign : "center",
-                align : "left",
-                color : "white",
-                truncate: "..."
-            });
-            console.log(t1.render());
-        }catch(err){
-            console.log(err);
+    try{
+      const objectschema = retrievesobjectfields(orgname,sobject);
+      let fields: any[] = JSON.parse(objectschema).result.fields;
+      if (filter){
+        const tmp = [];
+        for (const field of fields){
+          if (field.name.toLowerCase().includes(filter.toLowerCase())){
+            tmp.push(field);
+          }
         }
+        fields = tmp;
+      }
+      const table = new Table();
+      for (let i = 0; i < fields.length; i=i+4){
+        table.push([
+          fields[i]   ? fields[i].name   + '(' + fields[i].type   + ')' : '',
+          fields[i+1] ? fields[i+1].name + '(' + fields[i+1].type + ')' : '',
+          fields[i+2] ? fields[i+2].name + '(' + fields[i+2].type + ')' : '',
+          fields[i+3] ? fields[i+3].name + '(' + fields[i+3].type + ')' : ''
+        ]);
+      }
+      return { table: table.toString() };
+    }catch(err: any){
+      this.error(err);
     }
+  }
 }

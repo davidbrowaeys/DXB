@@ -1,174 +1,119 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfError } from '@salesforce/core';
+import { execSync as exec } from 'child_process';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { Messages, NamedPackageDir, SfProject } from '@salesforce/core';
+import * as fs from 'fs-extra';
 
-const fs = require('fs');
-const exec = require('child_process').exec;
-
-var content =  '<?xml version="1.0" encoding="UTF-8"?>\n'+
-                '<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>Accept</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>CancelEdit</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>Clone</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>Delete</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>Edit</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>List</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>New</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                    '   <actionName>SaveEdit</actionName>\n'+
-                    '   <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>Tab</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <actionOverrides>\n'+
-                '       <actionName>View</actionName>\n'+
-                '       <type>Default</type>\n'+
-                '   </actionOverrides>\n'+
-                '   <allowInChatterGroups>false</allowInChatterGroups>\n'+
-                '   <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>\n'+
-                '   <deploymentStatus>Deployed</deploymentStatus>\n'+
-                '   <description>{{description}}</description>\n'+
-                '   <enableActivities>true</enableActivities>\n'+
-                '   <enableBulkApi>true</enableBulkApi>\n'+
-                '   <enableChangeDataCapture>false</enableChangeDataCapture>\n'+
-                '   <enableFeeds>false</enableFeeds>\n'+
-                '   <enableHistory>true</enableHistory>\n'+
-                '   <enableReports>true</enableReports>\n'+
-                '   <enableSearch>true</enableSearch>\n'+
-                '   <enableSharing>true</enableSharing>\n'+
-                '   <enableStreamingApi>true</enableStreamingApi>\n'+
-                '   <label>{{label}}</label>\n'+
-                '   <nameField>\n'+
-                '       <label>{{label}} Name</label>\n'+
-                '       <type>Text</type>\n'+
-                '   </nameField>\n'+
-                '   <pluralLabel>{{label}}s</pluralLabel>\n'+
-                '   <searchLayouts/>\n'+
-                '   <sharingModel>{{sharingmodel}}</sharingModel>\n'+
-                '</CustomObject>';
-
-function updateContent(varName, question) {
-    var stdin = require('readline-sync');
-    var res = stdin.question(question);
-    
-    content = content.replace(new RegExp(`{{${varName}}}`, 'g'), res);
-
-    return res;
+type ObjectCreateResult = {
+  success: boolean;
 }
 
-async function push_source(orgname){
-    console.log('Push source to org...'); 
-    try{
-      return new Promise(async function (resolve, reject) {
-          await exec(`sfdx force:source:push -g -f -u ${orgname}`, (error, stdout, stderr) => {
-            resolve(stdout? stdout : stderr);
-          });
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'object.create');
+export default class ObjectCreate extends SfCommand<ObjectCreateResult> {
+
+  public static readonly summary = messages.getMessage('summary');
+
+  public static readonly examples = messages.getMessages('examples');
+
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    'object-name': Flags.string({char:'s',summary: messages.getMessage('flags.object-name.summary'),required:true}),
+    push: Flags.boolean({char: 'p', default: false, summary: messages.getMessage('flags.push.summary')})
+  };
+
+  private content: string =  messages.getMessage('data.object');
+
+
+  public async run(): Promise<ObjectCreateResult> {
+    const {flags} = await this.parse(ObjectCreate);
+    const orgname: string = flags['target-org']!.getUsername()!;
+    const pushToOrg: boolean = flags.push;
+    const defaultPackageDir: NamedPackageDir = (await SfProject.resolve()).getDefaultPackage();
+    const name = flags['object-name'];
+
+    const apiname = name.replace(new RegExp('[^A-Z0-9]','gi'), '_') + '__c';
+    const objectpath = `${defaultPackageDir.fullPath}/objects/${apiname}`;
+    if (fs.existsSync(objectpath)) {
+      throw messages.createError('error.exists');
+    }
+    fs.mkdirSync(objectpath);
+    this.content = this.content.replace(new RegExp('{{label}}', 'g'), name);
+
+    await this.updateContent('description', messages.getMessage('prompt.message.description'));
+    const sharingmodel = await this.updateContent('sharingmodel', messages.getMessage('prompt.message.sharingModel'));
+    if (sharingmodel === 'ControlledByParent'){
+      this.log(messages.getMessage('log.sharingControlledByParent'));
+      let masterfield =  messages.getMessage('data.master');
+
+      let prompt = await this.prompt<{response: string}>({
+        type: 'input',
+        name: 'response',
+        message: messages.getMessage('prompt.message.masterObject')
       });
-    }catch(err){
-      throw new SfError('Unable to push source to scratch org!');
+      const masterobject = prompt.response;
+
+      prompt = await this.prompt<{response: string}>({
+        type: 'input',
+        name: 'response',
+        message: messages.getMessage('prompt.message.masterLabel')
+      });
+      const masterlabel = prompt.response;
+
+      prompt = await this.prompt<{response: string}>({
+        type: 'input',
+        name: 'response',
+        message: messages.getMessage('prompt.message.relationshipName')
+      });
+      const relationshipLabel = prompt.response;
+
+      const fieldname = masterlabel.replace(new RegExp('[^A-Z0-9]','gi'), '_') + '__c';
+      masterfield = masterfield.replace(new RegExp('{{fieldname}}', 'g'), fieldname);
+      masterfield = masterfield.replace(new RegExp('{{fieldlabel}}', 'g'), masterlabel);
+      masterfield = masterfield.replace(new RegExp('{{masterobject}}', 'g'), masterobject);
+      const relationshipName = relationshipLabel.replace(new RegExp('[^A-Z0-9]','gi'), '_');
+      masterfield = masterfield.replace(new RegExp('{{relationshipLabel}}', 'g'), relationshipLabel);
+      masterfield = masterfield.replace(new RegExp('{{relationshipName}}', 'g'), relationshipName);
+
+      fs.mkdirSync(`${objectpath}/fields`);
+      fs.writeFileSync(`${objectpath}/fields/${fieldname}.field-meta.xml`, masterfield);
     }
-}
 
-export default class ObjectCreate extends SfdxCommand {
+    // update content file
+    const fullpath = objectpath+'/'+apiname+'.object-meta.xml';
+    fs.writeFileSync(fullpath, this.content);
+    this.log(messages.getMessage('log.objectCreated', [fullpath]));
 
-    public static description = 'Refresh scratch org by deleting local sync file, reset some metadata by target username, and re-push all to scratch org.';
-  
-    public static examples = [
-    `$ sfdx dxb:object:create --targetusername myOrg@example.com --objectname Invoice`
-    ];
-  
-    public static args = [{name: 'file'}];
-  
-    protected static flagsConfig = {
-        objectname: flags.string({char:'o',description:'Name of custom object',required:true})
-    };
-    // Comment this out if your command does not require an org username
-    protected static requiresUsername = true;
-  
-    // Comment this out if your command does not support a hub org username
-    protected static supportsDevhubUsername = true;
-  
-    // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-    protected static requiresProject = false;
-  
-    public async run() {
-        let orgname = this.org.getUsername();
-        let name = this.flags.objectname;
-
-        let apiname = name.replace(new RegExp(`[^A-Z0-9]`,'gi'), '_') + '__c';
-        var objectpath = `./force-app/main/default/objects/${apiname}`;
-        if (fs.existsSync(objectpath)) {
-            console.log("This object already exists");
-            process.exit(0);
-        }
-        fs.mkdirSync(objectpath);
-        content = content.replace(new RegExp(`{{label}}`, 'g'), name);
-
-        updateContent('description','Description: ');
-        var sharingmodel = updateContent('sharingmodel','Sharing Model (Private|Public|ControlledByParent) :');
-        if (sharingmodel === 'ControlledByParent'){
-            console.log('When sharing model is set as controlled by parent, you must define master details :');
-            var masterfield =   
-                    '<?xml version="1.0" encoding="UTF-8"?>\n'+
-                    '<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">\n'+
-                    '    <fullName>{{fieldname}}</fullName>\n'+
-                    '    <externalId>false</externalId>\n'+
-                    '    <label>{{fieldlabel}}</label>\n'+
-                    '    <referenceTo>{{masterobject}}</referenceTo>\n'+
-                    '    <relationshipLabel>{{relationshipLabel}}</relationshipLabel>\n'+
-                    '    <relationshipName>{{relationshipName}}</relationshipName>\n'+
-                    '    <relationshipOrder>0</relationshipOrder>\n'+
-                    '    <reparentableMasterDetail>true</reparentableMasterDetail>\n'+
-                    '    <trackHistory>false</trackHistory>\n'+
-                    '    <trackTrending>false</trackTrending>\n'+
-                    '    <type>MasterDetail</type>\n'+
-                    '    <writeRequiresMasterRead>false</writeRequiresMasterRead>\n'+
-                    '</CustomField>';
-            var stdin = require('readline-sync');
-            var masterobject = stdin.question('Master object(API name), i.e.: Account, Invoice__c:');
-            var masterlabel = stdin.question('Master field label:');
-            var relationshipLabel = stdin.question('Relationship name(i.e.:"Drawdowns", "Invoice Lines"):');
-
-            var fieldname = masterlabel.replace(new RegExp(`[^A-Z0-9]`,'gi'), '_') + '__c';
-            masterfield = masterfield.replace(new RegExp(`{{fieldname}}`, 'g'), fieldname);
-            masterfield = masterfield.replace(new RegExp(`{{fieldlabel}}`, 'g'), masterlabel);
-            masterfield = masterfield.replace(new RegExp(`{{masterobject}}`, 'g'), masterobject);
-            let relationshipName = relationshipLabel.replace(new RegExp(`[^A-Z0-9]`,'gi'), '_');
-            masterfield = masterfield.replace(new RegExp(`{{relationshipLabel}}`, 'g'), relationshipLabel);
-            masterfield = masterfield.replace(new RegExp(`{{relationshipName}}`, 'g'), relationshipName);
-
-            fs.mkdirSync(objectpath+'/fields');
-            fs.writeFileSync(objectpath+'/fields/'+fieldname+'.field-meta.xml', masterfield);
-        }
-
-        //update content file
-        const fullpath = objectpath+'/'+apiname+'.object-meta.xml';
-        fs.writeFileSync(fullpath, content);
-        console.log(`\n=== Custom Object created successfully\n ${fullpath}\n`);
-
-        var output = push_source(orgname);
-        console.log(output);
+    if (pushToOrg) {
+      const usesScratchOrg = await flags['target-org']!.determineIfScratch();
+      const output = await this.pushSource(orgname, usesScratchOrg, fullpath);
+      this.log(output);
     }
+
+    return { success: true };
+  }
+
+
+  private async updateContent(varName: string, question: string): Promise<string> {
+    const answer = await this.prompt<{res: string}>({
+      type: 'input',
+      name: 'res',
+      message: question
+    });
+
+    this.content = this.content.replace(new RegExp(`{{${varName}}}`, 'g'), answer.res);
+
+    return answer.res;
+  }
+
+  private async pushSource(orgname: string, usesScratchOrg: boolean, path: string): Promise<string>{
+    this.log('Push source to org...');
+    const command = usesScratchOrg
+    ? `sf project deploy start --ignore-warnings --ignore-conflicts --target-org ${orgname}`
+    : `sf project deploy start --ignore-warnings --ignore-conflicts --target-org ${orgname} --source-directory ${path}`;
+    try{
+      return await new Promise((resolve) => resolve(exec(command).toString()));
+    } catch(err){
+      throw messages.createError('error.pushFailed');
+    }
+  }
 }

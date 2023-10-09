@@ -1,62 +1,69 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxProject, SfdxError } from '@salesforce/core';
 import * as path from 'path';
 import * as fs from 'fs';
+import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { SfProject, NamedPackageDir, Messages } from '@salesforce/core';
 
-export default class MetadataReset extends SfdxCommand {
+type Rule = {
+  replaceby: string;
+  regex: string;
+  mergefield: string;
+}
+type DefaultConfig = {
+  folder: string;
+  rules: Rule[];
+}
+type MetadataResetResult = {
+  success: boolean;
+}
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'org.setdefaults');
+export default class MetadataReset extends SfCommand<MetadataResetResult> {
 
-  public static description = 'set defaut username and org wide email in metadata such as workflow based on target scratch org';
+  public static readonly summary = messages.getMessage('summary');
 
-  public static examples = [
-  `$ sfdx dxb:org:setdefault --targetusername myOrg@example.com`,
-  `$ sfdx dxb:org:setdefault --targetusername myOrg@example.com -d src`
-  ];
+  public static readonly examples = messages.getMessages('examples');
 
-  public static args = [{name: 'file'}];
-
-  protected static flagsConfig = {
-	basedir: flags.string({char: 'd', description: 'path of base directory', default:'force-app/main/default'})
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    'base-dir': Flags.string({char: 'd', summary: messages.getMessage('flags.base-dir.summary')})
   };
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
 
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
+  public async run(): Promise<MetadataResetResult> {
+    const {flags} = await this.parse(MetadataReset);
+    const project = await SfProject.resolve();
+    const packageDir: NamedPackageDir = project.getDefaultPackage();
+    let config: any = await project.resolveProjectConfig();
+    if (!config.plugins?.dxb){
+      throw messages.createError('error.badConfig')
+    }
+    config = config.plugins.dxb;
 
-  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = true;
+    const orgname = flags['target-org']!.getUsername()!;
+    const baseDir = flags['base-dir'] ?? packageDir.fullPath;
+    this.log(messages.getMessage('log.welcome'));
 
-  public async run() {
-		const project = await SfdxProject.resolve();
-		var config:any = await project.resolveProjectConfig();
-		if (!config.plugins || !config.plugins.dxb){
-			throw new SfdxError('Plugin definition dxb is missing in sfdx-project.json, make sure to setup plugin.');
-		}
-		config = config.plugins.dxb;
-	
-		let orgname = this.org.getUsername();
-		let basedir = this.flags.basedir;
-
-		this.ux.log('Replacing unspported metadata for scratch org i.e.: field update on specific user, send email from org wide email...');
-
-		config.orgdefault_config.forEach(element => {
-			var dirpath = path.join(basedir,element.folder);
-			if (fs.existsSync(dirpath)){
-				console.log(`* Processing ${element.folder} :`);
-				fs.readdirSync(dirpath).forEach(file => {
-					console.log(`>    ${file}`);
-					this.applyRules(element.rules, dirpath+'/'+file,orgname);
-				});
-			}
-		});
-	}
-	applyRules(rules:any, dirfile:string, username:string){
-		let content = fs.readFileSync(dirfile).toString();
-		rules.forEach(element => {
-			var value = element.replaceby;
-			if (element.mergefield === 'username') value = value.split('{{mergevalue}}').join(username); 
-			content = content.replace(new RegExp(element.regex,'g'), value);
-		});
-		fs.writeFileSync(dirfile, content);
-	}
+    config.orgdefault_config.forEach((element: DefaultConfig) => {
+      const dirpath = path.join(baseDir,element.folder);
+      if (fs.existsSync(dirpath)){
+        this.log(`* Processing ${element.folder} :`);
+        fs.readdirSync(dirpath).forEach(file => {
+          this.log(`>    ${file}`);
+          this.applyRules(element.rules, dirpath+'/'+file,orgname);
+        });
+      }
+    });
+    return { success: true };
+  }
+  // eslint-disable-next-line class-methods-use-this
+  private applyRules(rules: Rule[], dirfile: string, username: string): void{
+    let content = fs.readFileSync(dirfile).toString();
+    rules.forEach(element => {
+      let value = element.replaceby;
+      if (element.mergefield === 'username') {
+        value = value.split('{{mergevalue}}').join(username);
+      }
+      content = content.replace(new RegExp(element.regex,'g'), value);
+    });
+    fs.writeFileSync(dirfile, content);
+  }
 }

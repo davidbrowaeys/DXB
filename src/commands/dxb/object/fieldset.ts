@@ -104,6 +104,6 @@ export default class FieldSetCreate extends SfCommand<FieldSetCreateResult> {
 
   private async retrievesobjectfields(orgname: string, sobject: string): Promise<DescribeSObjectResult>{
     this.log(messages.getMessage('log.getFields', [sobject, orgname]));
-    return this.connection!.describe(sobject);
+    return this.connection!.describeSObject(sobject);
   }
 }

@@ -11,7 +11,7 @@ type ProfileBuildResult = {
   result: string[];
 }
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('dxb', 'profiles.build');
+const messages = Messages.loadMessages('dxb', 'profile.build');
 export default class ProfileBuild extends SfCommand<ProfileBuildResult> {
   
   public static readonly summary = messages.getMessage('summary');

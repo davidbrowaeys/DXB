@@ -9,7 +9,7 @@ type PasswordPoliciesMergeResult = {
   success: boolean;
 }
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('dxb', 'profiles.passwordpolicies.fix');
+const messages = Messages.loadMessages('dxb', 'profile.passwordpolicies.fix');
 export default class PasswordPoliciesMerge extends SfCommand<PasswordPoliciesMergeResult> {
   
   public static readonly summary = messages.getMessage('summary');

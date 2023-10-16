@@ -1,141 +1,151 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
-import * as fs from 'fs-extra';
 import * as path from 'path';
+import {Flags, SfCommand} from '@salesforce/sf-plugins-core';
+import { Messages } from '@salesforce/core';
+import * as fs from 'fs-extra';
+import * as xml2js from 'xml2js';
 
-let basedir: string;
-let testClasses: string[] = [];
-let regex;
-let processedClasses: string[] = [];
-let allClasses: string[] = [];
-export default class extends SfdxCommand {
-
-	public static description = 'This command calculated specified test classes base on source path. This command is to use after source:delta.';
-
-	public static examples = [
-		`$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml`,
-		`$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml" -t classes`,
-		`$ sfdx dxb:source:fetchtest -p "force-app/main/default/profiles/Sales Consultant.profile-meta.xml" -n ".*Test"`
-	];
-
-	public static args = [{ name: 'file' }];
-
-	protected static flagsConfig = {
-		sourcepath: flags.string({ char: 'p', description: 'source path, comma separated if multiple' }),
-		manifest: flags.string({ char: 'x', description: 'file path for manifest (package.xml) of components to retrieve' }),
-		metatype: flags.string({ char: 't', description: 'metatype comma separated, i.e.: objects,classes,workflows', default: 'objects,classes,workflows' }),
-		basedir: flags.string({ char: 'd', description: 'path of base directory', default: 'force-app/main/default' }),
-		testclsnameregex: flags.string({ char: 'n', description: 'Regex for test classes naming convention', default: '.*Test' })
-	};
-
-	public async run() {
-		let sourcepath = this.flags.sourcepath;
-		let manifest = this.flags.manifest;
-		if (sourcepath === undefined && manifest === undefined) {
-			throw new SfdxError('sourcepath or manifest is required');
-		}
-		let metatypes = this.flags.metatype.split(',');
-		regex = this.flags.testclsnameregex;
-		basedir = this.flags.basedir;
-		//retrieve all classes
-		this.getAllClasses(basedir);
-		//go through delta changes
-		if (manifest) {
-			await this.processFromPackageXmlContent(manifest);
-		} else {
-			await this.processFromArgument(sourcepath, metatypes);
-		}
-	}
-	protected async processFromArgument(sourcepath, metatypes) {
-		let deltaMeta = sourcepath.split(',');
-		deltaMeta.forEach((file: any) => {
-			file = path.parse(file);
-			metatypes.forEach((type: string) => {
-				if (file.dir.endsWith(type)) {
-					if ((type === 'classes' && file.base.endsWith('cls')) || type === 'workflows' || (type === 'objects' && file.base.endsWith('object-meta.xml'))) {
-						getTestClasses(path.join(basedir, 'classes'), type, file.name);
-					} else if (type === 'objects' && (file.base.endsWith('field-meta.xml') || file.base.endsWith('validationRule-meta.xml'))) {
-						var parentfolder = path.normalize(path.join(file.dir, '..'));
-						getTestClasses(path.join(basedir, 'classes'), type, path.parse(parentfolder).name);
-					}
-				}
-			});
-		});
-		if (testClasses && testClasses.length > 0) {
-			console.log(` -r "${testClasses.join(',')}"`);
-		}
-	}
-	protected async processFromPackageXmlContent(manifest) {
-		try {
-			return new Promise(function (resolve, reject) {
-				var xml2js = require('xml2js');
-				fs.readFile(manifest, function (err, data) {
-					var parser = new xml2js.Parser({ "explicitArray": false });
-					parser.parseString(data, function (err, result) {
-						const classPath = path.join(basedir, 'classes');
-						if (result.Package.types){
-							var metadata_types = Array.isArray(result.Package.types) ? result.Package.types : [result.Package.types];
-							metadata_types.forEach(metaType => {
-								if (metaType.name === 'ApexClass') {
-									if (Array.isArray(metaType.members)) {
-										metaType.members.forEach(elem => {
-											getTestClasses(classPath, 'classes', elem);
-										});
-									} else {
-										getTestClasses(classPath, 'classes', metaType.members);
-									}
-								}
-							});
-							if (testClasses && testClasses.length > 0) {
-								console.log(` -r "${testClasses.join(',')}"`);
-							}
-						}
-					});
-				});
-			});
-		} catch (err) {
-			throw new SfdxError('Unable to create scratch org!');
-		}
-	}
-
-	public getAllClasses(directory: string) {
-		var currentDirectorypath = path.join(directory);
-
-		var currentDirectory = fs.readdirSync(currentDirectorypath, 'utf8');
-
-		currentDirectory.forEach((file: string) => {
-			var pathOfCurrentItem: string = path.join(directory + '/' + file);
-			if (fs.statSync(pathOfCurrentItem).isFile() && file.endsWith('.cls')) {
-				allClasses.push(pathOfCurrentItem);
-			} else if (!fs.statSync(pathOfCurrentItem).isFile()) {
-				var directorypath = path.join(directory + '/' + file);
-				this.getAllClasses(directorypath);
-			}
-		});
-	}
+type FetchTestResult = {
+  result: string;
 }
-
-function getTestClasses(classpath: string, type: string, element: string) {
-	//check if the element is a test classes
-	if (type === 'classes' && !testClasses.includes(element) && element.search(new RegExp(regex, 'gmui')) >= 0) {
-		testClasses.push(element);
-		return;
-	}
-	//do we have a sibling test class with same name ? 
-	var siblingTestClass = allClasses.find(f => f.search(element + 'Test') >= 0);
-	if (siblingTestClass) {
-		let file: any = path.parse(siblingTestClass);
-		if (!testClasses.includes(file.name)) testClasses.push(file.name);
-	}
-	//go through each classes and check if element is referenced in the file content (case senstive ?!)
-	allClasses.forEach((f) => {
-		let file: any = path.parse(f);
-		if (!testClasses.includes(file.name)) {
-			var content = fs.readFileSync(f).toString();
-			if (content.indexOf(element) >= 0 && !processedClasses.includes(file.name)) { //make sure we don't re-process a class already processed
-				processedClasses.push(file.name);
-				getTestClasses(classpath, 'classes', file.name);
-			}
-		}
-	});
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'source.fetchtest');
+export default class FetchTest extends SfCommand<FetchTestResult> {
+  
+  public static readonly summary = messages.getMessage('summary');
+  
+  public static readonly examples = messages.getMessages('examples');
+  
+  public static readonly flags = {
+    'source-path': Flags.string({ char: 'p', summary: messages.getMessage('flags.source-path.summary'), multiple: true }),
+    manifest: Flags.file({ char: 'x', summary: messages.getMessage('flags.manifest.summary'), exists: true }),
+    'metadata-type': Flags.string({ char: 't', summary: messages.getMessage('flags.metadata-type.summary'), default: ['objects', 'classes', 'workflows'], multiple: true }),
+    'base-dir': Flags.string({ char: 'd', summary: messages.getMessage('flags.base-dir.summary'), default: 'force-app/main/default' }),
+    'test-class-name-regex': Flags.string({ char: 'n', summary: messages.getMessage('flags.test-class-name-regex.summary'), default: '.*Test' })
+  };
+  
+  
+  private basedir: string = '';
+  private testClasses: string[] = [];
+  private regex: string = '';
+  private processedClasses: string[] = [];
+  private allClasses: string[] = [];
+  
+  public async run(): Promise<FetchTestResult> {
+    const {flags} = await this.parse(FetchTest);
+    const sourcepath = flags['source-path'];
+    const manifest = flags.manifest;
+    if (sourcepath === undefined && manifest === undefined) {
+      throw messages.createError('error.requiredFlags');
+    }
+    const metadatatypes = flags['metadata-type'];
+    this.regex = flags['test-class-name-regex'];
+    this.basedir = flags['base-dir'];
+    // retrieve all classes
+    this.allClasses = this.getAllClasses(this.basedir).flat();
+    let result = '';
+    // go through delta changes
+    if (manifest) {
+      result = await this.processFromPackageXmlContent(manifest);
+    } else {
+      result = this.processFromArgument(sourcepath!, metadatatypes);
+    }
+    this.log(result);
+    return { result };
+  }
+  
+  public getAllClasses(directory: string): string[] | string[][] {
+    const currentDirectorypath = path.join(directory);
+    
+    const currentDirectory = fs.readdirSync(currentDirectorypath, { encoding: 'utf8' });
+    
+    return currentDirectory.map((file: string) => {
+      const pathOfCurrentItem: string = path.join(directory + '/' + file);
+      if (fs.statSync(pathOfCurrentItem).isFile() && file.endsWith('.cls')) {
+        return [pathOfCurrentItem];
+      } else if (!fs.statSync(pathOfCurrentItem).isFile()) {
+        const directorypath = path.join(directory + '/' + file);
+        return this.getAllClasses(directorypath).flat();
+      } else {
+        return [];
+      }
+    });
+  }
+  protected processFromArgument(sourcepath: string[], metadatatypes: string[]): string {
+    sourcepath.forEach((file: any) => {
+      file = path.parse(file);
+      metadatatypes.forEach((type: string) => {
+        if (file.dir.endsWith(type)) {
+          if ((type === 'classes' && file.base.endsWith('cls')) || type === 'workflows' || (type === 'objects' && file.base.endsWith('object-meta.xml'))) {
+            this.getTestClasses(path.join(this.basedir, 'classes'), type, file.name);
+          } else if (type === 'objects' && (file.base.endsWith('field-meta.xml') || file.base.endsWith('validationRule-meta.xml'))) {
+            const parentfolder = path.normalize(path.join(file.dir, '..'));
+            this.getTestClasses(path.join(this.basedir, 'classes'), type, path.parse(parentfolder).name);
+          }
+        }
+      });
+    });
+    return this.testClasses && this.testClasses.length > 0
+    ? ` -r "${this.testClasses.join(',')}"`
+    : ''
+  }
+  protected async processFromPackageXmlContent(manifest: string): Promise<string> {
+    try {
+      const data = fs.readFileSync(manifest);
+      const parser = new xml2js.Parser({ 'explicitArray': false });
+      const result = await parser.parseStringPromise(data);
+      const classPath = path.join(this.basedir, 'classes');
+      if (result.Package.types){
+        const metadataTypes = Array.isArray(result.Package.types) ? result.Package.types : [result.Package.types];
+        metadataTypes.forEach((metadataType: {name: string; members: string[]}) => {
+          if (metadataType.name === 'ApexClass') {
+            if (Array.isArray(metadataType.members)) {
+              metadataType.members.forEach(elem => {
+                this.getTestClasses(classPath, 'classes', elem);
+              });
+            } else {
+              this.getTestClasses(classPath, 'classes', metadataType.members);
+            }
+          }
+        });
+        return this.testClasses && this.testClasses.length > 0
+        ? ` -r "${this.testClasses.join(',')}"`
+        : ''
+      } else {
+        return '';
+      }
+    } catch (err) {
+      throw messages.createError('error.processManifest');
+    }
+  }
+  
+  private getTestClasses(classpath: string, type: string, element: string): string[] | string[][] {
+    // check if the element is a test classes
+    if (type === 'classes' && !this.testClasses.includes(element) && element.search(new RegExp(this.regex, 'gmui')) >= 0) {
+      this.testClasses.push(element);
+      return [];
+    }
+    // do we have a sibling test class with same name ? 
+    const siblingTestClass = this.allClasses.find(f => f.search(element + 'Test') >= 0);
+    if (siblingTestClass) {
+      const file: path.ParsedPath = path.parse(siblingTestClass);
+      if (!this.testClasses.includes(file.name)) {
+        this.testClasses.push(file.name);
+      }
+    }
+    // go through each classes and check if element is referenced in the file content (case senstive ?!)
+    return this.allClasses.map((f) => {
+      const file: path.ParsedPath = path.parse(f);
+      if (!this.testClasses.includes(file.name)) {
+        const content = fs.readFileSync(f).toString();
+        if (content.includes(element) && !this.processedClasses.includes(file.name)) { // make sure we don't re-process a class already processed
+          this.processedClasses.push(file.name);
+          return this.getTestClasses(classpath, 'classes', file.name).flat();
+        } else {
+          return [];
+        }
+      } else {
+        return [];
+      }
+    });
+  }
 }

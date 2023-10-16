@@ -58,7 +58,7 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
 
     const orgname = flags['set-alias'];
     const defaultorg = flags['default-org'];
-    const durationdays = flags['duration-days'] || config.defaultdurationdays;   
+    const durationdays: number = flags['duration-days'] || config.defaultdurationdays;   
     this.log('\x1b[91m%s\x1b[0m', messages.getMessage('log.welcome', [orgname]));
 
     let output: ScratchOrgCreateResult | AuthInfo | string = await this.createScratchOrg(orgname, defaultorg, durationdays);

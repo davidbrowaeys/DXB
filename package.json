@@ -8,13 +8,13 @@
     "sfdx": "bin/run"
   },
   "dependencies": {
+    "@colors/colors": "^1.6.0",
     "@oclif/core": "^2.11.8",
     "@salesforce/core": "^5.2.0",
     "@salesforce/kit": "^3.0.8",
     "@salesforce/sf-plugins-core": "^3.1.14",
     "@salesforce/source-deploy-retrieve": "^6.10.0",
     "@salesforce/ts-types": "^1.5.20",
-    "chalk": "^4.1.2",
     "cli-table3": "^0.6.3",
     "csv-parser": "^2.3.2",
     "csv-split-stream": "^1.0.2",

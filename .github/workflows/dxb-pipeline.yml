@@ -30,11 +30,12 @@ jobs:
       with:
         node-version: 16.x
 
-    - name: Install dependencies
-      run: npm i --ignore-scripts
+    - name: Setup Yarn and install dependencies
+      uses: bahmutov/npm-install@v1.6.0
+    - run: yarn install --ignore-scripts
 
     - name: Build
-      run: npm run prepack
+      run: yarn build
 
     # - name: Audit packages
     #   run: npm audit --audit-level=low 

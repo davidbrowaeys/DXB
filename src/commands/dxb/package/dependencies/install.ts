@@ -6,12 +6,12 @@ type PackageDependencyInstallResult = {
   success: boolean;
 }
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('dxb', 'packages.dependencies.install');
+const messages = Messages.loadMessages('dxb', 'package.dependencies.install');
 export default class PackageDependencyInstall extends SfCommand<PackageDependencyInstallResult> {
 
   public static readonly summary = messages.getMessage('summary');
 
-  public static readonly examples = messages.getMessage('examples');
+  public static readonly examples = messages.getMessages('examples');
 
   public static readonly flags = {
     'target-org': Flags.requiredOrg(),

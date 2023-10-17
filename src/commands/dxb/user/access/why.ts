@@ -8,7 +8,7 @@ type UserFindAccessResult = {
   success: boolean;
 }
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('dxb', 'user.access');
+const messages = Messages.loadMessages('dxb', 'user.access.why');
 export default class UserFindAccess extends SfCommand<UserFindAccessResult> {
 
   public static readonly summary = messages.getMessage('summary');

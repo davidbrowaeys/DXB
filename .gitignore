@@ -29,3 +29,7 @@ create_class.js
 create_trigger.js
 hello
 log
+.wireit/
+tsconfig.tsbuildinfo
+.eslintcache
+oclif.lock

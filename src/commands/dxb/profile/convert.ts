@@ -55,7 +55,7 @@ export default class ProfileConvert extends SfCommand<ProfileConvertResult> {
   public async convertProfile(profilename: string, sourcepath: string): Promise<void> {
     const profilepath = path.join(sourcepath,profilename);
     const data = fs.readFileSync(`${profilepath}.profile-meta.xml`,{encoding: 'utf-8'});
-    this.log(messages.getMessage('log.readFile'));
+    this.log(messages.getMessage('log.readFile', [profilepath]));
     if (!fs.existsSync(profilepath)) {
       fs.mkdirSync(profilepath);
     }

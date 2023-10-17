@@ -26,7 +26,7 @@ Package version %s
 
 # log.alias
 
-Alias 
+Alias %s
 
 # error.cannotInstall
 

@@ -32,7 +32,7 @@ export default class Query extends SfCommand<void> {
 
   public async run(): Promise<void> {
     const {flags} = await this.parse(Query);
-    this.accessToken = flags['target-org']?.getConnection().accessToken?.toString();
+    this.accessToken = flags['target-org']!.getConnection().accessToken!.toString();
     this.instanceUrl = flags['target-org']?.getConnection().instanceUrl;
     this.projectConfig = await  (await SfProject.resolve()).resolveProjectConfig();
 

@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/check-alignment */
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import {Flags, SfCommand } from '@salesforce/sf-plugins-core';

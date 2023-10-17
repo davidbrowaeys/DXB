@@ -2,6 +2,7 @@ import { execSync as exec } from 'child_process';
 import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
 import { SfProject, Org, ScratchOrgCreateResult, DefaultUserFields, User, AuthInfo, Messages, NamedPackageDir } from '@salesforce/core';
 import * as fs from 'fs-extra';
+import { ProjectSetupResult } from '../install';
 type ScratchOrgCreationResult = {
   success: boolean;
 }
@@ -49,16 +50,16 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
     const {flags} = await this.parse(ScratchOrgCreation);
     const project = await SfProject.resolve();
     this.org = flags['target-dev-hub']!;
-    let config: any = await project.resolveProjectConfig();
+    const config: any = await project.resolveProjectConfig();
     this.defaultPackageDir = project.getDefaultPackage();
     if (!config.plugins?.dxb){
       throw messages.createError('error.badConfig');
     }
-    config = config.plugins.dxb;
+    const dxbConfig: ProjectSetupResult = config.plugins.dxb;
 
     const orgname = flags['set-alias'];
     const defaultorg = flags['default-org'];
-    const durationdays: number = flags['duration-days'] || config.defaultdurationdays;   
+    const durationdays: number = flags['duration-days'] || dxbConfig.defaultdurationdays;   
     this.log('\x1b[91m%s\x1b[0m', messages.getMessage('log.welcome', [orgname]));
 
     let output: ScratchOrgCreateResult | AuthInfo | string = await this.createScratchOrg(orgname, defaultorg, durationdays);
@@ -68,54 +69,54 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
     this.log(exec(`sf dxb org setdefault --target-org ${orgname}`).toString());
     
     // DEPLOY PRE LEGACY PACKAGES
-    if (config.pre_legacy_packages) {
-      this.deployLegacyPackages(orgname, config.pre_legacy_packages, 'pre');
+    if (dxbConfig.pre_legacy_packages) {
+      this.deployLegacyPackages(orgname, dxbConfig.pre_legacy_packages, 'pre');
     }
-    if (config.deferPermissionSet){
-      this.log(exec(`sf project deploy start --target-org ${orgname} --source-dir ${config.deferPermissionSet} --wait 600`).toString());
+    if (dxbConfig.deferPermissionSet){
+      this.log(exec(`sf project deploy start --target-org ${orgname} --source-dir ${dxbConfig.deferPermissionSet} --wait 600`).toString());
     }
-    if (config.deferSharingUser){
-      this.log(exec(`sf force user permset assign --perm-set-name ${config.deferSharingUser} --target-org ${orgname} --on-behalf-of ${orgname}`).toString());
+    if (dxbConfig.deferSharingUser){
+      this.log(exec(`sf force user permset assign --perm-set-name ${dxbConfig.deferSharingUser} --target-org ${orgname} --on-behalf-of ${orgname}`).toString());
     }
 
-    if (config.userPermissionsKnowledgeUser){
+    if (dxbConfig.userPermissionsKnowledgeUser){
       this.log(exec(`sf data update record --sobject User --where "Name='User User'" --values "Country=Australia" --target-org ${orgname}`).toString());
       this.log(exec(`sf data update record --sobject User --where "Name='User User'" --values "UserPermissionsKnowledgeUser=true" --target-org ${orgname}`).toString());
     }
 
     // REMOVE FIELDS TRACKING HISTORY
     if (flags['include-tracking-history']) {
-      this.includeTrackingHistory(config.disableFeedTrackingHistory);
+      this.includeTrackingHistory(dxbConfig.disableFeedTrackingHistory);
     } 
     
-    if (config.manual_config_required){
+    if (dxbConfig.manual_config_required){
       // STOP USER FOR MANUAL CONFIG
-      await this.promptUserManualConfig(orgname, config.manual_steps,config.manual_config_start_url);
+      await this.promptUserManualConfig(orgname, dxbConfig.manual_steps!,dxbConfig.manual_config_start_url!);
     }
 
     // INSTALL PACKAGES
-    if (flags.includepackages && config.packages) {
-      this.installPackages(orgname, config.packages);
+    if (flags.includepackages && dxbConfig.packages) {
+      this.installPackages(orgname, dxbConfig.packages);
     }
 			
     // PUSH DX SOURCE
     this.log(await this.pushSource(orgname, true));
 
     // DEPLOY POST LEGACY PACKAGES
-    if (config.post_legacy_packages) {
-      this.deployLegacyPackages(orgname, config.post_legacy_packages, 'post');
+    if (dxbConfig.post_legacy_packages) {
+      this.deployLegacyPackages(orgname, dxbConfig.post_legacy_packages, 'post');
     }
 
     // IMPORT DATA
-    if (config.data_plan_path && fs.existsSync(config.data_plan_path)){
-      output = this.importDataPlan(orgname, config.data_plan_path);
+    if (dxbConfig.data_plan_path && fs.existsSync(dxbConfig.data_plan_path)){
+      output = this.importDataPlan(orgname, dxbConfig.data_plan_path);
       this.log(output);
     }else{
       this.log(messages.getMessage('log.noSetupData'));
     }
 
-    if (config.default_user_role){
-      const roleResult = JSON.parse(exec(`sf data query --query "select Id from UserRole where DeveloperName = ${config.default_user_role}" --target-org ${orgname} --json`).toString());
+    if (dxbConfig.default_user_role){
+      const roleResult = JSON.parse(exec(`sf data query --query "select Id from UserRole where DeveloperName = ${dxbConfig.default_user_role}" --target-org ${orgname} --json`).toString());
       if (roleResult.result?.totalSize === 1){
         this.log(exec(`sf data update record --sobject User --where "Name='User User'" --values "UserRoleId=${roleResult.result.records[0].Id}" --target-org ${orgname}`).toString());
       }else{
@@ -124,8 +125,8 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
     }
 
     // create other user, this also fix FLS being deleted from profile
-    if (config.user_def_file){
-      output = await this.createUser(orgname, config.user_alias_prefix);
+    if (dxbConfig.user_def_file){
+      output = await this.createUser(orgname, dxbConfig.user_alias_prefix);
       this.log(messages.getMessage('log.userCreated'));
     }
     this.log(exec(`sf org display --target-org ${orgname}`).toString());
@@ -134,7 +135,7 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
   }
 
   private async createScratchOrg(orgname: string, defaultorg: boolean, durationdays: number): Promise<ScratchOrgCreateResult>{
-    if (!fs.existsSync('./config/project-scratch-def.json')) {
+    if (!fs.existsSync('./dxbConfig/project-scratch-def.json')) {
       throw messages.createError('error.definitionFile');
     }
     
@@ -142,22 +143,22 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
       alias: orgname,
       setDefault: defaultorg,
       durationDays: durationdays,
-      orgConfig: JSON.parse(fs.readFileSync('./config.project-scratch-def.json').toString())
+      orgConfig: JSON.parse(fs.readFileSync('./dxbConfig.project-scratch-def.json').toString())
     });
   }
 
-  private deployLegacyPackages(orgname: string, legacyPackages: any[] ,type: string): void{
+  private deployLegacyPackages(orgname: string, legacyPackages: string[], type: string): void{
     this.log(messages.getMessage('log.packages', [type]));
     try{
       legacyPackages.forEach( elem => {
-        exec(`sf project deploy start --metadata-dir config/legacy-packages/${type}/${elem} -target-org ${orgname} --wait 60`).toString();
+        exec(`sf project deploy start --metadata-dir dxbConfig/legacy-packages/${type}/${elem} -target-org ${orgname} --wait 60`).toString();
       });
     }catch(err){
       throw messages.createError('error.packages', [type]);
     }
   }
 
-  private async promptUserManualConfig(orgname: string, manualSteps: any[], startURL: string): Promise<void>{
+  private async promptUserManualConfig(orgname: string, manualSteps: string[], startURL: string): Promise<void>{
     this.log(messages.getMessage('log.manualConfig'));
     manualSteps.forEach((elem) => {
       this.log(elem);
@@ -176,8 +177,8 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
     }
   }
   
-  private includeTrackingHistory(disableFeedTrackingObjects: string[]): void{
-    disableFeedTrackingObjects.forEach((elem) => {
+  private includeTrackingHistory(disableFeedTrackingObjects: string[] | undefined): void{
+    disableFeedTrackingObjects?.forEach((elem) => {
       this.log(messages.getMessage('log.trackingHistory', [elem]));
       this.removeFeedTrackingHistoryInObject(elem);
     });
@@ -229,7 +230,7 @@ export default class ScratchOrgCreation extends SfCommand<ScratchOrgCreationResu
     });
   }
 
-  private async createUser(orgname: string, userAliasPrefix: string): Promise<AuthInfo>{
+  private async createUser(orgname: string, userAliasPrefix: string | undefined): Promise<AuthInfo>{
     this.log(messages.getMessage('log.createUser'));
     const suffix = Math.floor((Math.random() * 20000000) + 1);
     if (!userAliasPrefix) {

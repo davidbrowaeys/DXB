@@ -12,21 +12,25 @@ type MetadataConfig = {
   folder: string;
   rules: MetadataRule[];
 }
-type ProjectSetupResult = {
+export type ProjectSetupResult = {
+  apextemplatepath?: string;
   apiAlignmentExclusion?: string[];
-  defaultdurationdays?: number;
-  packages?: string[];
-  pre_legacy_packages?: string[];
-  userPermissionsKnowledgeUser?: boolean;
+  data_plan_path?: string;
+  defaultdurationdays: number;
+  default_user_role?: string;
   deferPermissionSet?: string;
   deferSharingUser?: string;
   disableFeedTrackingHistory?: string[];
   manual_config_required?: boolean;
   manual_config_start_url?: string;
   manual_steps?: string[];
-  data_plan_path?: string;
-  apextemplatepath?: string;
   orgdefault_config?: MetadataConfig[];
+  packages?: string[];
+  post_legacy_packages?: string[];
+  pre_legacy_packages?: string[];
+  userPermissionsKnowledgeUser?: boolean;
+  user_alias_prefix?: string;
+  user_def_file?: string;
 }
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'install');
@@ -122,7 +126,7 @@ export default class ProjectSetup extends SfCommand<ProjectSetupResult> {
     fs.writeFileSync('config/dxb-schemagen-def.json', JSON.stringify(dxbSchemaGen, null, 2));
     this.log(messages.getMessage('log.schemagen'));
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
-    this.log('\x1b[34m\x1b[45m\x1b[5m%s', '\n\n'+messages.getMessage('log.success')+'\n\n');
+    this.log('\x1b[34m\x1b[45m\x1b[5m%s', '\n\n'+messages.getMessage('log.welcome')+'\n\n');
     return init;
   }
 }

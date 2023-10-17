@@ -44,17 +44,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
       - name: Authenticate with private NPM package
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-      - name: NPM Install
-        run: npm install
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.yarnrc
+      - name: Yarn Install
+        uses: bahmutov/npm-install@v1.6.0
+      - run: yarn install --ignore-scripts
       - name: Upgrade Package version"
         run: node dxbpackagecalc.js ${{ github.ref }} beta
-      - name: NPM Publish DXB
-        run: npm publish --tag beta
+      - name: Yarn Publish DXB
+        run: yarn publish --tag beta
       - name: Commit report
         run: |
           cat package.json
@@ -63,17 +64,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
       - name: Authenticate with private NPM package
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-      - name: NPM Install
-        run: npm install
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.yarnrc
+      - name: Yarn Install
+        uses: bahmutov/npm-install@v1.6.0
+      - run: yarn install --ignore-scripts
       - name: Upgrade Package version"
         run: node dxbpackagecalc.js master
-      - name: NPM Publish DXB
-        run: npm publish
+      - name: Yarn Publish DXB
+        run: yarn publish
       - name: Commit report
         run: |
           git config --global user.name 'David Browaeys'

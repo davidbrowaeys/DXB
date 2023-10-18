@@ -169,7 +169,7 @@ export default class GraphQlConvert extends SfCommand<GraphQlConvertResult> {
       from: undefined
     };
     for (const section in SOQLSTRUCTURE) {
-      if (Object.hasOwn(SOQLSTRUCTURE, section)) {
+      if (Object.prototype.hasOwnProperty.call(SOQLSTRUCTURE, section)) {
         const regex: RegExp = SOQLSTRUCTURE[section];
         const match = query.match(regex);
         if (match) {

@@ -113,9 +113,9 @@ export default class DataTransferExport extends SfCommand<DataTransferExportResu
         messages.createError('error.failedToDownload', [response.status]);
       }
       const contentType = response.headers.get('content-type');
-      const fileBuffer = await response.arrayBuffer();
+      const fileBlob = await response.blob();
 
-      const blob = new Blob([fileBuffer], { type: contentType! });
+      const blob = new Blob([fileBlob], { type: contentType! });
       const fileStream: fs.WriteStream = fs.createWriteStream(
         `./files/${contentDocumentId}_${sanitizeFileName(result.PathOnClient)}`
       );

@@ -4,7 +4,7 @@ import fse = require('fs-extra');
 import {Flags, SfCommand} from '@salesforce/sf-plugins-core';
 import { Messages, SfProject } from '@salesforce/core';
 
-type ApexTriggerCreationResult = {
+export type ApexTriggerCreationResult = {
   success: boolean;
 }
 

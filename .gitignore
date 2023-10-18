@@ -19,7 +19,7 @@ backup/cycle-1/full/Contact.csv
 backup/cycle-1/full/log.json
 backup/cycle-1/full/Opportunity.csv
 bulk_output/ACCOUNT.csv
-.sfdx/tools/apex.db
+.sfdx/
 .vim-force.com/session.properties
 config/data-def.json
 .pmdCache
@@ -32,3 +32,4 @@ log
 tsconfig.tsbuildinfo
 .eslintcache
 oclif.lock
+.yarn/

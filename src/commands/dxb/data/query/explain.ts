@@ -95,7 +95,7 @@ export default class QueryExplain extends SfCommand<Result> {
     };
     try{
       const response = await fetch(url, options);
-      const body: QueryExplainResult = await response.json();
+      const body: QueryExplainResult = await response.json() as QueryExplainResult;
       if (!body.plans || body.plans.length === 0){
         this.log(messages.getMessage('log.noExplanation'));
         return;

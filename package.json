@@ -45,6 +45,7 @@
     "@types/mocha": "^5.2.7",
     "@types/node": "^20.8.6",
     "@types/readline-sync": "^1.4.5",
+    "@types/sinon": "^10.0.19",
     "@types/xml2js": "^0.4.12",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",

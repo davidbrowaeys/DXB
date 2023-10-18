@@ -1,15 +1,14 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import * as mime from 'mime';
+import { Record } from 'jsforce';
 import {Flags, SfCommand } from '@salesforce/sf-plugins-core';
 import { Connection, Messages } from '@salesforce/core';
-import * as mime from 'mime';
 import * as Handlebars from 'handlebars';
 // import { NodeHtmlMarkdown } from 'node-html-markdown';
 // import * as htmlDocx from "html-docx-js";
 import { asBlob } from 'html-docx-js-typescript';
 import * as xml2js from 'xml2js';
-import { Record } from 'jsforce';
-import { CustomObject, FileProperties, Flow, ListView, MetadataDefinition, MetadataType, SamlSsoConfig, SharedTo, SharingCriteriaRule, SharingOwnerRule, SharingRules } from 'jsforce/lib/api/metadata';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pdf = require('pdf-creator-node');
 
@@ -902,7 +901,7 @@ export default class SchemaDocGen extends SfCommand<SchemaDocGenResult> {
     const formattedSharedTo: any[] = [];
     sharedInfo.forEach((r) => {
       for (const k in r) {
-        if (Object.hasOwn(r, k)) {
+        if (Object.prototype.hasOwnProperty.call(r, k)) {
           const value = r[k] ? (Array.isArray(r[k]) ? r[k].toString() : r[k]) : '';
           formattedSharedTo.push({ label: this.toCapitalCase(k), value });
         }

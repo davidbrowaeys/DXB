@@ -9,6 +9,8 @@ import * as Handlebars from 'handlebars';
 // import * as htmlDocx from "html-docx-js";
 import { asBlob } from 'html-docx-js-typescript';
 import * as xml2js from 'xml2js';
+import { CustomObject, Flow, SharingCriteriaRule, SharingOwnerRule, SharingRules, ListView, SamlSsoConfig, MetadataDefinition, SharedTo, MetadataType } from 'jsforce/lib/api/metadata';
+import { FileProperties } from '@salesforce/source-deploy-retrieve';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pdf = require('pdf-creator-node');
 

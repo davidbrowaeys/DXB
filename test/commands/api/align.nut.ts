@@ -3,7 +3,7 @@ import { execCmd, TestSession } from '@salesforce/cli-plugins-testkit';
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as shelljs from 'shelljs';
-import { ApiAlignResult } from '../../../src/commands/api/align';
+import { ApiAlignResult } from '../../../src/commands/dxb/api/align';
 
 describe('api align NUTs', () => {
   let session: TestSession;
@@ -17,7 +17,7 @@ describe('api align NUTs', () => {
     const projectConfig = JSON.parse(fs.readFileSync('sfdx-project.json').toString());
     projectConfig.sourceApiVersion = '57.0';
     fs.writeFileSync('sfdx-project.json', JSON.stringify(projectConfig), { encoding: 'utf8' });
-    execCmd('install', { ensureExitCode: 0 });
+    execCmd('dxb install', { ensureExitCode: 0 });
     shelljs.rm('-rf', 'force-app/main/default/lwc');
   });
 
@@ -26,7 +26,7 @@ describe('api align NUTs', () => {
   });
 
   it('should align api versions of all metadata files and package directories', async () => {
-    const command = 'api align --json';
+    const command = 'dxb api align --json';
     const output = await execCmd<ApiAlignResult>(command, { async: true });
     expect(output.jsonOutput?.result.success).to.equal(true);
     fs.readdirSync('force-app/main/default/classes')
@@ -38,7 +38,7 @@ describe('api align NUTs', () => {
   });
 
   it('should exclude certain metadata for alignment', async () => {
-    const command = 'api align --metadata-type ApexClass --json';
+    const command = 'dxb api align --metadata-type ApexClass --json';
     const output = await execCmd<ApiAlignResult>(command, { async: true });
     expect(output.jsonOutput?.result.success).to.equal(true);
     fs.readdirSync('force-app/main/default/classes')

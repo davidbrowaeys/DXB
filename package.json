@@ -84,104 +84,106 @@
       "@oclif/plugin-help"
     ],
     "topics": {
-      "apex": {
-        "description": "description for apex",
-        "subtopics": {
-          "coverage": {
-            "description": "description for apex.coverage"
-          },
-          "scan": {
-            "description": "description for apex.scan"
-          },
-          "trigger": {
-            "description": "description for apex.trigger"
+      "dxb": {
+        "apex": {
+          "description": "description for apex",
+          "subtopics": {
+            "coverage": {
+              "description": "description for apex.coverage"
+            },
+            "scan": {
+              "description": "description for apex.scan"
+            },
+            "trigger": {
+              "description": "description for apex.trigger"
+            }
           }
-        }
-      },
-      "api": {
-        "description": "description for api"
-      },
-      "community": {
-        "description": "description for community"
-      },
-      "data": {
-        "description": "description for data",
-        "subtopics": {
-          "bulk": {
-            "description": "description for data.bulk"
-          },
-          "file": {
-            "description": "description for data.file"
-          },
-          "query": {
-            "description": "description for data.query"
+        },
+        "api": {
+          "description": "description for api"
+        },
+        "community": {
+          "description": "description for community"
+        },
+        "data": {
+          "description": "description for data",
+          "subtopics": {
+            "bulk": {
+              "description": "description for data.bulk"
+            },
+            "file": {
+              "description": "description for data.file"
+            },
+            "query": {
+              "description": "description for data.query"
+            }
           }
-        }
-      },
-      "graphql": {
-        "description": "description for graphql"
-      },
-      "junit": {
-        "description": "description for junit"
-      },
-      "mdapi": {
-        "description": "description for mdapi"
-      },
-      "object": {
-        "description": "description for object",
-        "subtopics": {
-          "fields": {
-            "description": "description for object.fields"
-          },
-          "relationships": {
-            "description": "description for object.relationships"
-          },
-          "vr": {
-            "description": "description for object.vr"
+        },
+        "graphql": {
+          "description": "description for graphql"
+        },
+        "junit": {
+          "description": "description for junit"
+        },
+        "mdapi": {
+          "description": "description for mdapi"
+        },
+        "object": {
+          "description": "description for object",
+          "subtopics": {
+            "fields": {
+              "description": "description for object.fields"
+            },
+            "relationships": {
+              "description": "description for object.relationships"
+            },
+            "vr": {
+              "description": "description for object.vr"
+            }
           }
-        }
-      },
-      "org": {
-        "description": "description for org"
-      },
-      "package": {
-        "description": "description for package",
-        "subtopics": {
-          "dependencies": {
-            "description": "description for package.dependencies"
+        },
+        "org": {
+          "description": "description for org"
+        },
+        "package": {
+          "description": "description for package",
+          "subtopics": {
+            "dependencies": {
+              "description": "description for package.dependencies"
+            }
           }
-        }
-      },
-      "permissionset": {
-        "description": "description for permissionset"
-      },
-      "profile": {
-        "description": "description for profile",
-        "subtopics": {
-          "passwordpolicies": {
-            "description": "description for profile.passwordpolicies"
+        },
+        "permissionset": {
+          "description": "description for permissionset"
+        },
+        "profile": {
+          "description": "description for profile",
+          "subtopics": {
+            "passwordpolicies": {
+              "description": "description for profile.passwordpolicies"
+            }
           }
-        }
-      },
-      "schema": {
-        "description": "description for schema",
-        "subtopics": {
-          "doc": {
-            "description": "description for schema.doc"
+        },
+        "schema": {
+          "description": "description for schema",
+          "subtopics": {
+            "doc": {
+              "description": "description for schema.doc"
+            }
           }
-        }
-      },
-      "source": {
-        "description": "description for source"
-      },
-      "static": {
-        "description": "description for static"
-      },
-      "user": {
-        "description": "description for user",
-        "subtopics": {
-          "access": {
-            "description": "description for user.access"
+        },
+        "source": {
+          "description": "description for source"
+        },
+        "static": {
+          "description": "description for static"
+        },
+        "user": {
+          "description": "description for user",
+          "subtopics": {
+            "access": {
+              "description": "description for user.access"
+            }
           }
         }
       }

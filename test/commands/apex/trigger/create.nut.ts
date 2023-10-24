@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import { TestSession, execCmd } from '@salesforce/cli-plugins-testkit';
-import { ApexTriggerCreateResult } from '../../../../src/commands/apex/trigger/create';
+import { ApexTriggerCreateResult } from '../../../../src/commands/dxb/apex/trigger/create';
 
 /*
  * Copyright (c) 2023, salesforce.com, inc.
@@ -25,7 +25,7 @@ describe('apex trigger create', () => {
 
   it('should create a trigger with sobject = Account and no source-api-version', async () => {
     const result = (
-      await execCmd<ApexTriggerCreateResult>('apex trigger create --sobject Account --json', {
+      await execCmd<ApexTriggerCreateResult>('dxb apex trigger create --sobject Account --json', {
         ensureExitCode: 0,
         async: true,
       })
@@ -37,10 +37,13 @@ describe('apex trigger create', () => {
 
   it('runs apex trigger create with sobject = Account and source-api-version = 58', async () => {
     const result = (
-      await execCmd<ApexTriggerCreateResult>('apex trigger create --sobject Account --source-api-version 58 --json', {
-        ensureExitCode: 0,
-        async: true,
-      })
+      await execCmd<ApexTriggerCreateResult>(
+        'dxb apex trigger create --sobject Account --source-api-version 58 --json',
+        {
+          ensureExitCode: 0,
+          async: true,
+        }
+      )
     ).jsonOutput?.result;
 
     expect(result?.success).to.equal(true);

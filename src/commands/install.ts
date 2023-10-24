@@ -128,7 +128,7 @@ export default class ProjectSetup extends SfCommand<ProjectSetupResult> {
     config['plugins']['dxb'] = init;
     fs.writeFileSync('sfdx-project.json', JSON.stringify(config, null, 2));
     this.log(messages.getMessage('log.dxbAdded'));
-    const dxbSchemaGen = JSON.parse(fs.readFileSync(path.join(__dirname, '../../utils/documentinfo.json')).toString());
+    const dxbSchemaGen = JSON.parse(fs.readFileSync(path.join(__dirname, '../utils/documentinfo.json')).toString());
     fs.writeFileSync('config/dxb-schemagen-def.json', JSON.stringify(dxbSchemaGen, null, 2));
     this.log(messages.getMessage('log.schemagen'));
     this.spinner.stop(messages.getMessage('spinner.stop.done'));

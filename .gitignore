@@ -44,3 +44,7 @@ node_modules
 .idea
 
 oclif.manifest.json
+.sfdx/
+force-app/
+.sf/
+oclif.lock

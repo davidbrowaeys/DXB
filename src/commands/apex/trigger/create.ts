@@ -52,7 +52,7 @@ export default class ApexTriggerCreate extends SfCommand<ApexTriggerCreateResult
 
     let templateFolder = path.join('.sfdx-templates', template);
     if (!fse.existsSync(templateFolder)) {
-      templateFolder = path.join(__dirname, '../../../../utils/templates/', template);
+      templateFolder = path.join(__dirname, '../../../utils/templates/', template);
     }
     this.log(templateFolder);
 

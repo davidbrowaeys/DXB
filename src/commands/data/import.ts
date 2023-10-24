@@ -40,17 +40,23 @@ export default class DataImport extends SfCommand<DataImportResult> {
       summary: messages.getMessage('flags.definition-file.summary'),
       required: true,
       exists: true,
+      aliases: ['definitionfile'],
+      deprecateAliases: true,
     }),
     'data-dir': Flags.directory({
       char: 'd',
       summary: messages.getMessage('flags.data-dir.summary'),
       required: true,
       exists: true,
+      aliases: ['datadir'],
+      deprecateAliases: true,
     }),
     'polling-time-out': Flags.duration({
       unit: 'milliseconds',
       char: 'i',
       summary: messages.getMessage('flags.polling-time-out.summary'),
+      aliases: ['pollingtimeout'],
+      deprecateAliases: true,
     }),
   };
 

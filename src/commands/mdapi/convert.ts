@@ -22,12 +22,16 @@ export default class MdapiConvert extends SfCommand<MdapiConvertResult> {
       summary: messages.getMessage('flags.output-dir.summary'),
       exists: true,
       default: '.',
+      aliases: ['outputdir'],
+      deprecateAliases: true,
     }),
     'root-dir': Flags.directory({
       char: 'r',
       required: true,
       summary: messages.getMessage('flags.root-dir.summary'),
       exists: true,
+      aliases: ['rootdir'],
+      deprecateAliases: true,
     }),
   };
 

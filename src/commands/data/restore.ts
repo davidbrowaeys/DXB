@@ -31,6 +31,8 @@ export default class DataRestore extends SfCommand<DataRestoreResult> {
       summary: messages.getMessage('flags.backup-dir.summary'),
       required: true,
       exists: true,
+      aliases: ['backupdir'],
+      deprecateAliases: true,
     }),
   };
 

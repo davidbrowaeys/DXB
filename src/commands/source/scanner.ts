@@ -25,12 +25,19 @@ export default class SourceScanner extends SfCommand<SourceScannerResult> {
   public static readonly flags = {
     'target-org': Flags.requiredOrg(),
     file: Flags.file({ char: 'f', summary: messages.getMessage('flags.file.summary'), exists: true, required: true }),
-    'excluded-files': Flags.string({ char: 'e', summary: messages.getMessage('flags.excluded-files.summary') }),
+    'excluded-files': Flags.string({
+      char: 'e',
+      summary: messages.getMessage('flags.excluded-files.summary'),
+      aliases: ['excludedfiles'],
+      deprecateAliases: true,
+    }),
     severity: Flags.integer({ char: 's', summary: messages.getMessage('flags.severity.summary'), default: 1 }),
     'high-severity-rules': Flags.string({
       char: 'r',
       summary: messages.getMessage('flags.high-severity-rules.summary'),
       multiple: true,
+      aliases: ['highseverityrules'],
+      deprecateAliases: true,
     }),
   };
 

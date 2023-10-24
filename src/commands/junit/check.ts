@@ -35,16 +35,22 @@ export default class JunitCheck extends SfCommand<JunitCheckResult> {
       summary: messages.getMessage('flags.junit-path.summary'),
       required: true,
       exists: true,
+      aliases: ['junitpath'],
+      deprecateAliases: true,
     }),
     'time-threshold': Flags.integer({
       char: 't',
       summary: messages.getMessage('flags.time-threshold.summary'),
       default: 1,
+      aliases: ['timetreshold'],
+      deprecateAliases: true,
     }),
     'flag-as-error': Flags.boolean({
       char: 'e',
       summary: messages.getMessage('flags.flag-as-error.summary'),
       default: false,
+      aliases: ['flagaserror'],
+      deprecateAliases: true,
     }),
   };
 

@@ -21,6 +21,8 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
       char: 'p',
       summary: messages.getMessage('flags.source-path.summary'),
       multiple: true,
+      aliases: ['sourcepath'],
+      deprecateAliases: true,
     }),
     manifest: Flags.file({ char: 'x', summary: messages.getMessage('flags.manifest.summary'), exists: true }),
     'metadata-type': Flags.string({
@@ -28,16 +30,22 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
       summary: messages.getMessage('flags.metadata-type.summary'),
       default: ['objects', 'classes', 'workflows'],
       multiple: true,
+      aliases: ['metatype'],
+      deprecateAliases: true,
     }),
     'base-dir': Flags.string({
       char: 'd',
       summary: messages.getMessage('flags.base-dir.summary'),
       default: 'force-app/main/default',
+      aliases: ['basedir'],
+      deprecateAliases: true,
     }),
     'test-class-name-regex': Flags.string({
       char: 'n',
       summary: messages.getMessage('flags.test-class-name-regex.summary'),
       default: '.*Test',
+      aliases: ['testclsnameregex'],
+      deprecateAliases: true,
     }),
   };
 

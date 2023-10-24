@@ -16,15 +16,32 @@ export default class DataBulkQuery extends SfCommand<DataBulkQueryResult> {
 
   public static readonly flags = {
     'target-org': Flags.requiredOrg(),
-    'object-name': Flags.string({ char: 's', summary: messages.getMessage('flags.object-name.summary') }),
+    'object-name': Flags.string({
+      char: 's',
+      summary: messages.getMessage('flags.object-name.summary'),
+      aliases: ['objectname'],
+      deprecateAliases: true,
+    }),
     query: Flags.string({ char: 'q', summary: messages.getMessage('flags.query.summary') }),
-    'all-fields': Flags.boolean({ default: false, summary: messages.getMessage('flags.all-fields.summary') }),
+    'all-fields': Flags.boolean({
+      default: false,
+      summary: messages.getMessage('flags.all-fields.summary'),
+      aliases: ['allfields'],
+      deprecateAliases: true,
+    }),
     'output-dir': Flags.string({
       char: 'd',
       summary: messages.getMessage('flags.output-dir.summary'),
       default: 'bulk_output',
+      aliases: ['outputdir'],
+      deprecateAliases: true,
     }),
-    'file-name': Flags.string({ char: 'f', summary: messages.getMessage('flags.file-name.summary') }),
+    'file-name': Flags.string({
+      char: 'f',
+      summary: messages.getMessage('flags.file-name.summary'),
+      aliases: ['filename'],
+      deprecateAliases: true,
+    }),
   };
 
   protected fields: string[] = [];

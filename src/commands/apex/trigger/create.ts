@@ -26,6 +26,8 @@ export default class ApexTriggerCreate extends SfCommand<ApexTriggerCreateResult
     'source-api-version': Flags.integer({
       char: 'v',
       summary: messages.getMessage('flags.source-api-version.summary'),
+      aliases: ['sourceapiversion'],
+      deprecateAliases: true,
     }),
   };
 

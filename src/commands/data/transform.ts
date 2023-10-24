@@ -30,12 +30,16 @@ export default class DataTransform extends SfCommand<DataTransformResult> {
       char: 's',
       summary: messages.getMessage('flags.object-name.summary'),
       required: true,
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
     'transform-file': Flags.file({
       char: 'f',
       summary: messages.getMessage('flags.transform-file.summary'),
       exists: true,
       required: true,
+      aliases: ['transform'],
+      deprecateAliases: true,
     }),
   };
 

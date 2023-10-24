@@ -24,6 +24,8 @@ export default class ProfilePasswordpoliciesFix extends SfCommand<ProfilePasswor
       summary: messages.getMessage('flags.source-path.summary'),
       default: 'force-app/main/default/profilePasswordPolicies',
       exists: true,
+      aliases: ['sourcepath'],
+      deprecateAliases: true,
     }),
   };
 

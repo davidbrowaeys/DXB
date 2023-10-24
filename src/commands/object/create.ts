@@ -20,6 +20,8 @@ export default class ObjectCreate extends SfCommand<ObjectCreateResult> {
       char: 's',
       summary: messages.getMessage('flags.object-name.summary'),
       required: true,
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
     push: Flags.boolean({ char: 'p', default: false, summary: messages.getMessage('flags.push.summary') }),
   };

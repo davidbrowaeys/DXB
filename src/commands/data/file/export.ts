@@ -40,6 +40,8 @@ export default class DataFileExport extends SfCommand<DataFileExportResult> {
       char: 'f',
       summary: messages.getMessage('flags.file-path.summary'),
       default: './input.csv',
+      aliases: ['filepath'],
+      deprecateAliases: true,
     }),
     min: Flags.integer({
       char: 'm',

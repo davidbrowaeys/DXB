@@ -22,13 +22,22 @@ export default class ObjectFieldset extends SfCommand<ObjectFieldsetResult> {
       char: 's',
       summary: messages.getMessage('flags.object-name.summary'),
       required: true,
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
     'fieldset-name': Flags.string({
       char: 'n',
       summary: messages.getMessage('flags.fieldset-name.summary'),
       required: true,
+      aliases: ['fieldsetname'],
+      deprecateAliases: true,
     }),
-    'retrieve-fields': Flags.boolean({ char: 'f', summary: messages.getMessage('flags.retrieve-fields.summary') }),
+    'retrieve-fields': Flags.boolean({
+      char: 'f',
+      summary: messages.getMessage('flags.retrieve-fields.summary'),
+      aliases: ['retrievefields'],
+      deprecateAliases: true,
+    }),
     push: Flags.boolean({ char: 'p', summary: messages.getMessage('flags.push.summary'), default: false }),
   };
 

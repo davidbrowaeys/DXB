@@ -29,6 +29,8 @@ export default class PermissionsetClean extends SfCommand<PermissionsetCleanResu
       summary: messages.getMessage('flags.permissionset-name.summary'),
       deprecated: true,
       exclusive: ['file'],
+      aliases: ['permissionsetname'],
+      deprecateAliases: true,
     }),
     'root-dir': Flags.directory({
       char: 'r',
@@ -37,6 +39,8 @@ export default class PermissionsetClean extends SfCommand<PermissionsetCleanResu
       deprecated: true,
       exists: true,
       exclusive: ['file'],
+      aliases: ['rootdir'],
+      deprecateAliases: true,
     }),
   };
 

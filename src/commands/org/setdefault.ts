@@ -18,7 +18,12 @@ export default class OrgSetdefault extends SfCommand<OrgSetdefaultResult> {
 
   public static readonly flags = {
     'target-org': Flags.requiredOrg(),
-    'base-dir': Flags.string({ char: 'd', summary: messages.getMessage('flags.base-dir.summary') }),
+    'base-dir': Flags.string({
+      char: 'd',
+      summary: messages.getMessage('flags.base-dir.summary'),
+      aliases: ['basedir'],
+      deprecateAliases: true,
+    }),
   };
 
   public async run(): Promise<OrgSetdefaultResult> {

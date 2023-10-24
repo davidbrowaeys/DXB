@@ -18,11 +18,18 @@ export default class ProfileBuild extends SfCommand<ProfileBuildResult> {
   public static readonly examples = messages.getMessages('examples');
 
   public static readonly flags = {
-    'profile-name': Flags.string({ char: 'p', summary: messages.getMessage('flags.profile-name.summary') }),
+    'profile-name': Flags.string({
+      char: 'p',
+      summary: messages.getMessage('flags.profile-name.summary'),
+      aliases: ['profilename'],
+      deprecateAliases: true,
+    }),
     'source-dir': Flags.directory({
       char: 'd',
       summary: messages.getMessage('flags.source-dir.summary'),
       default: 'force-app/main/default/profiles',
+      aliases: ['sourcepath'],
+      deprecateAliases: true,
     }),
   };
 

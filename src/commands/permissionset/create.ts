@@ -25,16 +25,22 @@ export default class PermissionSetCreate extends SfCommand<PermissionSetCreateRe
       char: 'n',
       summary: messages.getMessage('flags.permissionset-name.summary'),
       required: true,
+      aliases: ['permissionsetname'],
+      deprecateAliases: true,
     }),
     'output-dir': Flags.directory({
       char: 'r',
       summary: messages.getMessage('flags.output-dir.summary'),
       default: 'force-app/main/default/permissionsets',
+      aliases: ['outputdir'],
+      deprecateAliases: true,
     }),
     'has-activation-required': Flags.boolean({
       char: 'a',
       summary: messages.getMessage('flags.has-activation-required.summary'),
       default: false,
+      aliases: ['hasactivationrequired'],
+      deprecateAliases: true,
     }),
     license: Flags.string({
       char: 'l',

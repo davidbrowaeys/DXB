@@ -32,19 +32,29 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
       default: 'commitid',
       options: ['commitid', 'tags', 'branch'],
     }),
-    'delta-key': Flags.string({ char: 'k', summary: messages.getMessage('flags.delta-key.summary'), required: true }),
+    'delta-key': Flags.string({
+      char: 'k',
+      summary: messages.getMessage('flags.delta-key.summary'),
+      required: true,
+      aliases: ['deltakey'],
+      deprecateAliases: true,
+    }),
     'base-dir': Flags.directory({
       char: 'd',
       summary: messages.getMessage('flags.base-dir.summary'),
       exists: true,
       default: 'force-app/main/default',
       deprecated: true,
+      aliases: ['basedir'],
+      deprecateAliases: true,
     }),
     'output-dir': Flags.directory({
       char: 'p',
       summary: messages.getMessage('flags.output-dir.summary'),
       exists: true,
       default: 'manifest',
+      aliases: ['outputpackage'],
+      deprecateAliases: true,
     }),
     granular: Flags.boolean({ char: 'g', summary: messages.getMessage('flags.granular.summary'), default: false }),
     'destructive-changes': Flags.boolean({
@@ -52,8 +62,16 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
       summary: messages.getMessage('flags.destructive-changes.summary'),
       default: false,
       hidden: true,
+      aliases: ['granularmode'],
+      deprecateAliases: true,
     }),
-    rollback: Flags.boolean({ char: 'r', summary: messages.getMessage('flags.rollback.summary'), default: false }),
+    rollback: Flags.boolean({
+      char: 'r',
+      summary: messages.getMessage('flags.rollback.summary'),
+      default: false,
+      aliases: ['destructivechange'],
+      deprecateAliases: true,
+    }),
   };
 
   public static readonly requiresProject = true;

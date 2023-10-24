@@ -21,6 +21,8 @@ export default class ObjectPrefix extends SfCommand<ObjectPrefixResult> {
       char: 's',
       summary: messages.getMessage('flags.object-name.summary'),
       exclusive: ['prefix'],
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
     prefix: Flags.string({
       char: 'p',

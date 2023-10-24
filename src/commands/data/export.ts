@@ -32,18 +32,24 @@ export default class DataExport extends SfCommand<DataExportResult> {
       summary: messages.getMessage('flags.definition-file.summary'),
       required: true,
       exists: true,
+      aliases: ['definitionfile'],
+      deprecateAliases: true,
     }),
     'output-dir': Flags.directory({
       char: 'd',
       summary: messages.getMessage('flags.output-dir.summary'),
       default: '.',
       exists: true,
+      aliases: ['outputdir'],
+      deprecateAliases: true,
     }),
     'query-limit': Flags.integer({
       char: 'l',
       summary: messages.getMessage('flags.query-limit.summary'),
       default: 500000,
       min: 1,
+      aliases: ['querylimit'],
+      deprecateAliases: true,
     }),
   };
 

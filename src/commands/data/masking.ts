@@ -26,17 +26,23 @@ export default class DataMasking extends SfCommand<DataMaskingResult> {
       summary: messages.getMessage('flags.definition-file.summary'),
       required: true,
       exists: true,
+      aliases: ['definitionfile'],
+      deprecateAliases: true,
     }),
     'source-data': Flags.file({
       char: 'd',
       summary: messages.getMessage('flags.source-data.summary'),
       required: true,
       exists: true,
+      aliases: ['sourcedata'],
+      deprecateAliases: true,
     }),
     'object-name': Flags.string({
       char: 's',
       summary: messages.getMessage('flags.object-name.summary'),
       required: true,
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
   };
 

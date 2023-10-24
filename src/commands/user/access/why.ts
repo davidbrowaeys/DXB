@@ -25,12 +25,16 @@ export default class UserFindAccess extends SfCommand<UserFindAccessResult> {
       char: 's',
       required: true,
       summary: messages.getMessage('flags.object-name.summary'),
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
     'field-name': Flags.string({
       char: 'f',
       required: false,
       summary: messages.getMessage('flags.field-name.summary'),
       default: '',
+      aliases: ['fieldname'],
+      deprecateAliases: true,
     }),
   };
 

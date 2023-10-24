@@ -176,6 +176,8 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       char: 'c',
       summary: messages.getMessage('flags.pdf-config.summary'),
       required: true,
+      aliases: ['pdfconfig'],
+      deprecateAliases: true,
     }),
     stylesheet: Flags.string({
       char: 's',
@@ -184,6 +186,8 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     'html-template': Flags.string({
       char: 't',
       summary: messages.getMessage('flags.html-template.summary'),
+      aliases: ['htmltemplate'],
+      deprecateAliases: true,
     }),
     manifest: Flags.file({
       char: 'x',

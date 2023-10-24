@@ -21,6 +21,8 @@ export default class ObjectFieldsList extends SfCommand<ObjectFieldsListResult> 
       char: 's',
       summary: messages.getMessage('flags.object-name.summary'),
       required: true,
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
     filter: Flags.string({ char: 'f', summary: messages.getMessage('flags.filter.summary') }),
   };

@@ -24,6 +24,8 @@ export default class DataBackup extends SfCommand<DataBackupResult> {
       summary: messages.getMessage('flags.definition-file.summary'),
       required: true,
       exists: true,
+      aliases: ['definitionfile'],
+      deprecateAliases: true,
     }),
     mode: Flags.string({ char: 'm', summary: messages.getMessage('flags.mode.summary'), default: 'full' }),
     'output-dir': Flags.directory({
@@ -31,6 +33,8 @@ export default class DataBackup extends SfCommand<DataBackupResult> {
       summary: messages.getMessage('flags.output-dir.summary'),
       default: '.',
       exists: true,
+      aliases: ['outputdir'],
+      deprecateAliases: true,
     }),
   };
 

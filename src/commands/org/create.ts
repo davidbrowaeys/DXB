@@ -31,14 +31,20 @@ export default class OrgCreate extends SfCommand<OrgCreateResult> {
       char: 'a',
       required: true,
       summary: messages.getMessage('flags.set-alias.summary'),
+      aliases: ['orgname'],
+      deprecateAliases: true,
     }),
     'include-packages': Flags.boolean({
       char: 'p',
       summary: messages.getMessage('flags.include-packages.summary'),
+      aliases: ['includepackages'],
+      deprecateAliases: true,
     }),
     'default-org': Flags.boolean({
       char: 's',
       summary: messages.getMessage('flags.default-org.summary'),
+      aliases: ['defaultorg'],
+      deprecateAliases: true,
     }),
     'duration-days': Flags.integer({
       char: 'd',
@@ -46,10 +52,14 @@ export default class OrgCreate extends SfCommand<OrgCreateResult> {
       summary: messages.getMessage('flags.duration-days.summary'),
       min: 1,
       max: 30,
+      aliases: ['durationday'],
+      deprecateAliases: true,
     }),
     'include-tracking-history': Flags.boolean({
       char: 't',
       summary: messages.getMessage('flags.include-tracking-history.summary'),
+      aliases: ['includetrackinghistory'],
+      deprecateAliases: true,
     }),
   };
 

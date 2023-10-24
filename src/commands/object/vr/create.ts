@@ -22,6 +22,8 @@ export default class ObjectVrCreate extends SfCommand<ObjectVrCreateResult> {
       char: 's',
       summary: messages.getMessage('flags.object-name.summary'),
       required: true,
+      aliases: ['objectname'],
+      deprecateAliases: true,
     }),
     push: Flags.boolean({ char: 'p', summary: messages.getMessage('flags.push.summary'), default: false }),
   };

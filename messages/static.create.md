@@ -5,16 +5,16 @@ Create static resource
 # examples
 
 - Specify information on the static resource files to be created
- 
- <%= config.bin %> <%= command.id %> --name MyImage --target-dir "My Logo" --file "/img/logo.png"
+
+<%= config.bin %> <%= command.id %> --name MyImage --target-dir "My Logo" --file "/img/logo.png"
 
 - Push the created source to the connected org
 
- <%= config.bin %> <%= command.id %> -n MyImage -d "My Logo" -f "/img/logo.png" --push
+<%= config.bin %> <%= command.id %> -n MyImage -d "My Logo" -f "/img/logo.png" --push
 
 - Specify a directory to place the created files in
 
- <%= config.bin %> <%= command.id %> -n MyImage -d "My Logo" -f "/img/logo.png" --target-dir src/staticresources
+<%= config.bin %> <%= command.id %> -n MyImage -d "My Logo" -f "/img/logo.png" --target-dir src/staticresources
 
 # flags.name.summary
 

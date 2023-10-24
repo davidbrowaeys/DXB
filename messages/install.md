@@ -5,8 +5,8 @@ This command initializes your sfdx project to support DXB cli.
 # examples
 
 - Basic installation
- 
- <%= config.bin %> <%= command.id %>
+
+<%= config.bin %> <%= command.id %>
 
 # log.schemagen
 

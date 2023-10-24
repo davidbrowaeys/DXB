@@ -5,8 +5,8 @@ Create a permission set from a profile without layout and category group visibli
 # examples
 
 - Create a named permissionset from an existing profile
- 
- <%= config.bin %> <%= command.id %> --profile force-app/main/default/profile/Admin.profile-meta.xml --permissionset-name AdminPermissionSet
+
+<%= config.bin %> <%= command.id %> --profile force-app/main/default/profile/Admin.profile-meta.xml --permissionset-name AdminPermissionSet
 
 # flags.profile.summary
 

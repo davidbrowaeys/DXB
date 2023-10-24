@@ -1,36 +1,36 @@
 {
-    "pdfOption": {
-        "format": "A3",
-        "orientation": "portrait",
-        "border": "10mm",
-        "header": {
-            "height": "45mm",
-            "contents": ""
-        },
-        "footer": {
-            "height": "28mm",
-            "contents": {
-                "default": "<div class=\"pdfheader\"><div class=\"left\">DXB Solution Design</div><div class=\"middle\"><span>{{page}}</span>/<span>{{pages}}</span></div><div class=\"right\">Deloitte Confidential</div></div>"
-            }
-        }
+  "pdfOption": {
+    "format": "A3",
+    "orientation": "portrait",
+    "border": "10mm",
+    "header": {
+      "height": "45mm",
+      "contents": ""
     },
-    "metadata": {
-        "stdobjects": ["Account","Contact","AccountContactRelation","Opportunity","Asset","Event","Task"],
-        "diagrams": {
-            "standard": {
-                "title": "Sales Cloud Data Model",
-                "path": "~/sales-cloud-overview-data-model.png"
-            },
-            "custom": {
-                "title": "Custom Data Model",
-                "path": "~/service-cloud-support-overview-data-model.png"
-            }
-        }
-    },
-    "documentInfo": {
-        "title": "ABC Technical Design",
-        "subtitle": "By David Browaeys",
-        "documentOwner": "David Browaeys", 
-        "createdDate": "21/03/2023"
+    "footer": {
+      "height": "28mm",
+      "contents": {
+        "default": "<div class=\"pdfheader\"><div class=\"left\">DXB Solution Design</div><div class=\"middle\"><span>{{page}}</span>/<span>{{pages}}</span></div><div class=\"right\">Deloitte Confidential</div></div>"
+      }
     }
+  },
+  "metadata": {
+    "stdobjects": ["Account", "Contact", "AccountContactRelation", "Opportunity", "Asset", "Event", "Task"],
+    "diagrams": {
+      "standard": {
+        "title": "Sales Cloud Data Model",
+        "path": "~/sales-cloud-overview-data-model.png"
+      },
+      "custom": {
+        "title": "Custom Data Model",
+        "path": "~/service-cloud-support-overview-data-model.png"
+      }
+    }
+  },
+  "documentInfo": {
+    "title": "ABC Technical Design",
+    "subtitle": "By David Browaeys",
+    "documentOwner": "David Browaeys",
+    "createdDate": "21/03/2023"
+  }
 }

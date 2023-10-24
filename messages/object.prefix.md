@@ -5,12 +5,12 @@ Retrieve key prefix of specified sobject or retrieve sobject from specified key
 # examples
 
 - Specify the SObject to get the prefix from
- 
- <%= config.bin %> <%= command.id %> --object-name Account
+
+<%= config.bin %> <%= command.id %> --object-name Account
 
 - Specify the prefix for which you want the object name for
- 
- <%= config.bin %> <%= command.id %> --prefix 001
+
+<%= config.bin %> <%= command.id %> --prefix 001
 
 # flags.object-name.summary
 
@@ -39,11 +39,11 @@ Retrieving global schema...
 
 # log.result.prefix
 
-==== Object Prefix:    %s
+==== Object Prefix: %s
 
 # log.result.objectname
 
-==== Object Name:    %s
+==== Object Name: %s
 
 # error.pushFailed
 
@@ -77,8 +77,8 @@ Unexpected error
 
 # prompt.message.fields
 
-Fields (APIName with comma separated): 
+Fields (APIName with comma separated):
 
 # prompt.message.description
 
-Description: 
+Description:

@@ -9,7 +9,7 @@ Align the API version of components with the API version defined in sfdx-project
 # examples
 
 - Align all components in the project with the API defined in sfdx-project.json:
-  
+
   <%= config.bin %> <%= command.id %>
 
 - Specify one or multiple metadata types to align:
@@ -19,11 +19,10 @@ Align the API version of components with the API version defined in sfdx-project
 - Specify directories and files to align:
 
   <%= config.bin %> <%= command.id %> --directory src/main --directory force-app/main/default/classes/ClassName.meta-xml
-  
 
 # flags.metadata-type.summary
 
-The types defined as the 'root' of the XML you want to target 
+The types defined as the 'root' of the XML you want to target
 
 # flags.metadata-type.description
 

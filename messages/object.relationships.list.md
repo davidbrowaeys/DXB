@@ -10,11 +10,11 @@ Instead it delete old file and remame .dup by actual file.
 # examples
 
 - Specify an object name to fetch the relationships for
-  
+
   <%= config.bin %> <%= command.id %> --object-name Account
 
 - Specify a filter to only include relationships that include the filter in the Name
-  
+
   <%= config.bin %> <%= command.id %> -s Account --filter Contact
 
 - Specify a target org to retrieve from

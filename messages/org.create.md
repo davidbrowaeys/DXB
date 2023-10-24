@@ -5,12 +5,12 @@ Create scratch org
 # examples
 
 - Include packages, mark the new org as default for your project and give it an alias
- 
- <%= config.bin %> <%= command.id %> --include-packages --default-org --set-alias myscratchorg
+
+<%= config.bin %> <%= command.id %> --include-packages --default-org --set-alias myscratchorg
 
 - Assign a custom number of duration to the scratch org, mark it as default for your project and give it an alias
- 
- <%= config.bin %> <%= command.id %> --duration-days 10 --default-org --set-alias myscratchorg
+
+<%= config.bin %> <%= command.id %> --duration-days 10 --default-org --set-alias myscratchorg
 
 # flags.set-alias.summary
 
@@ -83,7 +83,7 @@ Thank you for your patience! You can now enjoy your scrath org. Happy coding!
 
 # log.userCreated
 
-User has been created: 
+User has been created:
 
 # log.roleNotFound
 
@@ -99,11 +99,11 @@ Retrieving global schema...
 
 # log.result.prefix
 
-==== Object Prefix:    %s
+==== Object Prefix: %s
 
 # log.result.objectname
 
-==== Object Name:    %s
+==== Object Name: %s
 
 # error.installingPackage
 
@@ -169,4 +169,4 @@ Would you like to continue? (Y/N)
 
 # prompt.message.description
 
-Description: 
+Description:

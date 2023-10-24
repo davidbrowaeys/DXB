@@ -292,7 +292,7 @@ How does it looks like in your yaml ? Reference data are usually store in your r
     sfdx dxb:data:export -f data/data-def.json -d data/dev -u <sourceEnv>
     sfdx dxb:data:import -f data/data-def.json -d data/dev -u <targetEnv>
   condition: succeeded()
-  displayName: "DataLoad to targetEnv"
+  displayName: 'DataLoad to targetEnv'
 ```
 
 ### Delta Deployment
@@ -344,7 +344,7 @@ Azure Pipelines :
     testClass=$(sfdx dxb:source:fetchtest -p "$delta")
     sfdx force:source:deploy -p "$delta" -u targetEnv -l RunSpecifiedTests $testClass
   condition: succeeded()
-  displayName: "Deploy to targetEnv"
+  displayName: 'Deploy to targetEnv'
 ```
 
 Groovy pipeline

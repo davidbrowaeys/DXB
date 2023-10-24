@@ -5,12 +5,12 @@ Install package dependencies from sfdx-project.json
 # examples
 
 - Install the package dependencies inside sfdx-project.json to the connected org.
- 
- <%= config.bin %> <%= command.id %>
+
+<%= config.bin %> <%= command.id %>
 
 - Install the package dependencies inside sfdx-project.json to the target org.
- 
- <%= config.bin %> <%= command.id %> --target-org myOrg
+
+<%= config.bin %> <%= command.id %> --target-org myOrg
 
 # log.welcome
 

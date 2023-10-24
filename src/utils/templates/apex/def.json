@@ -1,86 +1,65 @@
 {
-	"Constructor" : {
-		"label": "Constructor",
-		"vars": [
-			"api_name",
-			"api_version"
-		],
-		"files": [
-			["ApexClass.cls", "cls"],
-			["apex.cls-meta.xml", "cls-meta.xml"]
-		],
-		"bundle": false
-	},
-	"NoConstructor" : {
-		"label": "NoConstructor",
-		"vars": [
-			"api_name",
-			"api_version"
-		],
-		"files": [
-			["ApexClassNoConstructor.cls", "cls"],
-			["apex.cls-meta.xml", "cls-meta.xml"]
-		],
-		"bundle": false
-	},
-	"Batch" : {
-		"label": "BatchApexClass",
-		"vars": [
-			"api_name",
-			"api_version"
-		],
-		"files": [
-			["BatchApexClass.cls", "cls"],
-			["apex.cls-meta.xml", "cls-meta.xml"]
-		],
-		"bundle": false
-	},
-	"Schedulable" : {
-		"label": "SchedulableApexClass",
-		"vars": [
-			"api_name",
-			"api_version"
-		],
-		"files": [
-			["SchedulableApexClass.cls", "cls"],
-			["apex.cls-meta.xml", "cls-meta.xml"]
-		],
-		"bundle": false
-	},
-	"ServiceClass" : {
-		"label": "ServiceClass",
-		"vars": [
-			"api_name",
-			"api_version"
-		],
-		"files": [
-			["BatchApexClass.cls", "cls"],
-			["apex.cls-meta.xml", "cls-meta.xml"]
-		],
-		"bundle": false
-	},
-	"Exception" : {
-		"label": "ExceptionApexClass",
-		"vars": [
-			"api_name",
-			"api_version"
-		],
-		"files": [
-			["ExceptionApexClass.cls", "cls"],
-			["apex.cls-meta.xml", "cls-meta.xml"]
-		],
-		"bundle": false
-	},
-	"TestClass" : {
-		"label": "UnitTestApexClass",
-		"vars": [
-			"api_name",
-			"api_version"
-		],
-		"files": [
-			["UnitTestApexClass.cls", "cls"],
-			["apex.cls-meta.xml", "cls-meta.xml"]
-		],
-		"bundle": false
-	}
+  "Constructor": {
+    "label": "Constructor",
+    "vars": ["api_name", "api_version"],
+    "files": [
+      ["ApexClass.cls", "cls"],
+      ["apex.cls-meta.xml", "cls-meta.xml"]
+    ],
+    "bundle": false
+  },
+  "NoConstructor": {
+    "label": "NoConstructor",
+    "vars": ["api_name", "api_version"],
+    "files": [
+      ["ApexClassNoConstructor.cls", "cls"],
+      ["apex.cls-meta.xml", "cls-meta.xml"]
+    ],
+    "bundle": false
+  },
+  "Batch": {
+    "label": "BatchApexClass",
+    "vars": ["api_name", "api_version"],
+    "files": [
+      ["BatchApexClass.cls", "cls"],
+      ["apex.cls-meta.xml", "cls-meta.xml"]
+    ],
+    "bundle": false
+  },
+  "Schedulable": {
+    "label": "SchedulableApexClass",
+    "vars": ["api_name", "api_version"],
+    "files": [
+      ["SchedulableApexClass.cls", "cls"],
+      ["apex.cls-meta.xml", "cls-meta.xml"]
+    ],
+    "bundle": false
+  },
+  "ServiceClass": {
+    "label": "ServiceClass",
+    "vars": ["api_name", "api_version"],
+    "files": [
+      ["BatchApexClass.cls", "cls"],
+      ["apex.cls-meta.xml", "cls-meta.xml"]
+    ],
+    "bundle": false
+  },
+  "Exception": {
+    "label": "ExceptionApexClass",
+    "vars": ["api_name", "api_version"],
+    "files": [
+      ["ExceptionApexClass.cls", "cls"],
+      ["apex.cls-meta.xml", "cls-meta.xml"]
+    ],
+    "bundle": false
+  },
+  "TestClass": {
+    "label": "UnitTestApexClass",
+    "vars": ["api_name", "api_version"],
+    "files": [
+      ["UnitTestApexClass.cls", "cls"],
+      ["apex.cls-meta.xml", "cls-meta.xml"]
+    ],
+    "bundle": false
+  }
 }

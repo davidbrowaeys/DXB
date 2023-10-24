@@ -10,11 +10,11 @@ Instead it delete old file and remame .dup by actual file.
 # examples
 
 - Specify the SObject and name for the Validation Rule
-  
+
   <%= config.bin %> <%= command.id %> --name BlockNameChange --object-name Account
 
 - Choose if you want to push the new Validation Rule to the connected org
-  
+
   <%= config.bin %> <%= command.id %> -s Account -n BlockNameChange --push
 
 - Specify a target org to deploy to

@@ -5,11 +5,11 @@ Export data from an org based on dxb data plan definition file.
 # examples
 
 - Query with a CSV file
-  
+
   <%= config.bin %> <%= command.id %> --file-path ./input/inputFile.csv
 
 - Query against a specific org
-  
+
   <%= config.bin %> <%= command.id %> -f ./input/inputFile.csv --target-org myOrg
 
 - Only query a specific set of the input file

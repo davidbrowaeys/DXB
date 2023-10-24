@@ -5,20 +5,20 @@ Create a new fieldset for an object. Push to org if needed.
 # examples
 
 - Specify the SObject to create
- 
- <%= config.bin %> <%= command.id %> --object-name Account --fieldset-name FS_1
+
+<%= config.bin %> <%= command.id %> --object-name Account --fieldset-name FS_1
 
 - Choose if you want to push the new Object to the connected org
- 
- <%= config.bin %> <%= command.id %> -s Account -n FS_1 --push
+
+<%= config.bin %> <%= command.id %> -s Account -n FS_1 --push
 
 - Specify a target org to deploy to
 
- <%= config.bin %> <%= command.id %> -s Account -n FS_1 -p --target-org myOrg
+<%= config.bin %> <%= command.id %> -s Account -n FS_1 -p --target-org myOrg
 
 - Display all fields on the Object before creating the field set
 
- <%= config.bin %> <%= command.id %> -s Account -n FS_1 -p --retrieve-fields
+<%= config.bin %> <%= command.id %> -s Account -n FS_1 -p --retrieve-fields
 
 # flags.object-name.summary
 
@@ -69,8 +69,8 @@ This object already exists
 
 # prompt.message.fields
 
-Fields (APIName with comma separated): 
+Fields (APIName with comma separated):
 
 # prompt.message.description
 
-Description: 
+Description:

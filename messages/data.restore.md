@@ -5,11 +5,11 @@ Restore records to Salesforce
 # examples
 
 - Use the path to a data backup folder
-  
+
   <%= config.bin %> <%= command.id %> --backup-dir backup/cycle-1
 
 - Specify a target org
-  
+
   <%= config.bin %> <%= command.id %> -d backup/cycle-1 --target-org myOrg
 
 # flags.backup-dir.summary

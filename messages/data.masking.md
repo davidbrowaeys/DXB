@@ -5,7 +5,7 @@ Create fieldset for specified object and push to scratch org.
 # examples
 
 - Use a specific data masking file, Object Name and Input File to mask
-  
+
   <%= config.bin %> <%= command.id %> --definition-file config/data-masking-def.json --object-name Account --source-data bulk_output/ACCOUNT.csv
 
 # flags.definition-file.summary

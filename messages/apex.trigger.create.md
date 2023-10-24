@@ -9,7 +9,7 @@ This command creates a trigger and accompanying apex class. Specify the object n
 # examples
 
 - Specify an sobject:
-  
+
   <%= config.bin %> <%= command.id %> --sobject Account
 
 - Specify an API version for the generated files:
@@ -35,4 +35,3 @@ def.json not found
 # error.defJSONVars
 
 The following variables are required: %s. Specify them like: -v className=myclass,apiName=40.0
-

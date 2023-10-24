@@ -1,8 +1,5 @@
 module.exports = {
   extends: ['eslint-config-salesforce-typescript', 'plugin:sf-plugin/recommended'],
-  parserOptions: {
-    tsconfigRootDir: __dirname
-  },
   root: true,
   rules: {
     '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -10,6 +7,6 @@ module.exports = {
     '@typescript-eslint/no-unsafe-member-access': 'off',
     '@typescript-eslint/no-unsafe-argument': 'off',
     '@typescript-eslint/no-unsafe-call': 'off',
-    'jsdoc/check-indentation': 'off'
-  }
+    'jsdoc/check-indentation': 'off',
+  },
 };

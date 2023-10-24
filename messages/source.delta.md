@@ -5,20 +5,20 @@ This command generate delta package by doing git diff.
 # examples
 
 - Specify a specific tag
- 
- <%= config.bin %> <%= command.id %> --mode tags --delta-key mytag
+
+<%= config.bin %> <%= command.id %> --mode tags --delta-key mytag
 
 - Specify a branch to compare with
 
- <%= config.bin %> <%= command.id %> --mode branch --delta-key origin/master
+<%= config.bin %> <%= command.id %> --mode branch --delta-key origin/master
 
 - Specify an output directory
 
- <%= config.bin %> <%= command.id %> -m branch -k origin/master --output-dir deltamanifest
+<%= config.bin %> <%= command.id %> -m branch -k origin/master --output-dir deltamanifest
 
 - Specify a commit to compare with
 
- <%= config.bin %> <%= command.id %> --mode commitid --delta-key 123456
+<%= config.bin %> <%= command.id %> --mode commitid --delta-key 123456
 
 # flags.mode.summary
 

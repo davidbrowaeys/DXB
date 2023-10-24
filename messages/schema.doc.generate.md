@@ -5,12 +5,12 @@ This command-line can generate technical design documentation for a Salesforce o
 # examples
 
 - Specify a path to the pdf configuration file
- 
- <%= config.bin %> <%= command.id %> --target-org myenv --pdf-config config/documentinfo.json',
+
+<%= config.bin %> <%= command.id %> --target-org myenv --pdf-config config/documentinfo.json',
 
 - Specify a package.xml file
 
- <%= config.bin %> <%= command.id %> -o myenv -c config/docmentinfo.json -x manifest/package.xml
+<%= config.bin %> <%= command.id %> -o myenv -c config/docmentinfo.json -x manifest/package.xml
 
 # flags.pdf-config.summary
 

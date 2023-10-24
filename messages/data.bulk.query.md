@@ -5,11 +5,11 @@ Export salesforce data using bulk api
 # examples
 
 - Use a specific Query
-  
+
   <%= config.bin %> <%= command.id %> --query "select id from Account"
 
 - Query a specific object
-  
+
   <%= config.bin %> <%= command.id %> --object-name Contact
 
 - Specify a specific org to run the query against:
@@ -42,7 +42,7 @@ Bulk data output directory, default "output_dir"
 
 # flags.file-name.summary
 
-Name of the CSV file generated. If not specified, it will default to "<objectname>_<timestamp>.csv"
+Name of the CSV file generated. If not specified, it will default to "<objectname>\_<timestamp>.csv"
 
 # flags.all-fields.summary
 

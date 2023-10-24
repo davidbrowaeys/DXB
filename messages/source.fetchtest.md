@@ -5,20 +5,20 @@ Calculate specified test classes base on source path. This command is to use aft
 # examples
 
 - Specify a file to retrieve the related test classes for
- 
- <%= config.bin %> <%= command.id %> --source-path force-app/main/default/classes/GenericApex.cls
+
+<%= config.bin %> <%= command.id %> --source-path force-app/main/default/classes/GenericApex.cls
 
 - Specify a manifestfile that contains metadata types to search through
 
- <%= config.bin %> <%= command.id %> --manifest manifest/package.xml
+<%= config.bin %> <%= command.id %> --manifest manifest/package.xml
 
 - Filter metadata types to use
 
- <%= config.bin %> <%= command.id %> -x manifest/package.xml --metadata-type classes
+<%= config.bin %> <%= command.id %> -x manifest/package.xml --metadata-type classes
 
 - Include a regex to specify test class naming convention
 
- <%= config.bin %> <%= command.id %> -x manifest/package.xml -t classes -n "*.T"
+<%= config.bin %> <%= command.id %> -x manifest/package.xml -t classes -n "\*.T"
 
 # flags.source-path.summary
 

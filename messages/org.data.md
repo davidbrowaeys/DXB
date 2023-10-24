@@ -9,8 +9,8 @@ Different orgs can require different settings i.e. hardcoded URLs. This command 
 # examples
 
 - Basic usage
- 
- <%= config.bin %> <%= command.id %> --config config/cty-env-mapping.json --environment SIT
+
+<%= config.bin %> <%= command.id %> --config config/cty-env-mapping.json --environment SIT
 
 # flags.config.summary
 

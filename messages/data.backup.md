@@ -5,15 +5,15 @@ Extract certificates from partner community. You must have access to parner comm
 # examples
 
 - Use a specific data definition file and directory to do a full backup from Salesforce
-  
+
   <%= config.bin %> <%= command.id %> --mode full --data-dir backup --definition-file config/backup-def.json
 
 - Load into a specific org
-  
+
   <%= config.bin %> <%= command.id %> -m full -d backup -f config/backup-def.json -o myOrg
 
-- Use delta mode 
-  
+- Use delta mode
+
   <%= config.bin %> <%= command.id %> -m delta -d backup -f config/backup-def.json
 
 # flags.definition-file.summary

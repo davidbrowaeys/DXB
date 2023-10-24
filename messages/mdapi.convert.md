@@ -10,11 +10,11 @@ Instead it delete old file and remame .dup by actual file.
 # examples
 
 - Specify a directory containing the MetaData API-formatted metadata
-  
+
   <%= config.bin %> <%= command.id %> --root-dir tmp
 
 - Specify a directory to store the output
-  
+
   <%= config.bin %> <%= command.id %> -r tmp --output-dir out
 
 # flags.root-dir.summary

@@ -5,16 +5,16 @@ This command removes fls and object permissions where all access are set to "fal
 # examples
 
 - Clean the permissions inside a specific permission set file.
- 
- <%= config.bin %> <%= command.id %> --file force-app/main/default/permissionsets/Social_Customer_Service_Permission_Set.permissionset-meta.xml
+
+<%= config.bin %> <%= command.id %> --file force-app/main/default/permissionsets/Social_Customer_Service_Permission_Set.permissionset-meta.xml
 
 - Clean the permissions inside all permissionse files
- 
- <%= config.bin %> <%= command.id %> --root-dir src/permissionsets
+
+<%= config.bin %> <%= command.id %> --root-dir src/permissionsets
 
 - Clean the permissions inside a specific permissionset
- 
- <%= config.bin %> <%= command.id %> --permissionset-name RW_All
+
+<%= config.bin %> <%= command.id %> --permissionset-name RW_All
 
 # flags.file.summary
 
@@ -42,7 +42,7 @@ Package version %s
 
 # log.alias
 
-Alias 
+Alias
 
 # error.cannotInstall
 

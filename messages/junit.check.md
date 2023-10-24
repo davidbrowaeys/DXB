@@ -5,7 +5,7 @@ Check the quality of a junit test result and flags anything slower than defined 
 # examples
 
 - Specify an existing JUnit XML file
-  
+
   <%= config.bin %> <%= command.id %> --junit-path tests/junit.xml
 
 # flags.junit-path.summary

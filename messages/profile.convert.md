@@ -5,16 +5,16 @@ Convert profile xml into small chunks of json files
 # examples
 
 - Use the default path to split the profile XML into separate JSON files
- 
- <%= config.bin %> <%= command.id %>
+
+<%= config.bin %> <%= command.id %>
 
 - Specify a path that contains profile XML
- 
- <%= config.bin %> <%= command.id %> --source-dir src/profiles
+
+<%= config.bin %> <%= command.id %> --source-dir src/profiles
 
 - Specify a specific Profile name to be converted to JSON files
 
- <%= config.bin %> <%= command.id %> --profile-name Admin
+<%= config.bin %> <%= command.id %> --profile-name Admin
 
 # flags.profile-name.summary
 

@@ -5,12 +5,12 @@ This command allows password policies deployment to ignore timestamp in file nam
 # examples
 
 - Use the default path to fix all profile password policies
- 
- <%= config.bin %> <%= command.id %>
+
+<%= config.bin %> <%= command.id %>
 
 - Use a specific path to fix all profile password policies
- 
- <%= config.bin %> <%= command.id %> --source-dir src/passwordPolicies
+
+<%= config.bin %> <%= command.id %> --source-dir src/passwordPolicies
 
 # flags.source-path.summary
 

@@ -4,14 +4,14 @@ import { execSync as exec } from 'child_process';
 interface Frame {
   name(): string;
 }
-export class PuppeteerSFConnector{
+export class PuppeteerSFConnector {
   private username: any;
   private options: any;
   private browser: any;
   private page: any;
 
-  public constructor(username: any, options: any){
-    if (!username){
+  public constructor(username: any, options: any) {
+    if (!username) {
       throw new Error('Missing argument: connection');
     }
     this.username = username;
@@ -19,7 +19,7 @@ export class PuppeteerSFConnector{
   }
 
   public async initBrowser(): Promise<void> {
-    try{
+    try {
       console.log('Initialise Browser');
       // this.browser = await puppeteer.launch({
       // 	args: ['--disable-features=site-per-process'],
@@ -27,7 +27,7 @@ export class PuppeteerSFConnector{
       // });
       this.page = await this.browser.newPage();
       await this.page.setDefaultNavigationTimeout(this.options.defaultNavigationTimeout);
-    }catch(err){
+    } catch (err) {
       console.error(err);
       throw new Error('Connection failed');
     }
@@ -46,7 +46,9 @@ export class PuppeteerSFConnector{
     // promise all to make sure it wait for each promise to complete
     await Promise.all([
       this.page.waitForNavigation(),
-      frameOrPage.$eval('input[name="pEnableExperienceBundleMetadata"]', (input: { checked: boolean }) => { input.checked = true }),
+      frameOrPage.$eval('input[name="pEnableExperienceBundleMetadata"]', (input: { checked: boolean }) => {
+        input.checked = true;
+      }),
       frameOrPage.click('input[name="save"]'),
     ]);
     console.log('Experience Bundle: enabled!');
@@ -59,10 +61,7 @@ export class PuppeteerSFConnector{
     await this.page.waitForSelector('iframe');
     const frameOrPage = (await this.page.frames().find((f: Frame) => f.name().startsWith('vfFrameId'))) || this.page;
     // promise all to make sure it wait for each promise to complete
-    await Promise.all([
-      this.page.waitForNavigation(),
-      frameOrPage.click('input[name="rule_suspend"]')
-    ]);
+    await Promise.all([this.page.waitForNavigation(), frameOrPage.click('input[name="rule_suspend"]')]);
     console.log('Sharing Rule Calculation: suspended!');
   }
 
@@ -73,10 +72,7 @@ export class PuppeteerSFConnector{
     await this.page.waitForSelector('iframe');
     const frameOrPage = (await this.page.frames().find((f: Frame) => f.name().startsWith('vfFrameId'))) || this.page;
     // promise all to make sure it wait for each promise to complete
-    await Promise.all([
-      this.page.waitForNavigation(),
-      frameOrPage.click('input[name="rule_resume"]')
-    ]);
+    await Promise.all([this.page.waitForNavigation(), frameOrPage.click('input[name="rule_resume"]')]);
     console.log('Sharing Rule Calculation: resumed!');
   }
 
@@ -87,15 +83,12 @@ export class PuppeteerSFConnector{
     await this.page.waitForSelector('iframe');
     const frameOrPage = (await this.page.frames().find((f: Frame) => f.name().startsWith('vfFrameId'))) || this.page;
     // promise all to make sure it wait for each promise to complete
-    await Promise.all([
-      this.page.waitForNavigation(),
-      frameOrPage.click('input[name="rule_recalc"]')
-    ]);
+    await Promise.all([this.page.waitForNavigation(), frameOrPage.click('input[name="rule_recalc"]')]);
     console.log('Sharing Rule Calculation: recalculating!');
   }
 
   public async enableLoginAsAnyUser(): Promise<void> {
-    try{
+    try {
       const pageUrl = this.fetchSalesforcePageUrl('/lightning/setup/LoginAccessPolicies/home');
       await this.page.goto(pageUrl, { waitUntil: 'networkidle2' });
       // because LEX page content is rendered in iframe
@@ -103,11 +96,16 @@ export class PuppeteerSFConnector{
       const frameOrPage = (await this.page.frames().find((f: Frame) => f.name().startsWith('vfFrameId'))) || this.page;
       // promise all to make sure it wait for each promise to complete
       await frameOrPage.waitForNavigation();
-      await frameOrPage.$eval('input[name="loginAccessPolicies:mainForm:j_id17:adminTable:0:adminsCanLogInAsAny"]', (input: { checked: boolean }) => { input.checked = true });
-      await frameOrPage.click('input[name="loginAccessPolicies:mainForm:j_id17:j_id22:save"]');			// click on save
+      await frameOrPage.$eval(
+        'input[name="loginAccessPolicies:mainForm:j_id17:adminTable:0:adminsCanLogInAsAny"]',
+        (input: { checked: boolean }) => {
+          input.checked = true;
+        }
+      );
+      await frameOrPage.click('input[name="loginAccessPolicies:mainForm:j_id17:j_id22:save"]'); // click on save
 
       console.log('Administrators Can Log in as Any User: enabled');
-    }catch(err){
+    } catch (err) {
       console.error(err);
       throw new Error('Connection failed');
     }
@@ -122,15 +120,17 @@ export class PuppeteerSFConnector{
     // promise all to make sure it wait for each promise to complete
     await frameOrPage.waitForSelector('input[name="edit"]');
     await frameOrPage.waitForSelector('input[name="p20"]');
-    await frameOrPage.$eval('input[name="p20"]', (input: { checked: boolean }) => { input.checked = true });
+    await frameOrPage.$eval('input[name="p20"]', (input: { checked: boolean }) => {
+      input.checked = true;
+    });
     await frameOrPage.click('input[name="save"]');
 
     console.log('Single Sign On - SAML: enabled');
   }
 
-  public fetchSalesforcePageUrl(url: string): string{
-    const command = `sfdx force:org:open -r -p ${url} -u ${this.username} --json`;
-    console.log('Opening:',command);
+  public fetchSalesforcePageUrl(url: string): string {
+    const command = `sfdx force:org:open -r -p ${url} -u ${this.username as string} --json`;
+    console.log('Opening:', command);
     const sfPage: { result: { url: string } } = JSON.parse(exec(command).toString());
     return sfPage.result.url;
   }

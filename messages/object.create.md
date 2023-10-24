@@ -9,16 +9,16 @@ Create a new custom object, prompting the user for specific object settings
 # examples
 
 - Specify the SObject to create
- 
- <%= config.bin %> <%= command.id %> --object-name Invoice
+
+<%= config.bin %> <%= command.id %> --object-name Invoice
 
 - Choose if you want to push the new Object to the connected org
- 
- <%= config.bin %> <%= command.id %> -s Invoice --push
+
+<%= config.bin %> <%= command.id %> -s Invoice --push
 
 - Specify a target org to deploy to
 
- <%= config.bin %> <%= command.id %> -s Invoice -p --target-org myOrg
+<%= config.bin %> <%= command.id %> -s Invoice -p --target-org myOrg
 
 # flags.object-name.summary
 
@@ -112,6 +112,7 @@ This object already exists
 </CustomObject>
 
 # data.master
+
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
   <fullName>{{fieldname}}</fullName>
@@ -130,7 +131,7 @@ This object already exists
 
 # prompt.message.masterObject
 
-Master object(API name), i.e.: Account, Invoice__c:
+Master object(API name), i.e.: Account, Invoice\_\_c:
 
 # prompt.message.masterLabel
 
@@ -146,4 +147,4 @@ Sharing Model (Private|Public|ControlledByParent):
 
 # prompt.message.description
 
-Description: 
+Description:

@@ -5,12 +5,12 @@ Extends scanner-code plugin and throw error if severity 1 rule are met.
 # examples
 
 - Specify a file that contains code scanner results
- 
- <%= config.bin %> <%= command.id %> --file apex_pmd_results.json
+
+<%= config.bin %> <%= command.id %> --file apex_pmd_results.json
 
 - Specify a path to a JSON file that contains a list of Apex Classes to exclude.
 
- <%= config.bin %> <%= command.id %> -f apex_pmd_results.json --excluded-files exclude_apex.json
+<%= config.bin %> <%= command.id %> -f apex_pmd_results.json --excluded-files exclude_apex.json
 
 # flags.file.summary
 

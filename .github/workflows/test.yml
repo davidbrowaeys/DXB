@@ -15,3 +15,4 @@ jobs:
     with:
       os: ${{ matrix.os }}
       nodeVersion: 16.x
+      sfdxExecutablePath: 'sf'

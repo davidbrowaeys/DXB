@@ -16,3 +16,4 @@ jobs:
       os: ${{ matrix.os }}
       nodeVersion: 16.x
       sfdxExecutablePath: 'sf'
+      command: 'yarn prepack && sf plugins link . && yarn test:nuts'

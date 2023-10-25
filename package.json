@@ -85,104 +85,107 @@
     ],
     "topics": {
       "dxb": {
-        "apex": {
-          "description": "description for apex",
-          "subtopics": {
-            "coverage": {
-              "description": "description for apex.coverage"
-            },
-            "scan": {
-              "description": "description for apex.scan"
-            },
-            "trigger": {
-              "description": "description for apex.trigger"
+        "description": "A CLI plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
+        "subtopics": {
+          "apex": {
+            "description": "A set of command to manipulate apex.",
+            "subtopics": {
+              "coverage": {
+                "description": "Manage Apex code coverage"
+              },
+              "scan": {
+                "description": "Scan Apex files for specific content"
+              },
+              "trigger": {
+                "description": "Manage Apex triggers"
+              }
             }
-          }
-        },
-        "api": {
-          "description": "description for api"
-        },
-        "community": {
-          "description": "description for community"
-        },
-        "data": {
-          "description": "description for data",
-          "subtopics": {
-            "bulk": {
-              "description": "description for data.bulk"
-            },
-            "file": {
-              "description": "description for data.file"
-            },
-            "query": {
-              "description": "description for data.query"
+          },
+          "api": {
+            "description": "A set of commands to manipulate api versioning."
+          },
+          "community": {
+            "description": "A set of commands to work with communities"
+          },
+          "data": {
+            "description": "A set of commands that allows to manipulate and optimize data.",
+            "subtopics": {
+              "bulk": {
+                "description": "A set of commands that extends bulk api(i.e.: query)."
+              },
+              "file": {
+                "description": "A couple of commands to export and import data from and to salesforce"
+              },
+              "query": {
+                "description": "CLI version of the salesforce query plan tool to optimize and speed up queries."
+              }
             }
-          }
-        },
-        "graphql": {
-          "description": "description for graphql"
-        },
-        "junit": {
-          "description": "description for junit"
-        },
-        "mdapi": {
-          "description": "description for mdapi"
-        },
-        "object": {
-          "description": "description for object",
-          "subtopics": {
-            "fields": {
-              "description": "description for object.fields"
-            },
-            "relationships": {
-              "description": "description for object.relationships"
-            },
-            "vr": {
-              "description": "description for object.vr"
+          },
+          "graphql": {
+            "description": "A set of commands to work with GraphQl"
+          },
+          "junit": {
+            "description": "A set of commands to work with JUnit testing"
+          },
+          "mdapi": {
+            "description": "A set of commands that extends dx mdapi topic."
+          },
+          "object": {
+            "description": "A set of commands to work with salesforce objects.",
+            "subtopics": {
+              "fields": {
+                "description": "A set of commands to work with salesforce fields."
+              },
+              "relationships": {
+                "description": "A set of commands regarding object relationships"
+              },
+              "vr": {
+                "description": "A set of commands regarding validation rule"
+              }
             }
-          }
-        },
-        "org": {
-          "description": "description for org"
-        },
-        "package": {
-          "description": "description for package",
-          "subtopics": {
-            "dependencies": {
-              "description": "description for package.dependencies"
+          },
+          "org": {
+            "description": "A set of commands for scratch org and sandbox"
+          },
+          "package": {
+            "description": "A set of commands to work with packages",
+            "subtopics": {
+              "dependencies": {
+                "description": "A set of commands that work on package dependencies"
+              }
             }
-          }
-        },
-        "permissionset": {
-          "description": "description for permissionset"
-        },
-        "profile": {
-          "description": "description for profile",
-          "subtopics": {
-            "passwordpolicies": {
-              "description": "description for profile.passwordpolicies"
+          },
+          "permissionset": {
+            "description": "A set of commands for permission sets"
+          },
+          "profile": {
+            "description": "A set of commands that allow to manipulate and facilitate salesforce profiles.",
+            "subtopics": {
+              "passwordpolicies": {
+                "description": "Work with Password Policies"
+              }
             }
-          }
-        },
-        "schema": {
-          "description": "description for schema",
-          "subtopics": {
-            "doc": {
-              "description": "description for schema.doc"
+          },
+          "schema": {
+            "description": "A set of commands to work around schemas",
+            "subtopics": {
+              "doc": {
+                "description": "Handles schema document generation"
+              }
             }
-          }
-        },
-        "source": {
-          "description": "description for source"
-        },
-        "static": {
-          "description": "description for static"
-        },
-        "user": {
-          "description": "description for user",
-          "subtopics": {
-            "access": {
-              "description": "description for user.access"
+          },
+          "source": {
+            "description": "A set of commands to manipulate source format"
+          },
+          "static": {
+            "description": "A set of commands regarding static resource"
+          },
+          "user": {
+            "description": "A set of commands to work around user related topics",
+            "subtopics": {
+              "access": {
+                "description": "Describe access rights for a user"
+              }
             }
           }
         }

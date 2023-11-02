@@ -49,4 +49,4 @@ force-app/
 .sf/
 oclif.lock
 
-!src/commands/dxb/apex/coverage
+!**/commands/*/coverage

@@ -1,7 +1,7 @@
 {
   "name": "dxb",
   "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
-  "version": "2.1.0",
+  "version": "3.0.1",
   "dependencies": {
     "@colors/colors": "^1.6.0",
     "@oclif/core": "^2.11.8",
@@ -201,7 +201,6 @@
     "docs": "sf-docs",
     "format": "wireit",
     "lint": "wireit",
-    "postinstall": "yarn husky install",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "sf-prepack",
     "test": "wireit",

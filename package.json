@@ -1,7 +1,7 @@
 {
   "name": "dxb",
   "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "dependencies": {
     "@colors/colors": "^1.6.0",
     "@oclif/core": "^2.11.8",
@@ -17,6 +17,7 @@
     "handlebars": "^4.7.8",
     "html-docx-js-typescript": "^0.1.5",
     "js2xmlparser": "^5.0.0",
+    "jsforce": "^2.0.0-beta.29",
     "mime": "^3.0.0",
     "pdf-creator-node": "^2.3.5",
     "tslib": "^2",
@@ -243,7 +244,7 @@
       "output": []
     },
     "lint": {
-      "command": "eslint src test --color --cache --cache-location .eslintcache",
+      "command": "eslint src test --color --cache --cache-location .eslintcache --ignore",
       "files": [
         "src/**/*.ts",
         "test/**/*.ts",

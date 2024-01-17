@@ -51,26 +51,30 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     'output-dir': Flags.directory({
       char: 'p',
       summary: messages.getMessage('flags.output-dir.summary'),
-      exists: true,
+      exists: false,
       default: 'manifest',
       aliases: ['outputpackage'],
       deprecateAliases: true,
     }),
-    granular: Flags.boolean({ char: 'g', summary: messages.getMessage('flags.granular.summary'), default: false }),
+    granular: Flags.boolean({
+      char: 'g',
+      summary: messages.getMessage('flags.granular.summary'),
+      default: false,
+      aliases: ['granularmode'],
+      deprecateAliases: true,
+    }),
     'destructive-changes': Flags.boolean({
       char: 'x',
       summary: messages.getMessage('flags.destructive-changes.summary'),
       default: false,
       hidden: true,
-      aliases: ['granularmode'],
+      aliases: ['destructivechange'],
       deprecateAliases: true,
     }),
     rollback: Flags.boolean({
       char: 'r',
       summary: messages.getMessage('flags.rollback.summary'),
       default: false,
-      aliases: ['destructivechange'],
-      deprecateAliases: true,
     }),
   };
 
@@ -102,7 +106,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     this.projectConfig = await project.resolveProjectConfig();
     this.packageDirectories = this.projectConfig.packageDirectories as PackageDir[];
     this.granularmode = flags.granular;
-    this.basedir = fs.existsSync(flags['base-dir']) ? flags['base-dir'] : project.getDefaultPackage().fullPath;
+    this.basedir = fs.existsSync(flags['base-dir']) ? flags['base-dir'] : '';
     // flags
     let filter = 'AMRU';
     if (flags['destructive-changes']) {
@@ -222,6 +226,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     // find metadata suffix and file name
     // eslint-disable-next-line prefer-const
     let { metadataType, fName, fSuffix } = this.getMetadataTypeAndName(base);
+
     if (
       (metadataType && fSuffix !== 'site' && fSuffix !== 'md') ??
       (metadataType && fSuffix === 'md' && base.endsWith('-meta.xml'))
@@ -243,12 +248,10 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     } else if (metadataDir) {
       // suffix is not good enough to identify metadata let's try to find parent metadata folder. This is usually the case for cmp such as lwc, static resource,  aura, etc.
       const metadataTypIndex = metadataDir.findIndex(
-        (x) => Object.values(registry.strictDirectoryNames).find((e) => e === x) !== undefined
+        (x) => !!Object.prototype.hasOwnProperty.call(registry.strictDirectoryNames, x)
       );
       if (metadataTypIndex >= 0) {
-        metadataType = this.registryAccess.getTypeByName(
-          Object.values(registry.strictDirectoryNames).find((e) => e === metadataDir[metadataTypIndex]) ?? ''
-        );
+        metadataType = this.registryAccess.getTypeByName(metadataDir[metadataTypIndex]);
         if (metadataType.name === 'CustomObject' && fSuffix !== 'object' && this.granularmode) {
           const tp = this.initMetadataTypeInPackage(
             metadataType.children!.types[metadataType.children!.suffixes[fSuffix]].name

@@ -116,7 +116,7 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
         }
       });
     });
-    return this.testClasses && this.testClasses.length > 0 ? ` -r "${this.testClasses.join(',')}"` : '';
+    return this.testClasses && this.testClasses.length > 0 ? ` -t "${this.testClasses.join(',')}"` : '';
   }
   protected async processFromPackageXmlContent(manifest: string): Promise<string> {
     try {
@@ -137,7 +137,7 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
             }
           }
         });
-        return this.testClasses && this.testClasses.length > 0 ? ` -r "${this.testClasses.join(',')}"` : '';
+        return this.testClasses && this.testClasses.length > 0 ? ` -t "${this.testClasses.join(',')}"` : '';
       } else {
         return '';
       }

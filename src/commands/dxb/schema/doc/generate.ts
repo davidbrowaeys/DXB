@@ -500,12 +500,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     if (flows) {
       const fullNameList = flows.map((f: Record) => f.ApiName as string);
       const chunkSize = 10;
-      const chunks: string[] = [];
-      // Split the array into chunks of 10 records
-      fullNameList.forEach((name, index) => {
-        const chunk: string[] = fullNameList.slice(index, index + chunkSize);
-        chunks.push(...chunk);
-      });
+      const chunks: string[][] = splitIntoChunks(fullNameList, chunkSize);
 
       return Promise.all(chunks.map((c) => this.connection!.metadata.read('Flow', c)));
     }
@@ -531,12 +526,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     if (flows) {
       const fullNameList = flows.map((f: any) => f.ApiName as string);
       const chunkSize = 10;
-      const chunks: string[] = [];
-      // Split the array into chunks of 10 records
-      fullNameList.forEach((_name, index) => {
-        const chunk = fullNameList.slice(index, index + chunkSize);
-        chunks.push(...chunk);
-      });
+      const chunks: string[][] = splitIntoChunks(fullNameList, chunkSize);
 
       return Promise.all(chunks.map((c) => this.connection?.metadata.read('Flow', c)));
     }
@@ -603,12 +593,8 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    */
   private async getFieldDefinitionForSObject(sobjects: string[]): Promise<Record[][]> {
     const chunkSize = 10;
-    const chunks: string[][] = [];
-    // Split the array into chunks of 10 records
-    sobjects.forEach((_name, index) => {
-      const chunk = sobjects.slice(index, index + chunkSize);
-      chunks.push(chunk);
-    });
+    const chunks: string[][] = splitIntoChunks(sobjects, chunkSize);
+
     return Promise.all(
       chunks.map(async (c) => this.query(FIELDQUERY.split('{{object_name}}').join(`'${c.join("','")}'`)))
     );
@@ -624,10 +610,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     const chunkSize = 5;
 
     // Split the array into chunks of 10 records
-    fullNames.forEach((_name, index) => {
-      const chunk = fullNames.slice(index, index + chunkSize);
-      chunks.push(...chunk);
-    });
+    const chunks: string[][] = splitIntoChunks(fullNames, chunkSize);
     return Promise.all(
       chunks.map(async (c) =>
         (this.toArray(await this.connection?.metadata.read('SharingRules', c)) as SharingRules[]).map(
@@ -680,16 +663,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    */
   private async getMetadataObject(type: string, fullNames: string[]): Promise<CustomObject[]> {
     const chunkSize = 5;
-    const chunks: string[] = [];
-
-    // Split the array into chunks of 10 records
-    fullNames.forEach((_name, index) => {
-      const chunk = fullNames.slice(index, index + chunkSize);
-      chunks.push(...chunk);
-    });
-    return Promise.all(chunks.map((c) => this.connection?.metadata.read(type as MetadataType, c))) as Promise<
-      Array<MetadataDefinition<string, CustomObjectComponent>>
-    >;
+    const chunks: string[][] = splitIntoChunks(fullNames, chunkSize);
 
     return Promise.all(
       chunks.map((c) => this.connection?.metadata.read(type as MetadataType, c))
@@ -853,4 +827,10 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       return [];
     }
   }
+}
+
+function splitIntoChunks<T>(array: T[], chunkSize: number): T[][] {
+  return Array.from({ length: Math.ceil(array.length / chunkSize) }, (_, index) =>
+    array.slice(index * chunkSize, index * chunkSize + chunkSize)
+  );
 }

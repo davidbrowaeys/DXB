@@ -19,11 +19,11 @@
     "diagrams": {
       "standard": {
         "title": "Sales Cloud Data Model",
-        "path": "~/sales-cloud-overview-data-model.png"
+        "path": "src/utils/sales-cloud-overview-data-model.png"
       },
       "custom": {
         "title": "Custom Data Model",
-        "path": "~/service-cloud-support-overview-data-model.png"
+        "path": "src/utils/service-cloud-support-overview-data-model.png"
       }
     }
   },

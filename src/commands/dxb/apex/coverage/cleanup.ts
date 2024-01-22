@@ -1,13 +1,14 @@
+/* eslint-disable class-methods-use-this */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import * as path from 'path';
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
-import { Messages } from '@salesforce/core';
+import { Messages, PackageDir, SfProject } from '@salesforce/core';
+import { JsonMap } from '@salesforce/ts-types';
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'fs-extra';
 
 type ApexCoverageCleanupResult = {
   success: boolean;
 };
-
-const allClasses: string[] = [];
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'apex.coverage.cleanup');
@@ -22,22 +23,44 @@ export default class ApexCoverageCleanup extends SfCommand<ApexCoverageCleanupRe
   public static readonly flags = {
     'file-path': Flags.string({ char: 'f', summary: messages.getMessage('flags.file-path.summary'), required: true, aliases: ['file'], deprecateAliases: true }),
   };
-
+  protected packageDirectories: string[] = [];
+  protected allClasses: string[] = [];
   public async run(): Promise<ApexCoverageCleanupResult> {
     // flags
     const { flags } = await this.parse(ApexCoverageCleanup);
     const originFile = flags['file-path'];
+    // project config
+    const project: SfProject = await SfProject.resolve();
+    const projectConfig: JsonMap = await project.resolveProjectConfig();
+    this.packageDirectories = (projectConfig.packageDirectories as PackageDir[]).map( pkg => pkg.path);
+
     let fileContent: string = readFileSync(originFile).toString();
     const results = [...fileContent.matchAll(/filename=".*?"/g)];
-    this.getAllClasses('.');
+    this.packageDirectories.forEach( (pkg) => {
+      this.getAllClasses(pkg);
+    });
     results.forEach((elem) => {
-      let classname = elem[0];
-      classname = classname.split('filename="no-map/').join('').slice(0, -1);
-      const classpath = allClasses.find((e: string) => e.endsWith(`/classes/${classname}.cls`));
-      fileContent = fileContent.split(`no-map/${classname}`).join(classpath);
+      const classnameString: string = elem[0];
+      // classname = classname.split('filename="no-map').join('').slice(0, -1);
+      // eslint-disable-next-line no-useless-escape
+      // classname = classname.split(/filename="no-map[\/\\]/).join('').slice(0, -1);
+      const classnameMatch = classnameString.match(/\\([^\\]+)$/); // Match the last part after the backslash
+      const classname = classnameMatch ? classnameMatch[1].slice(0, -1) : undefined;
+      this.log(classname);
+      if(classname){
+        const classpath = this.allClasses.find((e: string) => this.isPathEndingWith(e,classname));
+        fileContent = fileContent.split(`no-map\\${classname}`).join(classpath);
+      }
     });
     writeFileSync(originFile, fileContent);
     return { success: true };
+  }
+
+  public isPathEndingWith(filename: string, classname: string): boolean {
+    const expectedPath = path.join('classes', `${classname}.cls`);
+    const fullPath = path.resolve(filename);
+  
+    return fullPath.endsWith(expectedPath);
   }
 
   public getAllClasses(directory: string): void {
@@ -48,7 +71,7 @@ export default class ApexCoverageCleanup extends SfCommand<ApexCoverageCleanupRe
     currentDirectory.forEach((file: string) => {
       const pathOfCurrentItem: string = path.join(directory + '/' + file);
       if (statSync(pathOfCurrentItem).isFile() && file.endsWith('.cls')) {
-        allClasses.push(pathOfCurrentItem);
+        this.allClasses.push(pathOfCurrentItem);
       } else if (!statSync(pathOfCurrentItem).isFile()) {
         const directorypath = path.join(directory + '/' + file);
         this.getAllClasses(directorypath);

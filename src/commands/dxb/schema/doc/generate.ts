@@ -17,9 +17,9 @@ import {
   SharingRules,
   ListView,
   SamlSsoConfig,
-  MetadataDefinition,
   SharedTo,
   MetadataType,
+  CustomField,
 } from 'jsforce/lib/api/metadata';
 import { FileProperties } from '@salesforce/source-deploy-retrieve';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -107,15 +107,6 @@ interface CustomObjectComponent extends CustomObject {
   hasRecordTypes?: boolean;
   listViews: ListViewComponent[];
 }
-interface ObjectDefinition extends Record, CustomObjectComponent {
-  hasAutoFlows?: boolean;
-  autoflows?: Flow[] | undefined;
-  hasSharingRules?: boolean;
-  hasOwnerSharingRules?: boolean;
-  hasCriteriaSharingRules?: boolean;
-  sharingCriteriaRules?: SharingCriteriaRule[];
-  sharingOwnerRules?: SharingOwnerRule[];
-}
 type ApexRestResource = ApexClassDestruct & {
   urlMappingValue: string | undefined;
 };
@@ -126,7 +117,7 @@ type Diagram = {
   standard: { [key: string]: any; path: string; src: string };
   custom: { [key: string]: any; path: string; src: string };
 };
-interface TriggerDescruct extends ObjectDefinition {
+interface TriggerDescruct extends Record {
   hasTriggers: boolean;
   triggerInfo?: Array<{
     operation: Array<{
@@ -144,15 +135,15 @@ interface TriggerDescruct extends ObjectDefinition {
 }
 type DocumentDefinition = {
   format: string;
-  orginfo: ObjectDefinition[];
+  orginfo: Record[];
   ssoSettings: SamlSsoConfig[];
-  standardObjects: ObjectDefinition[];
-  customObjects: ObjectDefinition[];
+  standardObjects: Record[];
+  customObjects: Record[];
   apexClasses: ApexClassDestruct[];
   apexRestResource?: ApexRestResource[];
   apexTestClasses: ApexClassDestruct[];
   connectedApps?: ConnectedAppDestruct[];
-  namedCredentials: ObjectDefinition[];
+  namedCredentials: Record[];
   documentMeta: any;
   cssPath: string;
   pdfPath: string;
@@ -234,7 +225,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     const ssoSettings = await this.getSSOSettingMetadata((await flags['target-org']?.retrieveMaxApiVersion()) ?? '');
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
     this.spinner.start(messages.getMessage('spinner.start.retrieveStandard'));
-    let standardObjects: ObjectDefinition[] = [];
+    let standardObjects: Record[] = [];
     if (this.packageCmps?.CustomObject && !this.packageCmps.CustomObject.includes('*')) {
       const stdObjectNames = this.packageCmps.CustomObject.filter((o: any) => !o.endsWith('__c'));
       if (stdObjectNames) {
@@ -255,18 +246,16 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
     this.spinner.start(messages.getMessage('spinner.start.retrieveCustom'));
     let customObjects = await this.query(CUSTOMQUERY);
-    customObjects = customObjects.filter((e: ObjectDefinition) => !e.NamespacePrefix);
+    customObjects = customObjects.filter((e: Record) => !e.NamespacePrefix);
     if (customObjects && this.packageCmps?.CustomObject && !this.packageCmps.CustomObject.includes('*')) {
-      customObjects = customObjects.filter((e: ObjectDefinition) =>
-        this.packageCmps?.CustomObject.includes(e.QualifiedApiName)
-      );
+      customObjects = customObjects.filter((e: Record) => this.packageCmps?.CustomObject.includes(e.QualifiedApiName));
     }
     this.spinner.stop(messages.getMessage('spinner.stop.found', [customObjects.length]));
     this.spinner.start(messages.getMessage('spinner.start.retrieveCustomMetadata'));
     customObjects = await this.getObjectDefinition(
       customObjects,
       'CustomObject',
-      customObjects.map((e: ObjectDefinition) => e.QualifiedApiName as string)
+      customObjects.map((e: Record) => e.QualifiedApiName as string)
     );
     customObjects = customObjects.filter((sobject) => !!sobject);
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
@@ -288,7 +277,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     apexClasses = apexClasses.filter((cls) => !cls.Body.toLowerCase().includes('@istest'));
     let apexTriggers = await this.query(APEXTRGQUERY);
     if (apexTriggers && this.packageCmps?.ApexTrigger && !this.packageCmps.ApexTrigger.includes('*')) {
-      apexTriggers = apexTriggers.filter((e: ObjectDefinition) => this.packageCmps?.ApexTrigger.includes(e.Name));
+      apexTriggers = apexTriggers.filter((e: Record) => this.packageCmps?.ApexTrigger.includes(e.Name));
     }
     standardObjects = this.getTriggerForSObject(standardObjects, apexTriggers);
     customObjects = this.getTriggerForSObject(customObjects, apexTriggers);
@@ -445,7 +434,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @returns {Promise<Array>} A Promise that resolves to an array of Apex classes.
    */
   private async getApexClasses(): Promise<ApexClassDestruct[]> {
-    return (await this.query(APEXCLSQUERY)).map((cls: ObjectDefinition) => ({
+    return (await this.query(APEXCLSQUERY)).map((cls: Record) => ({
       ...cls,
       Body: cls.Body.length < 100 ? cls.Body : cls.Body.substring(0, 100),
     }));
@@ -484,7 +473,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {any[]} apps - The array of connected apps to retrieve usage count for.
    * @returns {Promise<any[]>} An array of objects containing the app and its usage count.
    */
-  private async getConnectedAppUsage(apps: ObjectDefinition[]): Promise<ConnectedAppDestruct[] | undefined> {
+  private async getConnectedAppUsage(apps: Record[]): Promise<ConnectedAppDestruct[] | undefined> {
     if (!apps) {
       return undefined;
     }
@@ -506,10 +495,10 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    *
    * @returns {Promise<any[]>} An array of Flow Definition records.
    */
-  private async getFlowDefinitions(): Promise<Flow[]> {
+  private async getFlowDefinitions(): Promise<Flow[][]> {
     const flows = await this.query(FLOWQUERY);
     if (flows) {
-      const fullNameList = flows.map((f: ObjectDefinition) => f.ApiName as string);
+      const fullNameList = flows.map((f: Record) => f.ApiName as string);
       const chunkSize = 10;
       const chunks: string[] = [];
       // Split the array into chunks of 10 records
@@ -537,7 +526,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       recordUpdateCount: f.recordUpdates?.length | 0,
     }));
   }
-  private async getFlowDefinitionForSObject(sobjects: string[]): Promise<Array<Flow | undefined>> {
+  private async getFlowDefinitionForSObject(sobjects: string[]): Promise<Array<Flow[] | undefined>> {
     const flows = await this.query(AUTOFLOWQUERY.split('{{object_name}}').join(`'${sobjects.join("','")}'`));
     if (flows) {
       const fullNameList = flows.map((f: any) => f.ApiName as string);
@@ -560,7 +549,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {Array} allTriggers - List of all triggers fetched from the org.
    * @returns {Array} - An array of sObjects with trigger information.
    */
-  private getTriggerForSObject(sobjects: ObjectDefinition[], allTriggers: ObjectDefinition[]): TriggerDescruct[] {
+  private getTriggerForSObject(sobjects: Record[], allTriggers: Record[]): TriggerDescruct[] {
     // Convert the list of triggers to a map with sObject names as keys
     const triggerMap = allTriggers.reduce((acc: any, cur): any => {
       if (!acc[cur.TableEnumOrId]) {
@@ -574,7 +563,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     return sobjects
       .filter((sobject) => !!sobject)
       .map((sobject) => {
-        const triggers = triggerMap[sobject.QualifiedApiName] as ObjectDefinition[];
+        const triggers = triggerMap[sobject.QualifiedApiName] as Record[];
         const triggerInfo = triggers
           ? triggers.map((trigger) => {
               const operations = this.processTrigger(trigger);
@@ -595,7 +584,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @returns {Array} - An array of operations
    */
   // eslint-disable-next-line class-methods-use-this
-  private processTrigger(trigger: ObjectDefinition): Array<{ name: string }> {
+  private processTrigger(trigger: Record): Array<{ name: string }> {
     const operations = [];
     if (trigger.UsageBeforeInsert) operations.push({ name: 'Before Insert' });
     if (trigger.UsageAfterInsert) operations.push({ name: 'After Insert' });
@@ -612,7 +601,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {Array} sobjects - List of sObject names to fetch field definition for.
    * @returns {Promise<Array>} - A Promise that resolves to an array of field definition objects.
    */
-  private async getFieldDefinitionForSObject(sobjects: string[]): Promise<ObjectDefinition[][]> {
+  private async getFieldDefinitionForSObject(sobjects: string[]): Promise<Record[][]> {
     const chunkSize = 10;
     const chunks: string[][] = [];
     // Split the array into chunks of 10 records
@@ -633,7 +622,6 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    */
   private async getSharingRulesMetadata(fullNames: string[]): Promise<SharingRulesMetadata[][]> {
     const chunkSize = 5;
-    const chunks: string[] = [];
 
     // Split the array into chunks of 10 records
     fullNames.forEach((_name, index) => {
@@ -644,26 +632,26 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       chunks.map(async (c) =>
         (this.toArray(await this.connection?.metadata.read('SharingRules', c)) as SharingRules[]).map(
           (sh: SharingRules) => {
-            if (sh?.fullName) {
-              let { sharingCriteriaRules, sharingOwnerRules } = sh;
+          if (sh?.fullName) {
+            let { sharingCriteriaRules, sharingOwnerRules } = sh;
               if (sharingCriteriaRules) {
-                sharingCriteriaRules = this.toArray(sharingCriteriaRules).map((shc: SharingCriteriaRule) => {
-                  shc.criteriaItems = this.toArray(shc.criteriaItems);
-                  shc.sharedTo = this.formatSharedInfo(this.toArray(shc.sharedTo)) as unknown as SharedTo;
-                  return { ...shc };
-                });
-              }
-              if (sharingOwnerRules) {
-                sharingOwnerRules = this.toArray(sharingOwnerRules).map((sho: SharingOwnerRule) => {
-                  sho.sharedTo = this.formatSharedInfo(this.toArray(sho.sharedTo)) as unknown as SharedTo;
-                  sho.sharedFrom = this.formatSharedInfo(this.toArray(sho.sharedFrom)) as unknown as SharedTo;
-                  return { ...sho };
-                });
-              }
-              return { ...sh, sharingOwnerRules, sharingCriteriaRules };
-            } else {
-              return { ...sh, sharingOwnerRules: [], sharingCriteriaRules: [] };
+              sharingCriteriaRules = this.toArray(sharingCriteriaRules).map((shc: SharingCriteriaRule) => {
+                shc.criteriaItems = this.toArray(shc.criteriaItems);
+                shc.sharedTo = this.formatSharedInfo(this.toArray(shc.sharedTo)) as unknown as SharedTo;
+                return { ...shc };
+              });
             }
+              if (sharingOwnerRules) {
+              sharingOwnerRules = this.toArray(sharingOwnerRules).map((sho: SharingOwnerRule) => {
+                sho.sharedTo = this.formatSharedInfo(this.toArray(sho.sharedTo)) as unknown as SharedTo;
+                sho.sharedFrom = this.formatSharedInfo(this.toArray(sho.sharedFrom)) as unknown as SharedTo;
+                return { ...sho };
+              });
+            }
+            return { ...sh, sharingOwnerRules, sharingCriteriaRules };
+          } else {
+            return { ...sh, sharingOwnerRules: [], sharingCriteriaRules: [] };
+          }
           }
         )
       )
@@ -690,10 +678,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {array} fullNames - Array of fullNames for the metadata object
    * @returns {Promise} - Returns a promise
    */
-  private async getMetadataObject(
-    type: string,
-    fullNames: string[]
-  ): Promise<Array<MetadataDefinition<string, CustomObjectComponent>>> {
+  private async getMetadataObject(type: string, fullNames: string[]): Promise<CustomObject[]> {
     const chunkSize = 5;
     const chunks: string[] = [];
 
@@ -705,6 +690,10 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     return Promise.all(chunks.map((c) => this.connection?.metadata.read(type as MetadataType, c))) as Promise<
       Array<MetadataDefinition<string, CustomObjectComponent>>
     >;
+
+    return Promise.all(
+      chunks.map((c) => this.connection?.metadata.read(type as MetadataType, c))
+    ) as unknown as Promise<CustomObject[]>;
   }
   /**
    * Get the object definition of given sobjects with its metadata, sharing rules metadata, and field definition
@@ -714,12 +703,9 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {Array} fullNames - Array of full names for the metadata to fetch
    * @returns {Array} - Array of sobjects with its metadata, sharing rules metadata, field definition, and other related information
    */
-  private async getObjectDefinition(
-    sobjects: ObjectDefinition[],
-    type: string,
-    fullNames: string[]
-  ): Promise<ObjectDefinition[]> {
+  private async getObjectDefinition(sobjects: Record[], type: string, fullNames: string[]): Promise<Record[]> {
     // get object and related element metadata
+    const metadata: CustomObject[] = (await this.getMetadataObject(type, fullNames)).flat();
     const metadata: Array<MetadataDefinition<string, CustomObjectComponent>> = (
       await this.getMetadataObject(type, fullNames)
     ).flat();
@@ -737,21 +723,21 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
         return acc;
       }, new Map<string, Flow[]>());
     }
-    const objectFields: Map<string, ObjectDefinition[]> = fieldsArray.flat().reduce((acc, cur) => {
+    const objectFields: Map<string, Record[]> = fieldsArray.flat().reduce((acc, cur) => {
       if (acc.has(cur.EntityDefinition.QualifiedApiName)) {
         acc.get(cur.EntityDefinition.QualifiedApiName)?.push(cur);
       } else {
         acc.set(cur.EntityDefinition.QualifiedApiName, [cur]);
       }
       return acc;
-    }, new Map<string, ObjectDefinition[]>());
+    }, new Map<string, Record[]>());
     // decorate object with other metadata
     return sobjects
-      .filter((o: ObjectDefinition) => metadata.find((e) => e?.fullName && e.fullName === o.QualifiedApiName))
-      .map((o: ObjectDefinition) => {
-        const objectMeta: MetadataDefinition<string, CustomObjectComponent> = metadata.find(
+      .filter((o: Record) => metadata.find((e) => e?.fullName && e.fullName === o.QualifiedApiName))
+      .map((o: Record) => {
+        const objectMeta: CustomObject | undefined = metadata.find(
           (e) => e?.fullName && e.fullName === o.QualifiedApiName
-        )!;
+        );
         const sharingRules = sharingRulesArray.find((e) => e?.fullName && e.fullName === o.QualifiedApiName);
         let autoflows = objectFlows.get(o.QualifiedApiName);
         if (autoflows && this.packageCmps?.Flow) {
@@ -761,8 +747,8 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
         if (objectMeta?.fields) {
           objectMeta.fields = this.toArray(objectMeta.fields);
           objectMeta.fields = objectMeta.fields
-            .filter((mf) => fields?.find((e) => mf.fullName === e.QualifiedApiName))
-            .map((mf) => {
+            .filter((mf: CustomField) => fields?.find((e) => mf.fullName === e.QualifiedApiName))
+            .map((mf: CustomField) => {
               const f = fields?.find((e) => mf.fullName === e.QualifiedApiName);
               return {
                 ...f,
@@ -771,12 +757,12 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
               };
             });
         }
-        objectMeta.hasValidations = !!objectMeta.validationRules;
-        if (objectMeta.hasValidations) {
+        // objectMeta.hasValidations = !!objectMeta.validationRules;
+        if (objectMeta?.validationRules) {
           objectMeta.validationRules = this.toArray(objectMeta.validationRules);
         }
-        objectMeta.hasRecordTypes = !!objectMeta.recordTypes;
-        if (objectMeta.hasRecordTypes) {
+        // objectMeta.hasRecordTypes = !!objectMeta.recordTypes;
+        if (objectMeta?.recordTypes) {
           objectMeta.recordTypes = this.toArray(objectMeta.recordTypes);
           if (objectMeta.recordTypes && this.packageCmps?.RecordType) {
             objectMeta.recordTypes = objectMeta.recordTypes?.filter((e: any) =>
@@ -784,8 +770,8 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
             );
           }
         }
-        objectMeta.hasListViews = !!objectMeta.listViews;
-        if (objectMeta.hasListViews) {
+        // objectMeta.hasListViews = !!objectMeta.listViews;
+        if (objectMeta?.listViews) {
           if (!Array.isArray(objectMeta.listViews)) {
             objectMeta.listViews = this.toArray(objectMeta.listViews);
           }
@@ -860,9 +846,9 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {string} soql - The SOQL query to execute
    * @returns {Promise} The records returned from the query
    */
-  private async query(soql: string): Promise<ObjectDefinition[]> {
+  private async query(soql: string): Promise<Record[]> {
     try {
-      return (await this.connection?.query(soql))?.records as ObjectDefinition[];
+      return (await this.connection?.query(soql))?.records ?? [];
     } catch (err) {
       return [];
     }

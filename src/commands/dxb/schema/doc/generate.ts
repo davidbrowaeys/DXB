@@ -12,9 +12,9 @@ import * as xml2js from 'xml2js';
 import {
   CustomObject,
   Flow,
-  SharingCriteriaRule,
-  SharingOwnerRule,
-  SharingRules,
+  // SharingCriteriaRule,
+  // SharingOwnerRule,
+  // SharingRules,
   ListView,
   SamlSsoConfig,
   SharedTo,
@@ -90,10 +90,10 @@ type FlowDestruct = Flow & {
 type ApexClassDestruct = Record & {
   Body: string;
 };
-type SharingRulesMetadata = {
-  sharingOwnerRules: SharingOwnerRule[];
-  sharingCriteriaRules: SharingCriteriaRule[];
-} & SharingRules;
+// type SharingRulesMetadata = {
+//   sharingOwnerRules: SharingOwnerRule[];
+//   sharingCriteriaRules: SharingCriteriaRule[];
+// } & SharingRules;
 type ManifestComponent = {
   [key: string]: string[];
 };
@@ -101,12 +101,6 @@ type ListViewComponent = ListView & {
   hasFilters?: boolean;
   hasShareTo?: boolean;
 };
-interface CustomObjectComponent extends CustomObject {
-  hasValidations?: boolean;
-  hasListViews?: boolean;
-  hasRecordTypes?: boolean;
-  listViews: ListViewComponent[];
-}
 type ApexRestResource = ApexClassDestruct & {
   urlMappingValue: string | undefined;
 };
@@ -606,38 +600,38 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {array} fullNames - An array of fullNames
    * @returns {Promise<Array>} - An array of sharing rules metadata
    */
-  private async getSharingRulesMetadata(fullNames: string[]): Promise<SharingRulesMetadata[][]> {
-    const chunkSize = 5;
+  // private async getSharingRulesMetadata(fullNames: string[]): Promise<SharingRulesMetadata[][]> {
+  //   const chunkSize = 5;
 
-    // Split the array into chunks of 10 records
-    const chunks: string[][] = splitIntoChunks(fullNames, chunkSize);
-    return Promise.all(
-      chunks.map(async (c) =>
-        this.toArray(await this.connection?.metadata.read('SharingRules', c)).map((sh: SharingRules) => {
-          if (sh?.fullName) {
-            let { sharingCriteriaRules, sharingOwnerRules } = sh;
-            if (sharingCriteriaRules.length > 0) {
-              sharingCriteriaRules = this.toArray(sharingCriteriaRules).map((shc: SharingCriteriaRule) => {
-                shc.criteriaItems = this.toArray(shc.criteriaItems);
-                shc.sharedTo = this.formatSharedInfo(this.toArray(shc.sharedTo)) as unknown as SharedTo;
-                return { ...shc };
-              });
-            }
-            if (sharingOwnerRules.length > 0) {
-              sharingOwnerRules = this.toArray(sharingOwnerRules).map((sho: SharingOwnerRule) => {
-                sho.sharedTo = this.formatSharedInfo(this.toArray(sho.sharedTo)) as unknown as SharedTo;
-                sho.sharedFrom = this.formatSharedInfo(this.toArray(sho.sharedFrom)) as unknown as SharedTo;
-                return { ...sho };
-              });
-            }
-            return { ...sh, sharingOwnerRules, sharingCriteriaRules };
-          } else {
-            return { ...sh, sharingOwnerRules: [], sharingCriteriaRules: [] };
-          }
-        })
-      )
-    );
-  }
+  //   // Split the array into chunks of 10 records
+  //   const chunks: string[][] = splitIntoChunks(fullNames, chunkSize);
+  //   return Promise.all(
+  //     chunks.map(async (c) =>
+  //       this.toArray(await this.connection?.metadata.read('SharingRules', c)).map((sh: SharingRules) => {
+  //         if (sh?.fullName) {
+  //           let { sharingCriteriaRules, sharingOwnerRules } = sh;
+  //           if (sharingCriteriaRules.length > 0) {
+  //             sharingCriteriaRules = this.toArray(sharingCriteriaRules).map((shc: SharingCriteriaRule) => {
+  //               shc.criteriaItems = this.toArray(shc.criteriaItems);
+  //               shc.sharedTo = this.formatSharedInfo(this.toArray(shc.sharedTo)) as unknown as SharedTo;
+  //               return { ...shc };
+  //             });
+  //           }
+  //           if (sharingOwnerRules.length > 0) {
+  //             sharingOwnerRules = this.toArray(sharingOwnerRules).map((sho: SharingOwnerRule) => {
+  //               sho.sharedTo = this.formatSharedInfo(this.toArray(sho.sharedTo)) as unknown as SharedTo;
+  //               sho.sharedFrom = this.formatSharedInfo(this.toArray(sho.sharedFrom)) as unknown as SharedTo;
+  //               return { ...sho };
+  //             });
+  //           }
+  //           return { ...sh, sharingOwnerRules, sharingCriteriaRules };
+  //         } else {
+  //           return { ...sh, sharingOwnerRules: [], sharingCriteriaRules: [] };
+  //         }
+  //       })
+  //     )
+  //   );
+  // }
   /**
    * Retrieves the SSO setting metadata
    *

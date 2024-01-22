@@ -613,18 +613,17 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     const chunks: string[][] = splitIntoChunks(fullNames, chunkSize);
     return Promise.all(
       chunks.map(async (c) =>
-        (this.toArray(await this.connection?.metadata.read('SharingRules', c)) as SharingRules[]).map(
-          (sh: SharingRules) => {
+        this.toArray(await this.connection?.metadata.read('SharingRules', c)).map((sh: SharingRules) => {
           if (sh?.fullName) {
             let { sharingCriteriaRules, sharingOwnerRules } = sh;
-              if (sharingCriteriaRules) {
+            if (sharingCriteriaRules.length > 0) {
               sharingCriteriaRules = this.toArray(sharingCriteriaRules).map((shc: SharingCriteriaRule) => {
                 shc.criteriaItems = this.toArray(shc.criteriaItems);
                 shc.sharedTo = this.formatSharedInfo(this.toArray(shc.sharedTo)) as unknown as SharedTo;
                 return { ...shc };
               });
             }
-              if (sharingOwnerRules) {
+            if (sharingOwnerRules.length > 0) {
               sharingOwnerRules = this.toArray(sharingOwnerRules).map((sho: SharingOwnerRule) => {
                 sho.sharedTo = this.formatSharedInfo(this.toArray(sho.sharedTo)) as unknown as SharedTo;
                 sho.sharedFrom = this.formatSharedInfo(this.toArray(sho.sharedFrom)) as unknown as SharedTo;
@@ -635,8 +634,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
           } else {
             return { ...sh, sharingOwnerRules: [], sharingCriteriaRules: [] };
           }
-          }
-        )
+        })
       )
     );
   }
@@ -680,10 +678,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
   private async getObjectDefinition(sobjects: Record[], type: string, fullNames: string[]): Promise<Record[]> {
     // get object and related element metadata
     const metadata: CustomObject[] = (await this.getMetadataObject(type, fullNames)).flat();
-    const metadata: Array<MetadataDefinition<string, CustomObjectComponent>> = (
-      await this.getMetadataObject(type, fullNames)
-    ).flat();
-    const sharingRulesArray: SharingRulesMetadata[] = (await this.getSharingRulesMetadata(fullNames)).flat();
+    // const sharingRulesArray: SharingRulesMetadata[] = (await this.getSharingRulesMetadata(fullNames)).flat();
     const fieldsArray = await this.getFieldDefinitionForSObject(fullNames);
     const flowsArray = await this.getFlowDefinitionForSObject(fullNames);
     let objectFlows = new Map<string, Flow[]>();
@@ -712,7 +707,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
         const objectMeta: CustomObject | undefined = metadata.find(
           (e) => e?.fullName && e.fullName === o.QualifiedApiName
         );
-        const sharingRules = sharingRulesArray.find((e) => e?.fullName && e.fullName === o.QualifiedApiName);
+        // const sharingRules = sharingRulesArray.find((e) => e?.fullName && e.fullName === o.QualifiedApiName);
         let autoflows = objectFlows.get(o.QualifiedApiName);
         if (autoflows && this.packageCmps?.Flow) {
           autoflows = autoflows?.filter((e: any) => this.packageCmps?.Flow.includes(e.fullName));
@@ -760,19 +755,19 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
             }
           });
         }
-        const sharingCriteriaRules = sharingRules?.sharingCriteriaRules;
-        const sharingOwnerRules = sharingRules?.sharingOwnerRules;
-        const hasSharingRules = !!sharingCriteriaRules || !!sharingOwnerRules;
+        // const sharingCriteriaRules = sharingRules?.sharingCriteriaRules;
+        // const sharingOwnerRules = sharingRules?.sharingOwnerRules;
+        // const hasSharingRules = !!sharingCriteriaRules || !!sharingOwnerRules;
         return {
           ...o,
           ...objectMeta,
           hasAutoFlows: !!autoflows,
           autoflows,
-          hasSharingRules,
-          hasOwnerSharingRules: !!sharingOwnerRules,
-          hasCriteriaSharingRules: !!sharingCriteriaRules,
-          sharingCriteriaRules,
-          sharingOwnerRules,
+          hasSharingRules: false,
+          hasOwnerSharingRules: false, // !!sharingOwnerRules,
+          hasCriteriaSharingRules: false, // !!sharingCriteriaRules,
+          sharingCriteriaRules: [],
+          sharingOwnerRules: [],
         };
       });
   }

@@ -215,9 +215,9 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     const manifest = flags.manifest;
     const format = flags.format;
     // Ensure required files exist
-    const pdfPath = htmltemplate ?? path.join(__dirname, '../../../../lib/utils/schema-template.html');
-    const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../lib/utils/schema-template-html.html');
-    const cssPath = flags.stylesheet ?? path.join(__dirname, '../../../../lib/utils/bootstrap.min.css');
+    const pdfPath = htmltemplate ?? path.join(__dirname, '../../../../utils/schema-template.html');
+    const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../utils/schema-template-html.html');
+    const cssPath = flags.stylesheet ?? path.join(__dirname, '../../../../utils/bootstrap.min.css');
     if (!fs.existsSync(htmlPath)) throw messages.createError('error.noHTMLTemplate', [htmlPath]);
     if (!fs.existsSync(cssPath)) throw messages.createError('error.noStylesheetTemplate', [cssPath]);
     if (!fs.existsSync(pdfconfig)) throw messages.createError('error.noPDFConfig', [pdfconfig]);

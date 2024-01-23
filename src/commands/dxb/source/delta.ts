@@ -25,7 +25,6 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
   public static readonly examples = messages.getMessages('examples');
 
   public static readonly flags = {
-    'target-org': Flags.requiredOrg(),
     mode: Flags.string({
       char: 'm',
       summary: messages.getMessage('flags.mode.summary'),

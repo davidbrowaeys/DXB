@@ -8,7 +8,7 @@ Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'source.fetchtest');
 
 export type SourceFetchtestResult = {
-  result: string;
+  result: string[];
 };
 
 export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
@@ -67,14 +67,14 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
     this.basedir = flags['base-dir'];
     // retrieve all classes
     this.allClasses = this.getAllClasses(this.basedir).flat();
-    let result = '';
+    let result = [];
     // go through delta changes
     if (manifest) {
       result = await this.processFromPackageXmlContent(manifest);
     } else {
       result = this.processFromArgument(sourcepath!, metadatatypes);
     }
-    this.log(result);
+    this.log(result.join(','));
     return { result };
   }
 
@@ -95,7 +95,7 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
       }
     });
   }
-  protected processFromArgument(sourcepath: string[], metadatatypes: string[]): string {
+  protected processFromArgument(sourcepath: string[], metadatatypes: string[]): string[] {
     sourcepath.forEach((file: any) => {
       file = path.parse(file);
       metadatatypes.forEach((type: string) => {
@@ -116,9 +116,9 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
         }
       });
     });
-    return this.testClasses && this.testClasses.length > 0 ? ` -t "${this.testClasses.join(',')}"` : '';
+    return this.testClasses;
   }
-  protected async processFromPackageXmlContent(manifest: string): Promise<string> {
+  protected async processFromPackageXmlContent(manifest: string): Promise<string[]> {
     try {
       const data = fs.readFileSync(manifest);
       const parser = new xml2js.Parser({ explicitArray: false });
@@ -137,9 +137,9 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
             }
           }
         });
-        return this.testClasses && this.testClasses.length > 0 ? ` -t "${this.testClasses.join(',')}"` : '';
+        return this.testClasses;
       } else {
-        return '';
+        return [];
       }
     } catch (err) {
       throw messages.createError('error.processManifest');

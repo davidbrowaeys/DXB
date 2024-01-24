@@ -187,6 +187,14 @@
                 "description": "Describe access rights for a user"
               }
             }
+          },
+          "lwc": {
+            "description": "A set of commands to work with LWC components",
+            "subtopics": {
+              "test": {
+                "description": "Perform LWC tests"
+              }
+            }
           }
         }
       }

@@ -3,6 +3,7 @@ import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
 import * as fs from 'fs-extra';
 import * as xml2js from 'xml2js';
+import { getComponentsFromManifest } from '../../../utils/utils';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'source.fetchtest');
@@ -120,27 +121,12 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
   }
   protected async processFromPackageXmlContent(manifest: string): Promise<string[]> {
     try {
-      const data = fs.readFileSync(manifest);
-      const parser = new xml2js.Parser({ explicitArray: false });
-      const result = await parser.parseStringPromise(data);
       const classPath = path.join(this.basedir, 'classes');
-      if (result.Package.types) {
-        const metadataTypes = Array.isArray(result.Package.types) ? result.Package.types : [result.Package.types];
-        metadataTypes.forEach((metadataType: { name: string; members: string[] }) => {
-          if (metadataType.name === 'ApexClass') {
-            if (Array.isArray(metadataType.members)) {
-              metadataType.members.forEach((elem) => {
-                this.getTestClasses(classPath, 'classes', elem);
-              });
-            } else {
-              this.getTestClasses(classPath, 'classes', metadataType.members);
-            }
-          }
-        });
-        return this.testClasses;
-      } else {
-        return [];
-      }
+      (await getComponentsFromManifest(manifest, 'ApexClass')).forEach((member) =>
+        this.getTestClasses(classPath, 'classes', member)
+      );
+
+      return this.testClasses;
     } catch (err) {
       throw messages.createError('error.processManifest');
     }

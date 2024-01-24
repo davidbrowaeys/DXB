@@ -2,7 +2,6 @@ import * as path from 'path';
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
 import * as fs from 'fs-extra';
-import * as xml2js from 'xml2js';
 import { getComponentsFromManifest } from '../../../utils/utils';
 
 Messages.importMessagesDirectory(__dirname);

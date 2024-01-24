@@ -1,7 +1,7 @@
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { Connection, Messages } from '@salesforce/core';
+import { Messages } from '@salesforce/core';
 import * as fs from 'fs-extra';
-import { Record, SObject, SObjectFieldType, Schema } from 'jsforce';
+import { Record, SObject, SObjectFieldType, Schema, Connection } from 'jsforce';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'data.file.export');

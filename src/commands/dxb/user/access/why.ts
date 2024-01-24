@@ -1,6 +1,6 @@
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
-import { Connection, Messages } from '@salesforce/core';
-import { QueryResult, Schema } from 'jsforce';
+import { Messages } from '@salesforce/core';
+import { QueryResult, Connection } from 'jsforce';
 import * as Table from 'cli-table3';
 import { PermissionSet } from 'jsforce/lib/api/metadata';
 import * as colors from '@colors/colors';
@@ -51,7 +51,7 @@ export default class UserFindAccess extends SfCommand<UserFindAccessResult> {
     if (!username) {
       username = flags['target-org'].getUsername()!;
     }
-    const connection: Connection<Schema> = flags['target-org']!.getConnection()!;
+    const connection: Connection = flags['target-org']!.getConnection()!;
     let fieldpermSql = '';
     if (fieldname) {
       fieldpermSql = `,(SELECT ID, Field, Parent.Name, PermissionsEdit, PermissionsRead, SobjectType FROM FieldPerms WHERE SobjectType = '${objectname}' AND Field = '${objectname}.${fieldname}')`;

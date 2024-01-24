@@ -1,9 +1,9 @@
 import * as path from 'path';
 import { execSync as exec } from 'child_process';
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { Connection, Messages } from '@salesforce/core';
+import { Messages } from '@salesforce/core';
 import * as fs from 'fs-extra';
-import { DescribeSObjectResult } from 'jsforce';
+import { Connection, DescribeSObjectResult } from 'jsforce';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'data.backup');

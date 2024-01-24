@@ -1,9 +1,9 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as mime from 'mime';
-import { Record } from 'jsforce';
+import { Record, Connection } from 'jsforce';
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
-import { Connection, Messages } from '@salesforce/core';
+import { Messages } from '@salesforce/core';
 import * as Handlebars from 'handlebars';
 // import { NodeHtmlMarkdown } from 'node-html-markdown';
 // import * as htmlDocx from "html-docx-js";

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/return-await */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { execSync as exec } from 'child_process';
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
 import {
   SfProject,
-  Org,
   ScratchOrgCreateResult,
   DefaultUserFields,
   User,
@@ -63,7 +64,7 @@ export default class OrgCreate extends SfCommand<OrgCreateResult> {
     }),
   };
 
-  protected org: Org | undefined;
+  protected org: any;
 
   private defaultPackageDir: NamedPackageDir | undefined;
 
@@ -194,11 +195,12 @@ export default class OrgCreate extends SfCommand<OrgCreateResult> {
       throw messages.createError('error.definitionFile');
     }
 
-    return this.org?.scratchOrgCreate({
+    return await this.org?.scratchOrgCreate({
       alias: orgname,
       setDefault: defaultorg,
       durationDays: durationdays,
-      orgConfig: JSON.parse(fs.readFileSync('./config.project-scratch-def.json').toString()),
+      // Fix the file path typo ('./config.project-scratch-def.json' -> './config/project-scratch-def.json')
+      orgConfig: JSON.parse(fs.readFileSync('./config/project-scratch-def.json').toString()),
     });
   }
 
@@ -303,7 +305,7 @@ export default class OrgCreate extends SfCommand<OrgCreateResult> {
         templateUser: this.org?.getUsername() ?? '',
         newUserName: `user.${suffix}@dxb-test.${orgname}`,
       });
-      const org = this.org!;
+      const org = this.org;
       const user: User = await User.create({ org });
       return await user.createUser(defaultUserFields.getFields());
     } catch (err) {

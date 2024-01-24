@@ -1,6 +1,6 @@
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
-import { Connection, Messages } from '@salesforce/core';
-import { DescribeSObjectResult } from 'jsforce';
+import { Messages } from '@salesforce/core';
+import { Connection, DescribeSObjectResult } from 'jsforce';
 import { DescribeGlobalSObjectResult } from 'jsforce/lib/api/soap/schema';
 
 Messages.importMessagesDirectory(__dirname);

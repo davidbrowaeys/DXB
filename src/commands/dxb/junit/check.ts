@@ -38,10 +38,10 @@ export default class JunitCheck extends SfCommand<JunitCheckResult> {
       aliases: ['junitpath'],
       deprecateAliases: true,
     }),
-    'time-threshold': Flags.integer({
+    'time-threshold': Flags.string({
       char: 't',
       summary: messages.getMessage('flags.time-threshold.summary'),
-      default: 1,
+      default: '1',
       aliases: ['timetreshold'],
       deprecateAliases: true,
     }),
@@ -57,7 +57,7 @@ export default class JunitCheck extends SfCommand<JunitCheckResult> {
   public async run(): Promise<JunitCheckResult> {
     const { flags } = await this.parse(JunitCheck);
     const junitpath = flags['junit-path'];
-    const threshold = flags['time-threshold'];
+    const threshold = Number(flags['time-threshold']);
     const flagaserror = flags['flag-as-error'];
     await this.readJunit(junitpath, threshold, flagaserror);
     return { success: true };

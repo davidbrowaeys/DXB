@@ -22,7 +22,7 @@ export default class ApexCoverageCheck extends SfCommand<ApexCoverageCheckResult
 
   public static readonly examples = messages.getMessages('examples');
 
-  public static readonly flags = {
+  public static readonly flags  = {
     'file-path': Flags.string({ char: 'f', summary: messages.getMessage('flags.file-path.summary'), required: true, aliases: ['filepath'], deprecateAliases: true }),
     'min-coverage': Flags.integer({
       char: 'c',

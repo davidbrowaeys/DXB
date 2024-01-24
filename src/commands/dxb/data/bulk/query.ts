@@ -1,5 +1,6 @@
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { Connection, Messages, SfError } from '@salesforce/core';
+import { Messages, SfError } from '@salesforce/core';
+import { Connection } from 'jsforce';
 import * as fs from 'fs-extra';
 
 Messages.importMessagesDirectory(__dirname);

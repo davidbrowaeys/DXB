@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { Connection, Messages } from '@salesforce/core';
+import { Connection } from 'jsforce';
+import { Messages } from '@salesforce/core';
 import * as fs from 'fs-extra';
 import * as csv from 'csv-parser';
 import { createObjectCsvWriter as createCsvWriter } from 'csv-writer';
@@ -75,7 +76,8 @@ export default class DataImport extends SfCommand<DataImportResult> {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     this.connection = flags['target-org']!.getConnection()!;
-    this.connection.bulk.pollTimeout = flags['polling-time-out'] ?? this.setting.pollTimeout ?? 10000000; // 10 min
+    this.connection.bulk.pollTimeout =
+      Number(flags['polling-time-out']) ?? Number(this.setting.pollTimeout) ?? 10000000; // 10 min
     if (!fs.existsSync(this.datadir)) {
       throw messages.createError('error.dataDirNotExist');
     }

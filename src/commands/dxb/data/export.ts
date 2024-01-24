@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
-import { Connection, Messages } from '@salesforce/core';
+import { Messages } from '@salesforce/core';
+import { Connection } from 'jsforce';
 import * as fs from 'fs-extra';
 import { createObjectCsvWriter as createCsvWriter } from 'csv-writer';
 Messages.importMessagesDirectory(__dirname);

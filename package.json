@@ -1,13 +1,13 @@
 {
   "name": "dxb",
   "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
-  "version": "3.0.9",
+  "version": "3.0.11",
   "dependencies": {
     "@colors/colors": "^1.6.0",
-    "@oclif/core": "^2.11.8",
-    "@salesforce/core": "^5.2.10",
+    "@oclif/core": "^3.18.1",
+    "@salesforce/core": "^6.5.0",
     "@salesforce/kit": "^3.0.8",
-    "@salesforce/sf-plugins-core": "^3.1.14",
+    "@salesforce/sf-plugins-core": "^5.0.13",
     "@salesforce/source-deploy-retrieve": "^9.7.28",
     "@salesforce/ts-types": "^2.0.9",
     "cli-table3": "^0.6.3",

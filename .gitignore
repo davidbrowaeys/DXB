@@ -19,7 +19,6 @@ lib
 *checkstyle.xml
 *unitcoverage
 .nyc_output
-coverage
 test_session*
 
 # generated docs
@@ -48,5 +47,3 @@ oclif.manifest.json
 force-app/
 .sf/
 oclif.lock
-
-!**/commands/*/coverage

@@ -41,14 +41,10 @@ export default class ApexCoverageCleanup extends SfCommand<ApexCoverageCleanupRe
     });
     results.forEach((elem) => {
       const classnameString: string = elem[0];
-      // classname = classname.split('filename="no-map').join('').slice(0, -1);
-      // eslint-disable-next-line no-useless-escape
-      // classname = classname.split(/filename="no-map[\/\\]/).join('').slice(0, -1);
-      const classnameMatch = classnameString.match(/\\([^\\]+)$/); // Match the last part after the backslash
-      const classname = classnameMatch ? classnameMatch[1].slice(0, -1) : undefined;
+      const classname = classnameString.split('filename="no-map/').join('').slice(0, -1);
       if(classname){
         const classpath = this.allClasses.find((e: string) => this.isPathEndingWith(e,classname));
-        fileContent = fileContent.split(`no-map\\${classname}`).join(classpath);
+        fileContent = fileContent.split(`no-map/${classname}`).join(classpath);
       }
     });
     writeFileSync(originFile, fileContent);

@@ -1,89 +1,90 @@
+import { execSync } from 'child_process';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import * as fs from 'fs-extra';
+import { Messages, NamedPackageDir, SfProject } from '@salesforce/core';
 
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'object.vr.create');
 
-const fs = require('fs');
-const execAsync = require('child_process').exec;
-var stdin = require('readline-sync');
+export type ObjectVrCreateResult = {
+  success: boolean;
+};
 
-var content =  '<?xml version="1.0" encoding="UTF-8"?>\n'+
-                '<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">\n'+
-                '    <fullName>{{fullname}}</fullName>\n'+
-                '    <active>true</active>\n'+
-                '    <description>{{description}}</description>\n'+
-                '    <errorConditionFormula>{{formula}}</errorConditionFormula>\n'+
-                '    <errorMessage>{{errorMessage}}</errorMessage>\n'+
-                '</ValidationRule>';
+export default class ObjectVrCreate extends SfCommand<ObjectVrCreateResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-function updateContent(varName, question) {
-    var res = stdin.question(question);
-    content = content.replace(new RegExp(`{{${varName}}}`, 'g'), res);
-}
+  public static readonly examples = messages.getMessages('examples');
 
-async function push_source(orgname){
-    this.ux.log('Push source to org...'); 
-    try{
-      return new Promise(async function (resolve, reject) {
-          await execAsync(`sfdx force:source:push -g -f -u ${orgname}`, (error, stdout, stderr) => {
-            if (error) {
-              console.warn(error);
-            }
-            resolve(stdout? stdout : stderr);
-          });
-      });
-    }catch(err){
-      throw new SfdxError('Unable to push source to scratch org!');
-    }
-}
-
-export default class ValidationRuleCreate extends SfdxCommand {
-
-  public static description = 'This command create a validation rule against specified object.';
-
-  public static examples = [
-  `$ sfdx dxb:object:vr:create`
-  ];
-
-  public static args = [{name: 'file'}];
-
-  protected static flagsConfig = {
-    name: flags.string({char:'n',description:'validation rule name',required:true}),
-    objectname: flags.string({char:'o',description:'object name',required:true}),
-    push:flags.boolean({char:'p',description:'push to scratch org'})
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    name: Flags.string({ char: 'n', summary: messages.getMessage('flags.name.summary'), required: true }),
+    'object-name': Flags.string({
+      char: 's',
+      summary: messages.getMessage('flags.object-name.summary'),
+      required: true,
+      aliases: ['objectname'],
+      deprecateAliases: true,
+    }),
+    push: Flags.boolean({ char: 'p', summary: messages.getMessage('flags.push.summary'), default: false }),
   };
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
 
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
+  private content: string =
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">\n' +
+    '    <fullName>{{fullname}}</fullName>\n' +
+    '    <active>true</active>\n' +
+    '    <description>{{description}}</description>\n' +
+    '    <errorConditionFormula>{{formula}}</errorConditionFormula>\n' +
+    '    <errorMessage>{{errorMessage}}</errorMessage>\n' +
+    '</ValidationRule>';
 
-  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
+  public async run(): Promise<ObjectVrCreateResult> {
+    const { flags } = await this.parse(ObjectVrCreate);
+    const orgname = flags['target-org']?.getUsername();
+    const sobject = flags['object-name'];
+    const defaultPackageDir: NamedPackageDir = (await SfProject.resolve()).getDefaultPackage();
+    const name = flags.name;
 
-  public async run() {
-    let orgname = this.flags.orgname;
-    let sobject = this.flags.objectname;
-    let name = this.flags.name;
+    const vrpath = `${defaultPackageDir.fullPath}/objects/${sobject}/validationRules`;
+    fs.ensureDirSync(vrpath);
 
-    var vrpath = `./force-app/main/default/objects/${sobject}/validationRules`;
-    if (!fs.existsSync(vrpath)) {
-        fs.mkdirSync(vrpath);
+    const apiname = name.replace(new RegExp('[^A-Z0-9]', 'gi'), '_');
+    this.content = this.content.replace(new RegExp('{{fullname}}', 'g'), apiname);
+
+    await this.updateContent('description', 'Description: ');
+    await this.updateContent('errorMessage', 'Error message: ');
+    await this.updateContent('formula', 'Formula:\n');
+
+    // update content file
+    const fullpath = `${vrpath}/${apiname}.validationRule-meta.xml`;
+    fs.writeFileSync(fullpath, this.content);
+    this.log(messages.getMessage('log.vrCreated', [fullpath]));
+
+    if (flags.push) {
+      const isScratch: boolean = (await flags['target-org']?.determineIfScratch()) ?? false;
+      await this.pushSource(orgname!, isScratch, fullpath);
     }
+    return { success: true };
+  }
 
-    let apiname = name.replace(new RegExp(`[^A-Z0-9]`,'gi'), '_');
-    content = content.replace(new RegExp(`{{fullname}}`, 'g'), apiname);
+  private async updateContent(varName: string, question: string): Promise<void> {
+    const answer = await this.prompt<{ res: string }>({
+      type: 'input',
+      name: 'res',
+      message: question,
+    });
+    this.content = this.content.replace(new RegExp(`{{${varName}}}`, 'g'), answer.res);
+  }
 
-    updateContent('description','Description: ');
-    updateContent('errorMessage','Error message: ');
-    updateContent('formula','Formula:\n');
-
-    //update content file
-    const fullpath = vrpath+'/'+apiname+'.validationRule-meta.xml';
-    fs.writeFileSync(fullpath, content);
-    console.log(`Validation rule created successfully : \n ${fullpath}`);
-
-    if (this.flags.push){
-        push_source(orgname);
+  private async pushSource(orgname: string, usesScratchOrg: boolean, path: string): Promise<string> {
+    this.log('Push source to org...');
+    const command = usesScratchOrg
+      ? `sf project deploy start --ignore-warnings --ignore-conflicts --target-org ${orgname}`
+      : `sf project deploy start --ignore-warnings --ignore-conflicts --target-org ${orgname} --source-directory ${path}`;
+    try {
+      return await new Promise((resolve) => resolve(execSync(command).toString()));
+    } catch (err) {
+      throw messages.createError('error.pushFailed');
     }
   }
 }

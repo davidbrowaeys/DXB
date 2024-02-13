@@ -1,274 +1,324 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxProject, SfdxError } from '@salesforce/core';
+/* eslint-disable @typescript-eslint/return-await */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+import { execSync as exec } from 'child_process';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import {
+  SfProject,
+  ScratchOrgCreateResult,
+  DefaultUserFields,
+  User,
+  AuthInfo,
+  Messages,
+  NamedPackageDir,
+} from '@salesforce/core';
+import * as fs from 'fs-extra';
+import { ProjectSetupResult } from '../install';
 
-const exec = require('child_process').execSync;
-const execAsync = require('child_process').exec;
-const fs = require('fs');
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'org.create');
 
-export default class Org extends SfdxCommand {
+export type OrgCreateResult = {
+  success: boolean;
+};
 
-  public static description = 'Create scratch org';
+export default class OrgCreate extends SfCommand<OrgCreateResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-  public static examples = [
-  `$ sfdx dxb:org:create --includepackages --defaultorg --orgname myorg`,
-  `$ sfdx dxb:org:create --durationday 10 --defaultorg --orgname myorg`
-  ];
+  public static readonly examples = messages.getMessages('examples');
 
-  public static args = [{name: 'file'}];
-
-  protected static flagsConfig = {
-    orgname :flags.string({
-      char: 'u',
+  public static readonly flags = {
+    'target-dev-hub': Flags.requiredHub(),
+    'set-alias': Flags.string({
+      char: 'a',
       required: true,
-      description: 'alias of scratch org'
+      summary: messages.getMessage('flags.set-alias.summary'),
+      aliases: ['orgname'],
+      deprecateAliases: true,
     }),
-    includepackages :flags.boolean({
+    'include-packages': Flags.boolean({
       char: 'p',
-      description: 'include packages from cli config file'
+      summary: messages.getMessage('flags.include-packages.summary'),
+      aliases: ['includepackages'],
+      deprecateAliases: true,
     }),
-    defaultorg: flags.boolean({
-      char: 's', 
-      description: 'mark as default org'
+    'default-org': Flags.boolean({
+      char: 's',
+      summary: messages.getMessage('flags.default-org.summary'),
+      aliases: ['defaultorg'],
+      deprecateAliases: true,
     }),
-    durationday : flags.number({
-      char: 'd', 
+    'duration-days': Flags.integer({
+      char: 'd',
       default: 30,
-      description: 'duration of the scratch org (in days) (default:30, min:1, max:30)'
+      summary: messages.getMessage('flags.duration-days.summary'),
+      min: 1,
+      max: 30,
+      aliases: ['durationday'],
+      deprecateAliases: true,
     }),
-    includetrackinghistory: flags.boolean({
-      char: 't', 
-      description: 'remove field tracking history tag from Account, Contact, Lead'
-    })
+    'include-tracking-history': Flags.boolean({
+      char: 't',
+      summary: messages.getMessage('flags.include-tracking-history.summary'),
+      aliases: ['includetrackinghistory'],
+      deprecateAliases: true,
+    }),
   };
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = false;
 
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
+  protected org: any;
 
-  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
+  private defaultPackageDir: NamedPackageDir | undefined;
 
-  async create_scratch_org(orgname: string, defaultorg:string, durationdays:number){
-    try{
-      return new Promise(function (resolve, reject) {
-          execAsync(`sfdx force:org:create -f config/project-scratch-def.json -a ${orgname} ${defaultorg} -d \"${durationdays}\"`, (error, stdout, stderr) => {
-            if (error) {
-              console.warn(error);
-            }
-            resolve(stdout? stdout : stderr);
-          });
-      });
-    }catch(err){
-      throw new SfdxError('Unable to create scratch org!');
+  public async run(): Promise<OrgCreateResult> {
+    const { flags } = await this.parse(OrgCreate);
+    const project = await SfProject.resolve();
+    this.org = flags['target-dev-hub'];
+    const config: any = await project.resolveProjectConfig();
+    this.defaultPackageDir = project.getDefaultPackage();
+    if (!config.plugins?.dxb) {
+      throw messages.createError('error.badConfig');
     }
-  }
+    const dxbConfig: ProjectSetupResult = config.plugins.dxb;
 
-  async deploy_legacy_packages(orgname: string, legacy_packages ,type: string){
-    this.ux.log(`Installing your ${type} legacy packages...`);
-    try{
-      legacy_packages.forEach( elem => {
-        exec(`sfdx force:mdapi:deploy --deploydir config/legacy-packages/${type}/${elem} -u ${orgname} -w 60`).toString();
-      });
-    }catch(err){
-      throw new SfdxError(`Unable to install your ${type} legacy packages!`);
-    }
-  }
+    const orgname = flags['set-alias'];
+    const defaultorg = flags['default-org'];
+    const durationdays: number = flags['duration-days'] || dxbConfig.defaultdurationdays;
+    this.log('\x1b[91m%s\x1b[0m', messages.getMessage('log.welcome', [orgname]));
 
-  async prompt_user_manual_config(orgname, manual_steps, startURL){
-    this.ux.log('Due to some limitations with DX scratch org, you must enable manually the following feature(s) before to proceed:');
-    manual_steps.forEach(function(elem) {
-      console.log(elem);
-    });
-    if (!startURL){
-      startURL = "/lightning/setup/SetupOneHome/home";
+    let output: ScratchOrgCreateResult | AuthInfo | string | undefined = await this.createScratchOrg(
+      orgname,
+      defaultorg,
+      durationdays
+    );
+    this.log(output?.warnings.join(', '));
+
+    // UPDATE WORKFLOWS
+    this.log(exec(`sf dxb org setdefault --target-org ${orgname}`).toString());
+
+    // DEPLOY PRE LEGACY PACKAGES
+    if (dxbConfig.pre_legacy_packages) {
+      this.deployLegacyPackages(orgname, dxbConfig.pre_legacy_packages, 'pre');
     }
-    this.ux.log(exec(`sfdx force:org:open -u ${orgname} -p ${startURL}`).toString());
-  
-    var stdin = require('readline-sync');
-    while(true) {
-      var yn = stdin.question("Would you like to continue?(Y/N)");
-      if(yn.toLowerCase() === 'y' ) {
-        break;
+    if (dxbConfig.deferPermissionSet) {
+      this.log(
+        exec(
+          `sf project deploy start --target-org ${orgname} --source-dir ${dxbConfig.deferPermissionSet} --wait 600`
+        ).toString()
+      );
+    }
+    if (dxbConfig.deferSharingUser) {
+      this.log(
+        exec(
+          `sf force user permset assign --perm-set-name ${dxbConfig.deferSharingUser} --target-org ${orgname} --on-behalf-of ${orgname}`
+        ).toString()
+      );
+    }
+
+    if (dxbConfig.userPermissionsKnowledgeUser) {
+      this.log(
+        exec(
+          `sf data update record --sobject User --where "Name='User User'" --values "Country=Australia" --target-org ${orgname}`
+        ).toString()
+      );
+      this.log(
+        exec(
+          `sf data update record --sobject User --where "Name='User User'" --values "UserPermissionsKnowledgeUser=true" --target-org ${orgname}`
+        ).toString()
+      );
+    }
+
+    // REMOVE FIELDS TRACKING HISTORY
+    if (flags['include-tracking-history']) {
+      this.includeTrackingHistory(dxbConfig.disableFeedTrackingHistory);
+    }
+
+    if (dxbConfig.manual_config_required) {
+      // STOP USER FOR MANUAL CONFIG
+      await this.promptUserManualConfig(orgname, dxbConfig.manual_steps ?? [], dxbConfig.manual_config_start_url ?? '');
+    }
+
+    // INSTALL PACKAGES
+    if (flags.includepackages && dxbConfig.packages) {
+      this.installPackages(orgname, dxbConfig.packages);
+    }
+
+    // PUSH DX SOURCE
+    this.log(await this.pushSource(orgname, true));
+
+    // DEPLOY POST LEGACY PACKAGES
+    if (dxbConfig.post_legacy_packages) {
+      this.deployLegacyPackages(orgname, dxbConfig.post_legacy_packages, 'post');
+    }
+
+    // IMPORT DATA
+    if (dxbConfig.data_plan_path && fs.existsSync(dxbConfig.data_plan_path)) {
+      output = this.importDataPlan(orgname, dxbConfig.data_plan_path);
+      this.log(output);
+    } else {
+      this.log(messages.getMessage('log.noSetupData'));
+    }
+
+    if (dxbConfig.default_user_role) {
+      const roleResult = JSON.parse(
+        exec(
+          `sf data query --query "select Id from UserRole where DeveloperName = ${dxbConfig.default_user_role}" --target-org ${orgname} --json`
+        ).toString()
+      );
+      if (roleResult.result?.totalSize === 1) {
+        this.log(
+          exec(
+            `sf data update record --sobject User --where "Name='User User'" --values "UserRoleId=${
+              roleResult.result.records[0].Id as string
+            }" --target-org ${orgname}`
+          ).toString()
+        );
       } else {
-        process.exit();
+        this.log(messages.getMessage('log.roleNotFound'));
       }
     }
+
+    // create other user, this also fix FLS being deleted from profile
+    if (dxbConfig.user_def_file) {
+      output = await this.createUser(orgname, dxbConfig.user_alias_prefix);
+      this.log(messages.getMessage('log.userCreated'));
+    }
+    this.log(exec(`sf org display --target-org ${orgname}`).toString());
+    this.log('\x1b[91m%s\x1b[0m', messages.getMessage('log.closing'));
+    return { success: true };
   }
-  
-  async includetrackinghistory(disableFeedTrackingObjects){
-    disableFeedTrackingObjects.forEach(function(elem) {
-      console.log(`Disabling Feed Tracking History for ${elem}`);
+
+  private async createScratchOrg(
+    orgname: string,
+    defaultorg: boolean,
+    durationdays: number
+  ): Promise<ScratchOrgCreateResult | undefined> {
+    if (!fs.existsSync('./config/project-scratch-def.json')) {
+      throw messages.createError('error.definitionFile');
+    }
+
+    return await this.org?.scratchOrgCreate({
+      alias: orgname,
+      setDefault: defaultorg,
+      durationDays: durationdays,
+      // Fix the file path typo ('./config.project-scratch-def.json' -> './config/project-scratch-def.json')
+      orgConfig: JSON.parse(fs.readFileSync('./config/project-scratch-def.json').toString()),
+    });
+  }
+
+  private deployLegacyPackages(orgname: string, legacyPackages: string[], type: string): void {
+    this.log(messages.getMessage('log.packages', [type]));
+    try {
+      legacyPackages.forEach((elem) => {
+        exec(
+          `sf project deploy start --metadata-dir config/legacy-packages/${type}/${elem} -target-org ${orgname} --wait 60`
+        ).toString();
+      });
+    } catch (err) {
+      throw messages.createError('error.packages', [type]);
+    }
+  }
+
+  private async promptUserManualConfig(orgname: string, manualSteps: string[], startURL: string): Promise<void> {
+    this.log(messages.getMessage('log.manualConfig'));
+    manualSteps.forEach((elem) => {
+      this.log(elem);
+    });
+    if (!startURL) {
+      startURL = '/lightning/setup/SetupOneHome/home';
+    }
+    this.log(exec(`sf org open --target-org ${orgname} --path ${startURL}`).toString());
+    const prompt = await this.prompt<{ response: string }>({
+      type: 'input',
+      name: 'response',
+      message: messages.getMessage('prompt.message.continue'),
+    });
+    if (prompt.response.toLowerCase() !== 'y') {
+      process.exit();
+    }
+  }
+
+  private includeTrackingHistory(disableFeedTrackingObjects: string[] | undefined): void {
+    disableFeedTrackingObjects?.forEach((elem) => {
+      this.log(messages.getMessage('log.trackingHistory', [elem]));
       this.removeFeedTrackingHistoryInObject(elem);
     });
   }
-  
-  async removeFeedTrackingHistoryInObject(objectName){
-    var objectPath = `./force-app/main/default/objects/${objectName}/${objectName}.object-meta.xml`;
-    var content = fs.readFileSync(objectPath).toString();
-    content = content.replace(new RegExp(`<enableHistory>.+</enableHistory>`,'g'), '<enableHistory>false</enableHistory>');
+
+  private removeFeedTrackingHistoryInObject(objectName: string): void {
+    const objectPath = `${this.defaultPackageDir?.fullPath}/objects/${objectName}/${objectName}.object-meta.xml`;
+    let content = fs.readFileSync(objectPath).toString();
+    content = content.replace(
+      new RegExp('<enableHistory>.+</enableHistory>', 'g'),
+      '<enableHistory>false</enableHistory>'
+    );
     fs.writeFileSync(objectPath, content);
-  
+
     this.removeFeedTrackingHistoryInField(objectName);
   }
-  
-  async removeFeedTrackingHistoryInField(objectName){
-    var objectPath = `./force-app/main/default/objects/${objectName}/fields`;
-    fs.readdirSync(objectPath).forEach(file => {
-      var content = fs.readFileSync(objectPath+'/'+file).toString();
-      content = content.replace(new RegExp(`<trackHistory>.+</trackHistory>`,'g'), '');
-      fs.writeFileSync(objectPath+'/'+file, content);
-      });
+
+  private removeFeedTrackingHistoryInField(objectName: string): void {
+    const objectPath = `${this.defaultPackageDir?.fullPath}/objects/${objectName}/fields`;
+    fs.readdirSync(objectPath).forEach((file) => {
+      let content = fs.readFileSync(objectPath + '/' + file).toString();
+      content = content.replace(new RegExp('<trackHistory>.+</trackHistory>', 'g'), '');
+      fs.writeFileSync(objectPath + '/' + file, content);
+    });
   }
 
-  async push_source(orgname){
-    this.ux.log('Push source to org...'); 
-    try{
-      return new Promise(async function (resolve, reject) {
-          await execAsync(`sfdx force:source:push -g -f -u ${orgname}`, (error, stdout, stderr) => {
-            if (error) {
-              console.warn(error);
-            }
-            resolve(stdout? stdout : stderr);
-          });
-      });
-    }catch(err){
-      throw new SfdxError('Unable to push source to scratch org!');
+  private async pushSource(orgname: string, usesScratchOrg: boolean | undefined, path?: string): Promise<string> {
+    this.log('Push source to org...');
+    const command = usesScratchOrg
+      ? `sf project deploy start --ignore-warnings --ignore-conflicts --target-org ${orgname}`
+      : `sf project deploy start --ignore-warnings --ignore-conflicts --target-org ${orgname} --source-directory ${path}`;
+    try {
+      return await new Promise((resolve) => resolve(exec(command).toString()));
+    } catch (err) {
+      throw messages.createError('error.pushFailed');
     }
   }
 
-  async install_packages(orgname, packages){
-    console.log('Installing your (un)managed packages...');
-    packages.forEach(elem =>{
-      try{
-        var output = JSON.parse(exec(`sfdx force:package:install --package ${elem} -u ${orgname} -w 60 --json -r`).toString());
-        if (output && output.result && output.result.Status === 'SUCCESS'){
-          console.log(`Successfully installed package [${elem}]`);
-        }else{
-          throw new SfdxError(`Error while installing package [${elem}]`);
+  private installPackages(orgname: string, packages: string[]): void {
+    this.log(messages.getMessage('log.installing'));
+    packages.forEach((elem) => {
+      try {
+        const output = JSON.parse(
+          exec(`sf package install --package ${elem} --target-org ${orgname} --wait 60 --json --no-prompt`).toString()
+        );
+        if (output?.result && output.result.Status === 'SUCCESS') {
+          this.log(messages.getMessage('log.installed', [elem]));
+        } else {
+          throw messages.createError('error.installingPackage', [elem]);
         }
-      }catch(err){
-        throw new SfdxError('Unable to install (un)managed packages!');
+      } catch (err) {
+        throw messages.createError('error.installing');
       }
     });
   }
 
-  async create_user(orgname, user_alias_prefix,user_def_file){
-    console.log('Creating testing user...');
-    const suffix = Math.floor((Math.random() * 20000000) + 1);
-    if (!user_alias_prefix) user_alias_prefix = 'usr';
-    try{
-      return new Promise(function (resolve, reject) {
-          execAsync(`sfdx force:user:create --setalias ${user_alias_prefix}-${orgname} --definitionfile ${user_def_file} username=user.${suffix}@nab-test.${orgname} -u ${orgname}`, (error, stdout, stderr) => {
-            if (error) {
-              console.warn(error);
-            }
-            resolve(stdout? stdout : stderr);
-          });
+  private async createUser(orgname: string, userAliasPrefix: string | undefined): Promise<AuthInfo> {
+    this.log(messages.getMessage('log.createUser'));
+    const suffix = Math.floor(Math.random() * 20000000 + 1);
+    if (!userAliasPrefix) {
+      userAliasPrefix = 'usr';
+    }
+    try {
+      const defaultUserFields = await DefaultUserFields.create({
+        templateUser: this.org?.getUsername() ?? '',
+        newUserName: `user.${suffix}@dxb-test.${orgname}`,
       });
-    }catch(err){
-      throw new SfdxError('Unable to create user to scratch org!');
+      const org = this.org;
+      const user: User = await User.create({ org });
+      return await user.createUser(defaultUserFields.getFields());
+    } catch (err) {
+      throw messages.createError('error.createUser');
     }
   }
 
-  async import_data_plan(orgname, dataplan){
-    console.log('Importing podium data plan...');
-    try{
-      return new Promise(function (resolve, reject) {
-          execAsync(`sfdx force:data:tree:import -p ${dataplan} -u ${orgname}`, (error, stdout, stderr) => {
-            if (error) {
-              console.warn(error);
-            }
-            resolve(stdout? stdout : stderr);
-          });
-      });
-    }catch(err){
-      throw new SfdxError('Unable to create user to scratch org!');
+  private importDataPlan(orgname: string, dataplan: string): string {
+    this.log(messages.getMessage('log.importData'));
+    try {
+      return exec(`sf data import tree --plan ${dataplan} --target-org ${orgname} --json`).toString();
+    } catch (err) {
+      throw messages.createError('error.importData');
     }
-  }
-
-  public async run() {
-    const project = await SfdxProject.resolve();
-    var config:any = await project.resolveProjectConfig();
-    if (!config.plugins || !config.plugins.dxb){
-      throw new SfdxError('Plugin definition dxb is missing in sfdx-project.json, make sure to setup plugin.');
-    }
-    config = config.plugins.dxb;
-
-    let orgname = this.flags.orgname;
-    let defaultorg = this.flags.defaultorg ? '-s' : '';
-    let durationdays = this.flags.durationdays || config.defaultdurationdays;   
-    this.ux.log('\x1b[91m%s\x1b[0m', `Welcome to dxb CLI! We are now creating your scratch org[${orgname}]...`);
-
-    var output = await this.create_scratch_org(orgname, defaultorg, durationdays);
-    console.log(output);
-
-    //UPDATE WORKFLOWS
-    console.log(exec(`sfdx dxb:org:setdefault -u ${orgname}`).toString());
-    
-    //DEPLOY PRE LEGACY PACKAGES
-    if (config.pre_legacy_packages) {
-      await this.deploy_legacy_packages(orgname, config.pre_legacy_packages, 'pre');
-    }
-    if (config.deferPermissionSet){
-      console.log(exec(`sfdx force:source:deploy -u ${orgname} -p ${config.deferPermissionSet} -w 600`).toString());
-    }
-    if (config.deferSharingUser){
-      console.log(exec(`sfdx force:user:permset:assign -n ${config.deferSharingUser} -u ${orgname} -o ${orgname}`).toString());
-    }
-
-    if (config.userPermissionsKnowledgeUser){
-      console.log(exec(`sfdx force:data:record:update -s User -w "Name='User User'" -v "Country=Australia" -u ${orgname}`).toString());
-      console.log(exec(`sfdx force:data:record:update -s User -w "Name='User User'" -v "UserPermissionsKnowledgeUser=true" -u ${orgname}`).toString());
-    }
-
-    //REMOVE FIELDS TRACKING HISTORY
-    if (this.flags.includetrackinghistory) {
-      this.includetrackinghistory(config.disableFeedTrackingHistory);
-    } 
-    
-    if (config.manual_config_required){
-      //STOP USER FOR MANUAL CONFIG
-      this.prompt_user_manual_config(orgname, config.manual_steps,config.manual_config_start_url);
-    }
-
-    //INSTALL PACKAGES
-    if (this.flags.includepackages && config.packages) {
-      await this.install_packages(orgname, config.packages);
-    }
-			
-    //PUSH DX SOURCE
-    output = await this.push_source(orgname);
-    console.log(output);
-			
-    //DEPLOY POST LEGACY PACKAGES
-    if (config.post_legacy_packages) {
-      await this.deploy_legacy_packages(orgname, config.post_legacy_packages, 'post');
-    }
-
-    //IMPORT DATA
-    if (config.data_plan_path && fs.existsSync(config.data_plan_path)){
-      output = await this.import_data_plan(orgname, config.data_plan_path);
-      console.log(output);
-    }else{
-      console.log('No setup data...');
-    }
-
-    if (config.default_user_role){
-      var roleResult = JSON.parse(exec(`sfdx force:data:soql:query -q "select Id from UserRole where DeveloperName = ${config.default_user_role}" -u ${orgname} --json`).toString());
-      if (roleResult && roleResult.result &&  roleResult.result.totalSize === 1){
-        console.log(exec(`sfdx force:data:record:update -s User -w "Name='User User'" -v "UserRoleId=${roleResult.result.records[0].Id}" -u ${orgname}`).toString());
-      }else{
-        console.log('Default role not found');
-      }
-    }
-
-    //create other user, this also fix FLS being deleted from profile
-    if (config.user_def_file){
-      output = await this.create_user(orgname, config.user_alias_prefix, config.user_def_file);
-      console.log(output);
-    }
-    this.ux.log(exec(`sfdx force:org:display -u ${orgname}`).toString());
-    this.ux.log('\x1b[91m%s\x1b[0m', `Thank you for your patience! You can now enjoy your scrath org. Happy coding!`);
   }
 }

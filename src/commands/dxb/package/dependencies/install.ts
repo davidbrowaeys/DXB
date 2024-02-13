@@ -1,71 +1,67 @@
-
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxProject, SfdxError } from '@salesforce/core';
 import { execSync as exec } from 'child_process';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { Messages, PackageDir, SfProject } from '@salesforce/core';
 
-interface PackageDirectory {
-  path: string;
-  default: boolean;
-  dependencies: any[];
-}
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'package.dependencies.install');
 
-export default class extends SfdxCommand {
+export type PackageDependenciesInstallResult = {
+  success: boolean;
+};
 
-  public static description = 'This command generate delta package by doing git diff.';
+export default class PackageDependenciesInstall extends SfCommand<PackageDependenciesInstallResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-  public static examples = [
-    `$ sfdx dxb:package:dependencies:install`,
-  ];
+  public static readonly examples = messages.getMessages('examples');
 
-  public static args = [{ name: 'file' }];
-
-  protected static flagsConfig = {
-    mode: flags.string({ char: 'm', description: 'commitid|tags|branch', default: "commitid" })
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
   };
 
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
-
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
-
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = true;
+  public static readonly requiresProject = true;
 
-  protected projectConfig;
-  protected orgName;
-  protected packageDirectories: PackageDirectory[] = [];
-  public async run() {
-    this.orgName = this.org?.getUsername();
-    //project config
-    this.projectConfig = await  (await SfdxProject.resolve()).resolveProjectConfig();
+  protected projectConfig: any;
+  protected orgName: string | undefined;
+  protected packageDirectories: PackageDir[] = [];
+  public async run(): Promise<PackageDependenciesInstallResult> {
+    const { flags } = await this.parse(PackageDependenciesInstall);
+    this.orgName = flags['target-org']?.getUsername();
+    // project config
+    this.projectConfig = await (await SfProject.resolve()).resolveProjectConfig();
     this.packageDirectories = this.projectConfig.packageDirectories;
-    await this.installPackages();
+    this.installPackages();
+    return { success: true };
   }
-  private async installPackages(){
-    var installedPackage =  JSON.parse(exec(`sfdx package:installed:list --json`).toString());
-    console.log(JSON.stringify(installedPackage));
-    console.log('alias',this.projectConfig.packageAliases);
-    this.packageDirectories.forEach(pkg =>{
-        if ( pkg.dependencies){
-            pkg.dependencies.forEach( (elem) => {
-                try{
-                    const packageVersion = `${elem.package}@${elem.versionNumber.replace('.LATEST','-1')}`;
-                    console.log('packageVersion',packageVersion);
-                    const packageID = this.projectConfig.packageAliases[packageVersion];
-                    console.log(`sfdx force:package:install --package "${packageID}" -u ${this.orgName} -w 600 --json -r`);
-                    // console.log('Installing',packageID,installedPackage.find(p => packageID === ''));
-                    var output = JSON.parse(exec(`sfdx force:package:install --package "${packageID}" -u ${this.orgName} -w 600 --json -r`).toString());
-                    if (output && output.result && output.result.Status === 'SUCCESS'){
-                        console.log(`Successfully installed package [${packageID}]`);
-                    }else{
-                        throw new SfdxError(`Error while installing package [${packageID}]`);
-                    }
-                }catch(err){
-                    throw new SfdxError('Unable to install packages dependencies!',JSON.stringify(err));
-                }
-            });
-        }
-      });
+  private installPackages(): void {
+    this.log(exec(`sf package installed list --target-org ${this.orgName} --json`).toString());
+    this.log(messages.getMessage('log.alias', [this.projectConfig.packageAliases]));
+    this.packageDirectories.forEach((pkg) => {
+      if (pkg.dependencies) {
+        pkg.dependencies.forEach((elem) => {
+          try {
+            const packageVersion = `${elem.package}@${elem.versionNumber?.replace('.LATEST', '-1')}`;
+            this.log(messages.getMessage('log.packageVersion', [packageVersion]));
+            const packageID: string = this.projectConfig.packageAliases[packageVersion];
+            this.log(
+              `sf package install --package "${packageID}" --target-org ${this.orgName} --wait 600 --json --no-prompt`
+            );
+            // console.log('Installing',packageID,installedPackage.find(p => packageID === ''));
+            const output = JSON.parse(
+              exec(
+                `sf package install --package "${packageID}" --target-org ${this.orgName} --wait 600 --json --no-prompt`
+              ).toString()
+            );
+            if (output?.result && output.result.Status === 'SUCCESS') {
+              this.log(messages.getMessage('log.installPackage', [packageID]));
+            } else {
+              throw messages.createError('error.errorInstall', [packageID]);
+            }
+          } catch (err) {
+            throw messages.createError('error.cannotInstall', [JSON.stringify(err)]);
+          }
+        });
+      }
+    });
   }
 }

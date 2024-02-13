@@ -1,115 +1,116 @@
-import { SfdxCommand } from '@salesforce/command';
-import { SfdxProject } from '@salesforce/core';
 import * as path from 'path';
 import * as fs from 'fs';
+import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
+import { Messages, PackageDir, SfProject } from '@salesforce/core';
+import { ux } from '@oclif/core';
+import { readdirSync, statSync } from 'fs-extra';
+export type ApexScanQueryResult = {
+  success: boolean;
+};
+const SOQL_REGEX = /\[SELECT\s.*?\]|\('(SELECT|select).*'\)/g;
 
-interface PackageDirectory {
-  path: string;
-  default: boolean;
-}
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'apex.scan.query');
 
-const SOQL_REGEX = /\[SELECT\s.*?\]|\(\'(SELECT|select).*\'\)/g;
+export default class ApexScanQuery extends SfCommand<ApexScanQueryResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-export default class extends SfdxCommand {
+  public static readonly description = messages.getMessage('description');
 
-  public static description = 'This command generate delta package by doing git diff.';
+  public static readonly examples = messages.getMessages('examples');
 
-  public static examples = [
-    `$ sfdx dxb:apex:scan:query -m tags -k mytag`,
-  ];
-
-  public static args = [{ name: 'file' }];
-
-  protected static flagsConfig = {};
-
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
-
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
+  public static readonly flags = { 'target-org': Flags.requiredOrg() };
 
   // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = true;
-  protected packageDirectories: PackageDirectory[] = [];
-  protected projectConfig;
-  protected instanceUrl:string;
-  protected accessToken:string;
+  public static readonly requiresProject = true;
+
+  protected packageDirectories: PackageDir[] = [];
+  protected projectConfig: any;
+  protected instanceUrl: string | undefined = '';
+  protected accessToken = '';
   protected allClasses: string[] = [];
-  public async run() {
-    this.accessToken = this.org.getConnection().accessToken;
-    this.instanceUrl = this.org.getConnection().instanceUrl;
-    this.projectConfig = await  (await SfdxProject.resolve()).resolveProjectConfig();
-    
+
+  public async run(): Promise<ApexScanQueryResult> {
+    const { flags } = await this.parse(ApexScanQuery);
+    this.accessToken = flags['target-org']?.getConnection().accessToken?.toString() ?? '';
+    this.instanceUrl = flags['target-org']?.getConnection().instanceUrl;
+    this.projectConfig = await (await SfProject.resolve()).resolveProjectConfig();
+
     this.packageDirectories = this.projectConfig.packageDirectories;
-    this.packageDirectories.forEach((directory: PackageDirectory) => {
-        this.getAllClasses(directory.path);
+    this.packageDirectories.forEach((directory: PackageDir) => {
+      this.getAllClasses(directory.path);
     });
-    await Promise.all(this.allClasses.map(async (file) => {
+    await Promise.all(
+      this.allClasses.map(async (file) => {
         const fileContent = fs.readFileSync(file, 'utf8');
         let match;
-        let queries = [];
+        const queries = [];
         while ((match = SOQL_REGEX.exec(fileContent)) !== null) {
-            const query = match[0].substring(1, match[0].length - 1);
-            queries.push(query);
+          const query = match[0].substring(1, match[0].length - 1);
+          queries.push(query);
         }
-        if (queries.length === 1){
-            await this.scanQuery(file, queries[0]);
-        }else if (queries.length > 1){
-            await Promise.all(queries.map(async (query) => {
-                try{
-                    await this.scanQuery(file, query);
-                }catch(err){
-                    console.error(file, query, err);    
-                }
-            }));
+        if (queries.length === 1) {
+          await this.scanQuery(file, queries[0]);
+        } else if (queries.length > 1) {
+          await Promise.all(
+            queries.map(async (query) => {
+              try {
+                await this.scanQuery(file, query);
+              } catch (err) {
+                ux.error(`${file}-${query}-${(err as Error).message}`);
+              }
+            })
+          );
         }
-    }));
+      })
+    );
+    return { success: true };
   }
-  public async scanQuery(file, query){
+  public async scanQuery(file: string, query: string): Promise<void> {
     const url = `${this.instanceUrl}/services/data/v57.0/query/?explain=${encodeURIComponent(query)}`;
-    const headers = new Headers();
-    headers.append('Authorization',  'Bearer ' + this.accessToken);
-    headers.append('X-SFDC-Session',  'Bearer ' + this.accessToken);
+    const headers: Headers = new Headers();
+    headers.append('Authorization', 'Bearer ' + this.accessToken);
+    headers.append('X-SFDC-Session', 'Bearer ' + this.accessToken);
     headers.append('Content-Type', 'application/json; charset=UTF-8');
     headers.append('Accept', 'application/json');
     const options: RequestInit = {
-        method: 'GET',
-        headers: headers,
+      method: 'GET',
+      headers,
     };
-    try{
-        const response = await fetch(url, options);
-        const body:any = await response.json();
-        if (!body.plans || body.plans.length === 0){
-            console.log(body);
-            return;
+    try {
+      const response: Response = await fetch(url, options);
+      const body: any = await response.json();
+      if (!body.plans || body.plans.length === 0) {
+        this.log(body);
+        return;
+      }
+      this.log(messages.getMessage('class', [file]));
+      this.log(messages.getMessage('query', [query]));
+      for (const queryPlan of body) {
+        this.log(queryPlan);
+        for (const queryPlanNote of queryPlan.notes) {
+          this.log(queryPlanNote);
         }
-        console.log('Class:',file);
-        console.log('Query:',query);
-        for (var i = 0 ; i < body.plans.length; i++){
-            console.log(body.plans[i]);
-
-            for (var n = 0; n < body.plans[i].notes.length; n++){
-                console.log(body.plans[i].notes[n]); 
-            }
-        }
-        console.log('----------------------------------------------------');
-    }catch(err){
-        console.error(err);
+      }
+      this.log('----------------------------------------------------');
+    } catch (err) {
+      this.error(err as Error);
     }
   }
-  public getAllClasses(directory: string) {
-    var currentDirectorypath = path.join(directory);
 
-    var currentDirectory = fs.readdirSync(currentDirectorypath, 'utf8');
+  public getAllClasses(directory: string): void {
+    const currentDirectorypath = path.join(directory);
+
+    const currentDirectory = readdirSync(currentDirectorypath, 'utf8');
 
     currentDirectory.forEach((file: string) => {
-        var pathOfCurrentItem: string = path.join(directory + '/' + file);
-        if (fs.statSync(pathOfCurrentItem).isFile() && file.endsWith('.cls')) {
-            this.allClasses.push(pathOfCurrentItem);
-        } else if (!fs.statSync(pathOfCurrentItem).isFile()) {
-            var directorypath = path.join(directory + '/' + file);
-            this.getAllClasses(directorypath);
-        }
+      const pathOfCurrentItem: string = path.join(directory + '/' + file);
+      if (statSync(pathOfCurrentItem).isFile() && file.endsWith('.cls')) {
+        this.allClasses.push(pathOfCurrentItem);
+      } else if (!statSync(pathOfCurrentItem).isFile()) {
+        const directorypath = path.join(directory + '/' + file);
+        this.getAllClasses(directorypath);
+      }
     });
-}
+  }
 }

@@ -83,6 +83,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
   protected allClasses: string[] = [];
   protected processedClasses: string[] = [];
   protected projectConfig!: JsonMap;
+  protected metdataFolderContentTypes: MetadataType[] = [];
   protected registryAccess: RegistryAccess = new RegistryAccess();
   protected packageJson: any = {
     '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' },
@@ -225,7 +226,6 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     // find metadata suffix and file name
     // eslint-disable-next-line prefer-const
     let { metadataType, fName, fSuffix } = this.getMetadataTypeAndName(base);
-
     if (
       (metadataType && fSuffix !== 'site' && fSuffix !== 'md') ??
       (metadataType && fSuffix === 'md' && base.endsWith('-meta.xml'))
@@ -250,7 +250,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
         (x) => !!Object.prototype.hasOwnProperty.call(registry.strictDirectoryNames, x)
       );
       if (metadataTypIndex >= 0) {
-        metadataType = this.registryAccess.getTypeByName(metadataDir[metadataTypIndex]);
+        metadataType = this.registryAccess.getTypeByName(registry.strictDirectoryNames[metadataDir[metadataTypIndex]]);
         if (metadataType.name === 'CustomObject' && fSuffix !== 'object' && this.granularmode) {
           const tp = this.initMetadataTypeInPackage(
             metadataType.children!.types[metadataType.children!.suffixes[fSuffix]].name

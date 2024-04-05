@@ -1,179 +1,126 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError } from '@salesforce/core';
-import { QueryResult } from 'jsforce';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { Messages } from '@salesforce/core';
+import { QueryResult, Connection } from 'jsforce';
+import * as Table from 'cli-table3';
+import { PermissionSet } from 'jsforce/lib/api/metadata';
+import * as colors from '@colors/colors';
+export type UserFindAccessResult = {
+  success: boolean;
+};
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'user.access.why');
+export default class UserFindAccess extends SfCommand<UserFindAccessResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-const Table = require('tty-table');
-const chalk = require('chalk');
+  public static readonly examples = messages.getMessages('examples');
 
-export default class UserFindAccess extends SfdxCommand {
-
-  public static description = 'Find why a specified user have access to a field or object';
-
-  public static examples = [
-    `$ sfdx dxb:user:access:why -o Product2`,
-    `$ sfdx dxb:user:access:why -o Product2 -f External_ID__c`,
-    `$ sfdx dxb:user:access:why -o Product2 -f External_ID__c -i johndoe@abc.com.au`,
-  ];
-
-  public static args = [{name: 'file'}];
-
-  protected static flagsConfig = {
-    username :flags.string({
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    username: Flags.string({
       char: 'i',
       required: false,
-      description: 'username of salesforce user. If not specified, will use dx default user'
+      summary: messages.getMessage('flags.username.summary'),
     }),
-    objectname :flags.string({
-        char: 'o',
-        required: true,
-        description: 'salesforce api name of object, i.e.: Account, Invoice__c'
-      }),
-    fieldname :flags.string({
-        char: 'f',
-        required: false,
-        description: 'salesforce api name of object, i.e.: AccountId, Name',
-        default:''
-      })
+    'object-name': Flags.string({
+      char: 's',
+      required: true,
+      summary: messages.getMessage('flags.object-name.summary'),
+      aliases: ['objectname'],
+      deprecateAliases: true,
+    }),
+    'field-name': Flags.string({
+      char: 'f',
+      required: false,
+      summary: messages.getMessage('flags.field-name.summary'),
+      default: '',
+      aliases: ['fieldname'],
+      deprecateAliases: true,
+    }),
   };
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = true;
 
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
-
-  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
-
-  public async run() {
-      this.ux.startSpinner('Scanning org for user access');
-      // Uses latest API version
-        let username:any = this.flags.username;
-        let objectname:string = this.flags.objectname;
-        let fieldname:string = this.flags.fieldname;
-        if (!this.org){
-          throw new SfdxError('Connectons not established!');
-        }
-        if (!username) username = this.org.getUsername();
-        const connection:any = this.org.getConnection();
-        var fieldpermSql = '';
-        if (fieldname) {
-            fieldpermSql = `,(SELECT ID, Field, Parent.Name, PermissionsEdit, PermissionsRead, SobjectType FROM FieldPerms WHERE SobjectType = '${objectname}' AND Field = '${objectname}.${fieldname}')`
-        }else{
-            fieldpermSql = `,(SELECT SobjectType, Parent.Name, PermissionsViewAllRecords, PermissionsRead, PermissionsModifyAllRecords, PermissionsEdit, PermissionsDelete, PermissionsCreate FROM ObjectPerms WHERE SobjectType = '${objectname}')`;
-        }
-        const soql:string = `
+  public async run(): Promise<UserFindAccessResult> {
+    const { flags } = await this.parse(UserFindAccess);
+    this.spinner.start('Scanning org for user access');
+    // Uses latest API version
+    let username: string | undefined = flags.username;
+    const objectname: string = flags['object-name'];
+    const fieldname: string = flags['field-name'];
+    if (!flags['target-org']) {
+      throw messages.createError('error.connection');
+    }
+    if (!username) {
+      username = flags['target-org'].getUsername()!;
+    }
+    const connection: Connection = flags['target-org']!.getConnection()!;
+    let fieldpermSql = '';
+    if (fieldname) {
+      fieldpermSql = `,(SELECT ID, Field, Parent.Name, PermissionsEdit, PermissionsRead, SobjectType FROM FieldPerms WHERE SobjectType = '${objectname}' AND Field = '${objectname}.${fieldname}')`;
+    } else {
+      fieldpermSql = `,(SELECT SobjectType, Parent.Name, PermissionsViewAllRecords, PermissionsRead, PermissionsModifyAllRecords, PermissionsEdit, PermissionsDelete, PermissionsCreate FROM ObjectPerms WHERE SobjectType = '${objectname}')`;
+    }
+    const soql = `
         SELECT Id, Name ${fieldpermSql}
         FROM PermissionSet
         WHERE Id IN (SELECT PermissionSetId FROM PermissionSetAssignment WHERE Assignee.Username = '${username}')`;
 
-        const result: QueryResult<{}> = await connection.query(soql);
+    const result: QueryResult<PermissionSet> = await connection.query(soql);
 
-        var headers:any = [
-          {
-              value : "Permission Set Name",
-              headerColor : "green",
-              color: "white",
-              align : "left",
-              paddingLeft : 2,
-              width : 40
-          },
-          {
-            value : "C(reate)",
-            headerColor : "green",
-            color: "white",
-            align : "center",
-            width : 20,
-            formatter : formaPermission
-          },
-          {
-            value : "R(ead)",
-            headerColor : "green",
-            color: "white",
-            align : "center",
-            width : 20,
-            formatter : formaPermission
-          },
-          {
-            value : "E(dit)",
-            headerColor : "green",
-            color: "white",
-            align : "center",
-            width : 20,
-            formatter : formaPermission
-          },
-          {
-            value : "D(elete)",
-            headerColor : "green",
-            color: "white",
-            align : "center",
-            width : 20,
-            formatter : formaPermission
-        },
-        {
-          value : "V(iew All)",
-          headerColor : "green",
-          color: "white",
-          align : "center",
-          width : 20,
-          formatter : formaPermission
-          },
-          {
-            value : "M(odified All)",
-            headerColor : "green",
-            color: "white",
-            align : "center",
-            width : 30,
-            formatter : formaPermission
-            }
-        ];
-        var rows:any = [];
-        result.records.forEach( (elem:any) => {
-          if (elem.ObjectPerms && elem.ObjectPerms !== null && elem.ObjectPerms.totalSize >= 1){
-            rows.push([
-              elem.Name,
-              elem.ObjectPerms.records[0].PermissionsCreate   ? 'V' : 'X',
-              elem.ObjectPerms.records[0].PermissionsRead   ? 'V' : 'X',
-              elem.ObjectPerms.records[0].PermissionsEdit   ? 'V' : 'X',
-              elem.ObjectPerms.records[0].PermissionsDelete   ? 'V' : 'X',
-              elem.ObjectPerms.records[0].PermissionsViewAllRecords   ? 'V' : 'X',
-              elem.ObjectPerms.records[0].PermissionsModifyAllRecords   ? 'V' : 'X'
-            ]);
-          }
-          if (elem.FieldPerms && elem.FieldPerms !== null && elem.FieldPerms.totalSize >= 1){
-            rows.push([
-              elem.Name,
-              '',
-              elem.FieldPerms.records[0].PermissionsRead   ? 'V' : 'X',
-              elem.FieldPerms.records[0].PermissionsEdit   ? 'V' : 'X',
-              '',
-              '',
-              ''
-            ]);
-          }
-        });
-        var t1 = Table(headers,rows,null,{
-            borderStyle : 1,
-            borderColor : "blue",
-            paddingBottom : 0,
-            headerAlign : "center",
-            align : "center",
-            color : "white",
-            truncate: "..."
-        });
-        this.ux.log(`\nWhy ${username} have access to ${objectname} ${fieldname}?`);
-        this.ux.log(t1.render());
-    }
+    const headers: string[] = [
+      'Permission Set Name',
+      'C(reate)',
+      'R(ead)',
+      'E(dit)',
+      'D(elete)',
+      'V(iew all)',
+      'M(odify all)',
+    ];
+    const headerStyles = [
+      colors.green.toString(),
+      colors.green.toString(),
+      colors.green.toString(),
+      colors.green.toString(),
+      colors.green.toString(),
+      colors.green.toString(),
+      colors.green.toString(),
+    ];
+
+    const t1 = new Table({
+      head: headers,
+      style: {
+        head: headerStyles,
+        border: [colors.blue.toString()],
+      },
+      colWidths: [40, 20, 20, 20, 20, 20, 30],
+      colAligns: ['left', 'center', 'center', 'center', 'center', 'center', 'center'],
+      truncate: '...',
+    });
+    result.records.forEach((elem: PermissionSet) => {
+      if (elem.objectPermissions && elem.objectPermissions !== null && elem.objectPermissions.length >= 1) {
+        t1.push([
+          elem.fullName,
+          elem.objectPermissions[0].allowCreate ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+          elem.objectPermissions[0].allowRead ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+          elem.objectPermissions[0].allowEdit ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+          elem.objectPermissions[0].allowDelete ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+          elem.objectPermissions[0].viewAllRecords ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+          elem.objectPermissions[0].modifyAllRecords ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+        ]);
+      }
+      if (elem.fieldPermissions && elem.fieldPermissions !== null && elem.fieldPermissions.length >= 1) {
+        t1.push([
+          elem.fullName,
+          '',
+          elem.fieldPermissions[0].readable ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+          elem.fieldPermissions[0].editable ? colors.black.bgGreen('V') : colors.white.bgRed('X'),
+          '',
+          '',
+          '',
+        ]);
+      }
+    });
+    this.spinner.stop(messages.getMessage('spinner.stop.done'));
+    this.log(messages.getMessage('log.why', [username, objectname, fieldname]));
+    this.log(t1.toString());
+    return { success: true };
   }
-  function formaPermission(value:string){
-          
-    //will convert an empty string to 0	
-    //value = value * 1;
-    
-    if(value === 'V'){
-        value = chalk.black.bgGreen(value);
-    }
-    else{
-        value = chalk.white.bgRed(value);
-    }
-    return value;
 }

@@ -1,40 +1,52 @@
-import { flags, SfdxCommand } from '@salesforce/command';
 import * as fs from 'fs';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import { Messages } from '@salesforce/core';
 
-export default class extends SfdxCommand {
+type EnvRule = {
+  source: string;
+  target: string;
+};
+type EnvFile = {
+  pagePath: string;
+  replacerules: EnvRule[];
+};
+type OrgDataResult = {
+  success: boolean;
+};
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'org.data');
+export default class OrgData extends SfCommand<OrgDataResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-  public static description = 'This command generate delta package by doing git diff.';
+  public static readonly description = messages.getMessage('description');
 
-  public static examples = [
-    `$ sfdx dxb:org:data --config config/cty-env-mapping.json --environment ST`
-  ];
+  public static readonly examples = messages.getMessages('examples');
 
-  public static args = [{ name: 'file' }];
-
-  protected static flagsConfig = {
-    config: flags.string({ char: 'f', description: 'Path to config file', required:true}),
-    environment: flags.string({ char: 'f', description: 'Path to config file', required:true})
+  public static readonly flags = {
+    config: Flags.file({
+      char: 'f',
+      summary: messages.getMessage('flags.config.summary'),
+      required: true,
+      exists: true,
+    }),
+    environment: Flags.string({ char: 'e', summary: messages.getMessage('flags.environment.summary'), required: true }),
   };
 
-  protected testClasses: string[] = [];
-  protected allClasses: string[] = [];
-  protected processedClasses: string[] = [];
-  protected regex;
-  protected projectConfig;
+  public async run(): Promise<OrgDataResult> {
+    // flags
+    const { flags } = await this.parse(OrgData);
+    const config = flags.config;
+    const environment = flags.environment;
 
-  public async run() {
-    //flags
-    let config = this.flags.config;
-    let environment = this.flags.environment;
-
-    let envMapping = JSON.parse(fs.readFileSync(config).toString());
-    envMapping[environment].forEach(file => {
-      console.log('Processing:',file.pagePath);
-      var fileContent = fs.readFileSync(file.pagePath).toString();
-      file.replacerules.forEach(rule => {
-        fileContent = fileContent.replace(new RegExp(rule.source,'g'), rule.target);
+    const envMapping = JSON.parse(fs.readFileSync(config).toString());
+    envMapping[environment].forEach((file: EnvFile) => {
+      this.log(messages.getMessage('log.processing', [file.pagePath]));
+      let fileContent = fs.readFileSync(file.pagePath).toString();
+      file.replacerules.forEach((rule) => {
+        fileContent = fileContent.replace(new RegExp(rule.source, 'g'), rule.target);
       });
       fs.writeFileSync(file.pagePath, fileContent);
     });
+    return { success: true };
   }
 }

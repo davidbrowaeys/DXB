@@ -1,163 +1,325 @@
 {
-	"name": "dxb",
-	"description": "A set of utility for sfdx",
-	"version": "2.0.0",
-	"author": "David Browaeys",
-	"bugs": "https://github.com/davidbrowaeys/DXB/issues",
-	"bin": {
-		"sfdx": "bin/run"
-	},
-	"dependencies": {
-		"@salesforce/command": "^4.2.0",
-		"@salesforce/core": "^5.3.1",
-		"@salesforce/plugin-user": "^2.3.32",
-		"@salesforce/source-deploy-retrieve": "^9.7.20",
-		"@salesforce/ts-types": "^1.5.20",
-		"@types/babel__traverse": "^7.18.3",
-		"chalk": "^4.1.2",
-		"csv-parser": "^2.3.2",
-		"csv-split-stream": "^1.0.2",
-		"csv-writer": "^1.6.0",
-		"handlebars": "^4.7.7",
-		"html-docx-js-typescript": "^0.1.5",
-		"js2xmlparser": "^4.0.1",
-		"pdf-creator-node": "^2.3.5",
-		"salesforce-alm": "^53.6.0",
-		"tslib": "^2.1.0",
-		"tty-table": "^2.7.0",
-		"xmldom": "^0.6.0"
-	},
-	"devDependencies": {
-		"@oclif/dev-cli": "1.26.5",
-		"@oclif/plugin-help": "3.2.9",
-		"@oclif/test": "^1.2.8",
-		"@oclif/tslint": "^3",
-		"@salesforce/dev-config": "^2.1.0",
-		"@types/chai": "^4.3.4",
-		"@types/jsforce": "^1.11.0",
-		"@types/mocha": "^5.2.7",
-		"@types/node": "^14.18.38",
-		"@typescript-eslint/eslint-plugin": "^6.7.2",
-		"@typescript-eslint/parser": "^6.7.2",
-		"cli-table": "0.3.1",
-		"copyfiles": "^2.4.1",
-		"eslint": "^8.49.0",
-		"js2xmlparser": "^4.0.1",
-		"prettier": "^2.8.4",
-		"readline-sync": "^1.4.10",
-		"rimraf": "^4.4.1",
-		"ts-node": "^10.8.1",
-		"tslint": "^5.20.1",
-		"typescript": "^4.9.5",
-		"xml2js": "^0.4.23"
-	},
-	"engines": {
-		"node": ">=14.0.0"
-	},
-	"files": [
-		"/bin",
-		"/lib",
-		"/messages",
-		"/oclif.manifest.json"
-	],
-	"homepage": "https://github.com/davidbrowaeys/DXB",
-	"keywords": [
-		"salesforce",
-		"sfdx",
-		"sfdx-plugin"
-	],
-	"license": "MIT",
-	"main": "index.js",
-	"oclif": {
-		"commands": "./lib/commands",
-		"bin": "sfdx",
-		"topics": {
-			"dxb": {
-				"description": "A CLI plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
-				"subtopics": {
-					"api": {
-						"description": "A set of commands to manipulate api versioning.",
-						"subtopics": {
-							"align": {
-								"description": "This command aligns the API version of components with the API version defined in sfdx-project.json."
-							}
-						}
-					},
-					"apex": {
-						"description": "A set of command to manipulate apex.",
-						"subtopics": {
-							"trigger": {
-								"description": "This command create trigger and apex class by simply specifying object name according to domain layer."
-							}
-						}
-					},
-					"data": {
-						"description": "A set of commands that allows to manipulate and optimize data.",
-						"subtopics": {
-							"bulk": {
-								"description": "A set of commands that extends bulk api(i.e.: query)."
-							},
-							"query": {
-								"description": "CLI version of the salesforce query plan tool to optimize and speed up queries."
-							},
-							"transfer": {
-								"description": "A couple of command to export and import data from and to salesforce"
-							}
-						}
-					},
-					"mdapi": {
-						"description": "A set of commands that extends dx mdapi topic."
-					},
-					"object": {
-						"description": "A set of commands in regards to salesforce objects.",
-						"subtopics": {
-							"fields": {
-								"description": "A set of commands in regards to salesforce fields."
-							},
-							"vr": {
-								"description": "A set of commands regarding validation rule"
-							},
-							"relationships": {
-								"description": "A set of commands regarding object relationships"
-							}
-						}
-					},
-					"org": {
-						"description": "A set of commands for scratch org and sandbox"
-					},
-					"permissionset": {
-						"description": "A set of commands for permission sets"
-					},
-					"profile": {
-						"description": "A set of commands that allow to manipuilate and faciliate salesforce profiles."
-					},
-					"source": {
-						"description": "A set of commands to manipulate source format"
-					},
-					"static": {
-						"description": "A set of commands regarding static resource"
-					},
-					"user": {
-						"description": "A set of commands to manipulate user"
-					}
-				}
-			}
-		},
-		"plugins": [
-			"@oclif/plugin-help"
-		]
-	},
-	"repository": "davidbrowaeys/DXB",
-	"scripts": {
-		"postpack": "rimraf oclif.manifest.json npm-shrinkwrap.json",
-		"posttest": "tsc -p test --noEmit && tslint -p test -t stylish",
-		"copyfiles": "copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib",
-		"prepack": "rimraf lib && tsc && oclif-dev manifest && oclif-dev readme && copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib",
-		"prepare": "rimraf lib && tsc && oclif-dev manifest && oclif-dev readme && copyfiles -u 1 src/**/*.html src/**/*.css src/**/*.cls src/**/*.png src/**/*.json src/**/*.xml lib",
-		"release": "np",
-		"test": "nyc mocha --forbid-only \"test/**/*.test.ts\"",
-		"version": "oclif-dev readme && git add README.md",
-		"prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml,ts}\"",
-		"prettier:verify": "prettier --list-different \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml,ts}\""
-	}
+  "name": "dxb",
+  "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
+  "version": "3.0.18",
+  "dependencies": {
+    "@colors/colors": "^1.6.0",
+    "@oclif/core": "^2.15.0",
+    "@salesforce/core": "^5.2.10",
+    "@salesforce/kit": "^3.0.8",
+    "@salesforce/sf-plugins-core": "^3.1.24",
+    "@salesforce/source-deploy-retrieve": "^9.7.28",
+    "@salesforce/ts-types": "^2.0.9",
+    "cli-table3": "^0.6.3",
+    "csv-parser": "^3.0.0",
+    "csv-split-stream": "^1.0.2",
+    "csv-writer": "^1.6.0",
+    "handlebars": "^4.7.8",
+    "html-docx-js-typescript": "^0.1.5",
+    "js2xmlparser": "^5.0.0",
+    "mime": "^3.0.0",
+    "pdf-creator-node": "^2.3.5",
+    "tslib": "^2",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@salesforce/cli-plugins-testkit": "^4.4.7",
+    "@salesforce/dev-config": "^4.0.1",
+    "@salesforce/dev-scripts": "^5.7.0",
+    "@salesforce/prettier-config": "^0.0.3",
+    "@salesforce/ts-sinon": "^1.4.18",
+    "@swc/core": "^1.3.19",
+    "@types/fs-extra": "^11.0.3",
+    "@types/inquirer": "^9.0.3",
+    "@types/mime": "^3.0.3",
+    "@types/node": "^20.8.7",
+    "@types/xml2js": "^0.4.13",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "chai": "^4.3.6",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-salesforce": "^2.0.2",
+    "eslint-config-salesforce-typescript": "^1.1.2",
+    "eslint-plugin-import": "2.28.1",
+    "eslint-plugin-jsdoc": "^46.4.6",
+    "eslint-plugin-sf-plugin": "^1.16.2",
+    "husky": "^7.0.4",
+    "mocha": "^9.2.2",
+    "nyc": "^15.1.0",
+    "oclif": "^3.17.2",
+    "prettier": "^2.8.8",
+    "pretty-quick": "^3.1.3",
+    "shelljs": "^0.8.5",
+    "shx": "0.3.4",
+    "sinon": "10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6",
+    "wireit": "^0.14.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "/lib",
+    "/messages",
+    "/oclif.manifest.json"
+  ],
+  "keywords": [
+    "force",
+    "salesforce",
+    "sfdx",
+    "salesforcedx",
+    "sfdx-plugin",
+    "sf-plugin",
+    "sf"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "sf",
+    "topicSeparator": " ",
+    "devPlugins": [
+      "@oclif/plugin-help"
+    ],
+    "topics": {
+      "dxb": {
+        "description": "A CLI plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
+        "subtopics": {
+          "apex": {
+            "description": "A set of command to manipulate apex.",
+            "subtopics": {
+              "coverage": {
+                "description": "Manage Apex code coverage"
+              },
+              "scan": {
+                "description": "Scan Apex files for specific content"
+              },
+              "trigger": {
+                "description": "Manage Apex triggers"
+              }
+            }
+          },
+          "api": {
+            "description": "A set of commands to manipulate api versioning."
+          },
+          "community": {
+            "description": "A set of commands to work with communities"
+          },
+          "data": {
+            "description": "A set of commands that allows to manipulate and optimize data.",
+            "subtopics": {
+              "bulk": {
+                "description": "A set of commands that extends bulk api(i.e.: query)."
+              },
+              "file": {
+                "description": "A couple of commands to export and import data from and to salesforce"
+              },
+              "query": {
+                "description": "CLI version of the salesforce query plan tool to optimize and speed up queries."
+              }
+            }
+          },
+          "graphql": {
+            "description": "A set of commands to work with GraphQl"
+          },
+          "junit": {
+            "description": "A set of commands to work with JUnit testing"
+          },
+          "mdapi": {
+            "description": "A set of commands that extends dx mdapi topic."
+          },
+          "object": {
+            "description": "A set of commands to work with salesforce objects.",
+            "subtopics": {
+              "fields": {
+                "description": "A set of commands to work with salesforce fields."
+              },
+              "relationships": {
+                "description": "A set of commands regarding object relationships"
+              },
+              "vr": {
+                "description": "A set of commands regarding validation rule"
+              }
+            }
+          },
+          "org": {
+            "description": "A set of commands for scratch org and sandbox"
+          },
+          "package": {
+            "description": "A set of commands to work with packages",
+            "subtopics": {
+              "dependencies": {
+                "description": "A set of commands that work on package dependencies"
+              }
+            }
+          },
+          "permissionset": {
+            "description": "A set of commands for permission sets"
+          },
+          "profile": {
+            "description": "A set of commands that allow to manipulate and facilitate salesforce profiles.",
+            "subtopics": {
+              "passwordpolicies": {
+                "description": "Work with Password Policies"
+              }
+            }
+          },
+          "schema": {
+            "description": "A set of commands to work around schemas",
+            "subtopics": {
+              "doc": {
+                "description": "Handles schema document generation"
+              }
+            }
+          },
+          "source": {
+            "description": "A set of commands to manipulate source format"
+          },
+          "static": {
+            "description": "A set of commands regarding static resource"
+          },
+          "user": {
+            "description": "A set of commands to work around user related topics",
+            "subtopics": {
+              "access": {
+                "description": "Describe access rights for a user"
+              }
+            }
+          },
+          "lwc": {
+            "description": "A set of commands to work with LWC components",
+            "subtopics": {
+              "test": {
+                "description": "Perform LWC tests"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "wireit",
+    "clean": "sf-clean",
+    "clean-all": "sf-clean all",
+    "clean:lib": "shx rm -rf lib && shx rm -rf coverage && shx rm -rf .nyc_output && shx rm -f oclif.manifest.json",
+    "compile": "wireit",
+    "docs": "sf-docs",
+    "format": "wireit",
+    "lint": "wireit",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "prepack": "sf-prepack",
+    "test": "wireit",
+    "test:nuts": "nyc mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
+    "test:only": "wireit",
+    "version": "oclif readme"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "wireit": {
+    "build": {
+      "dependencies": [
+        "compile",
+        "lint"
+      ]
+    },
+    "compile": {
+      "command": "tsc -p . --pretty --incremental",
+      "files": [
+        "src/**/*.ts",
+        "**/tsconfig.json",
+        "messages/**"
+      ],
+      "output": [
+        "lib/**",
+        "*.tsbuildinfo"
+      ],
+      "clean": "if-file-deleted"
+    },
+    "format": {
+      "command": "prettier --write \"+(src|test|schemas)/**/*.+(ts|js|json)|command-snapshot.json\"",
+      "files": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "schemas/**/*.json",
+        "command-snapshot.json",
+        ".prettier*"
+      ],
+      "output": []
+    },
+    "lint": {
+      "command": "eslint src test --color --cache --cache-location .eslintcache --ignore",
+      "files": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "messages/**",
+        "**/.eslint*",
+        "**/tsconfig.json"
+      ],
+      "output": []
+    },
+    "test:compile": {
+      "command": "tsc -p \"./test\" --pretty",
+      "files": [
+        "test/**/*.ts",
+        "**/tsconfig.json"
+      ],
+      "output": []
+    },
+    "test": {
+      "dependencies": [
+        "test:compile",
+        "test:only",
+        "lint"
+      ]
+    },
+    "test:only": {
+      "command": "nyc mocha \"test/**/*.nut.ts\"",
+      "env": {
+        "FORCE_COLOR": "2"
+      },
+      "files": [
+        "test/**/*.ts",
+        "src/**/*.ts",
+        "**/tsconfig.json",
+        ".mocha*",
+        "!*.nut.ts",
+        ".nycrc"
+      ],
+      "output": []
+    },
+    "test:command-reference": {
+      "command": "\"./bin/dev\" commandreference:generate --erroronwarnings",
+      "files": [
+        "src/**/*.ts",
+        "messages/**",
+        "package.json"
+      ],
+      "output": [
+        "tmp/root"
+      ]
+    },
+    "test:deprecation-policy": {
+      "command": "\"./bin/dev\" snapshot:compare",
+      "files": [
+        "src/**/*.ts"
+      ],
+      "output": [],
+      "dependencies": [
+        "compile"
+      ]
+    },
+    "test:json-schema": {
+      "command": "\"./bin/dev\" schema:compare",
+      "files": [
+        "src/**/*.ts",
+        "schemas"
+      ],
+      "output": []
+    }
+  },
+  "author": "David Browaeys"
 }

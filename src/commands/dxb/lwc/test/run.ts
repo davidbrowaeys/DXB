@@ -130,11 +130,8 @@ export default class LwcTestRun extends SfCommand<LwcTestRunResult> {
   // eslint-disable-next-line class-methods-use-this
   private testComponents(components: string[] | undefined, roots: string[]): string | undefined {
     try {
-      exec(
-        `sfdx-lwc-jest -- ${
-          components ? components.join(' ') : ''
-        } --silent --ci --bail=false --json --outputFile=jestOutput.json --roots=${roots.join(' ')}`
-      );
+      // prettier-ignore
+      exec(`sfdx-lwc-jest -- ${components ? components.join(' ') : ''} --silent --ci --bail=false --json --outputFile=jestOutput.json --roots=${roots.join(' ')}`);
     } catch (error) {
       return (error as Error).message.split('\n').slice(1).join('\n'); // remove first line to hide implementation details
     }

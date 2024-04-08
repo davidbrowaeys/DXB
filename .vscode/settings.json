@@ -11,6 +11,6 @@
     "**/bin": true
   },
   "editor.tabSize": 2,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "rewrap.wrappingColumn": 80
 }

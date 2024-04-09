@@ -45,5 +45,8 @@ node_modules
 oclif.manifest.json
 .sfdx/
 force-app/
+force-ui/
+manifest/
 .sf/
 oclif.lock
+.forceignore

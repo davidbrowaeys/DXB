@@ -50,6 +50,11 @@ export default class LwcTestRun extends SfCommand<LwcTestRunResult> {
     let components = flags.test;
     if (flags.manifest) {
       components = await this.processFromPackageXmlContent(flags.manifest);
+      if (!components) {
+        return {
+          result: messages.getMessage('error.invalidComponents'),
+        };
+      }
     }
 
     this.projectConfig = await (await SfProject.resolve()).resolveProjectConfig();
@@ -62,7 +67,7 @@ export default class LwcTestRun extends SfCommand<LwcTestRunResult> {
       acc.push(...this.sanitize(components, cur));
       return acc;
     }, []);
-    if (components && validTestNames.length === 0) {
+    if (components && components.length > 0 && validTestNames.length === 0) {
       throw messages.createError('error.invalidComponents');
     }
 
@@ -83,10 +88,14 @@ export default class LwcTestRun extends SfCommand<LwcTestRunResult> {
   // eslint-disable-next-line class-methods-use-this
   private async processFromPackageXmlContent(manifest: string): Promise<string[] | undefined> {
     try {
-      const lwcComponents = (await getComponentsFromManifest(manifest, 'LightningComponentBundle')).filter(
-        (componentName) => componentName !== '*'
-      );
-      return lwcComponents.length > 0 ? lwcComponents : undefined;
+      const componentsFromManifest = await getComponentsFromManifest(manifest, 'LightningComponentBundle');
+      if (componentsFromManifest.length === 1 && componentsFromManifest[0] === '*') {
+        return [];
+      }
+      if (componentsFromManifest.length === 0) {
+        return undefined;
+      }
+      return componentsFromManifest;
     } catch (err) {
       throw messages.createError('error.processManifest');
     }

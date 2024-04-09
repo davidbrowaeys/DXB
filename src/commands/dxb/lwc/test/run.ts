@@ -131,7 +131,7 @@ export default class LwcTestRun extends SfCommand<LwcTestRunResult> {
   private testComponents(components: string[] | undefined, roots: string[]): string | undefined {
     try {
       // prettier-ignore
-      exec(`sfdx-lwc-jest -- ${components ? components.join(' ') : ''} --silent --ci --bail=false --json --outputFile=jestOutput.json --roots=${roots.join(' ')}`);
+      exec(`jest ${components ? components.join(' ') : ''} --silent --ci --bail=false --json --outputFile=jestOutput.json --roots=${roots.join(' ')}`);
     } catch (error) {
       return (error as Error).message.split('\n').slice(1).join('\n'); // remove first line to hide implementation details
     }

@@ -201,6 +201,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     const format = flags.format;
     // Ensure required files exist
     const pdfPath = htmltemplate ?? path.join(__dirname, '../../../../utils/schema-template.html');
+    this.log('PDF Path', pdfPath);
     const htmlPath = htmltemplate ?? path.join(__dirname, '../../../../utils/schema-template-html.html');
     const cssPath = flags.stylesheet ?? path.join(__dirname, '../../../../utils/bootstrap.min.css');
     if (!fs.existsSync(htmlPath)) throw messages.createError('error.noHTMLTemplate', [htmlPath]);
@@ -213,13 +214,14 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     }
     // Connect to org
     this.connection = flags['target-org']?.getConnection();
-    // retrieve objects informatin
+    // retrieve objects information
     this.spinner.start(messages.getMessage('spinner.start.retrieveInfo'));
     const orginfo = await this.query(ORGQUERY);
     const ssoSettings = await this.getSSOSettingMetadata((await flags['target-org']?.retrieveMaxApiVersion()) ?? '');
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
+    // retrieve standard objects
     this.spinner.start(messages.getMessage('spinner.start.retrieveStandard'));
-    let standardObjects: Record[] = [];
+    let standardObjects: any = [];
     if (this.packageCmps?.CustomObject && !this.packageCmps.CustomObject.includes('*')) {
       const stdObjectNames = this.packageCmps.CustomObject.filter((o: any) => !o.endsWith('__c'));
       if (stdObjectNames) {
@@ -236,10 +238,12 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     this.spinner.stop(messages.getMessage('spinner.stop.found', [standardObjects.length]));
     this.spinner.start(messages.getMessage('spinner.start.retrieveStandardMetadata'));
     standardObjects = await this.getObjectDefinition(standardObjects, 'CustomObject', documentMeta.metadata.stdobjects);
-    standardObjects = standardObjects.filter((sobject) => !!sobject);
+    standardObjects = standardObjects.filter((sobject: any) => !!sobject);
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
+    
+    // custom objects
     this.spinner.start(messages.getMessage('spinner.start.retrieveCustom'));
-    let customObjects = await this.query(CUSTOMQUERY);
+    let customObjects: any = await this.query(CUSTOMQUERY);
     customObjects = customObjects.filter((e: Record) => !e.NamespacePrefix);
     if (customObjects && this.packageCmps?.CustomObject && !this.packageCmps.CustomObject.includes('*')) {
       customObjects = customObjects.filter((e: Record) => this.packageCmps?.CustomObject.includes(e.QualifiedApiName));
@@ -249,11 +253,11 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     customObjects = await this.getObjectDefinition(
       customObjects,
       'CustomObject',
-      customObjects.map((e: Record) => e.QualifiedApiName as string)
+      customObjects.map((e: any) => e.QualifiedApiName as string)
     );
-    customObjects = customObjects.filter((sobject) => !!sobject);
+    customObjects = customObjects.filter((sobject: any) => !!sobject);
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
-
+    // flows
     this.spinner.start(messages.getMessage('spinner.start.retrieveFlow'));
     let flows: FlowDestruct[] = this.processFlow((await this.getFlowDefinitions()).flat());
     if (flows && this.packageCmps?.Flow) {
@@ -273,8 +277,11 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     if (apexTriggers && this.packageCmps?.ApexTrigger && !this.packageCmps.ApexTrigger.includes('*')) {
       apexTriggers = apexTriggers.filter((e: Record) => this.packageCmps?.ApexTrigger.includes(e.Name));
     }
+
     standardObjects = this.getTriggerForSObject(standardObjects, apexTriggers);
     customObjects = this.getTriggerForSObject(customObjects, apexTriggers);
+
+    this.log('Find Apex Rest Resource');
     const apexRestResource: ApexRestResource[] | undefined = !apexClasses
       ? undefined
       : apexClasses
@@ -286,7 +293,8 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
           .filter((cls) => !!cls.urlMappingValue);
     apexClasses = apexClasses?.filter((cls) => !cls.Body.includes('@RestResource'));
     this.spinner.stop(messages.getMessage('spinner.stop.found', [apexClasses.length]));
-
+    
+    // retrieve aura cmp
     this.spinner.start(messages.getMessage('spinner.start.retrieveAura'));
     const auracmps = await this.query(AURAQUERY);
     this.spinner.stop(messages.getMessage('spinner.stop.found', [auracmps.length]));
@@ -315,7 +323,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       cssPath,
       pdfPath,
       htmlPath,
-      flows,
+      flows
     });
     return { success: true };
   }
@@ -377,9 +385,9 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
         orginfo,
         ssoSettings,
         // eslint-disable-next-line camelcase
-        std_objects: standardObjects,
+        standardObjects,
         // eslint-disable-next-line camelcase
-        cust_objects: customObjects,
+        customObjects,
         apexClasses,
         apexRestResource,
         apexTestClasses,
@@ -638,11 +646,15 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @returns {Promise<Array>} - An array of SSO setting metadata
    */
   private async getSSOSettingMetadata(apiVersion: string): Promise<SamlSsoConfig[]> {
-    const types = [{ type: 'SamlSsoConfig', folder: null }];
-    const list: FileProperties[] = this.toArray(await this.connection?.metadata.list(types, apiVersion));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    const fullNameList = list.map((e) => e.fullName);
-    return this.toArray(await this.connection?.metadata.read('SamlSsoConfig', fullNameList)) as SamlSsoConfig[];
+    try{
+      const types = [{ type: 'SamlSsoConfig', folder: null }];
+      const list: FileProperties[] = this.toArray(await this.connection?.metadata.list(types, apiVersion));
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      const fullNameList = list.map((e) => e.fullName);
+      return this.toArray(await this.connection?.metadata.read('SamlSsoConfig', fullNameList)) as SamlSsoConfig[];
+    }catch(err){
+      return [];
+    }
   }
 
   /**
@@ -669,7 +681,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @param {Array} fullNames - Array of full names for the metadata to fetch
    * @returns {Array} - Array of sobjects with its metadata, sharing rules metadata, field definition, and other related information
    */
-  private async getObjectDefinition(sobjects: Record[], type: string, fullNames: string[]): Promise<Record[]> {
+  private async getObjectDefinition(sobjects: any, type: string, fullNames: string[]): Promise<any> {
     // get object and related element metadata
     const metadata: CustomObject[] = (await this.getMetadataObject(type, fullNames)).flat();
     // const sharingRulesArray: SharingRulesMetadata[] = (await this.getSharingRulesMetadata(fullNames)).flat();
@@ -695,9 +707,10 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       return acc;
     }, new Map<string, Record[]>());
     // decorate object with other metadata
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return sobjects
-      .filter((o: Record) => metadata.find((e) => e?.fullName && e.fullName === o.QualifiedApiName))
-      .map((o: Record) => {
+      .filter((o: any) => metadata.find((e) => e?.fullName && e.fullName === o.QualifiedApiName))
+      .map((o: any) => {
         const objectMeta: CustomObject | undefined = metadata.find(
           (e) => e?.fullName && e.fullName === o.QualifiedApiName
         );
@@ -713,11 +726,17 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
             .filter((mf: CustomField) => fields?.find((e) => mf.fullName === e.QualifiedApiName))
             .map((mf: CustomField) => {
               const f = fields?.find((e) => mf.fullName === e.QualifiedApiName);
-              return {
+              const field: any = {
                 ...f,
                 ...mf,
+                hasEncryptionScheme: f?.encryptionScheme && f?.encryptionScheme !== 'None',
                 summaryFilterItems: this.toArray(mf.summaryFilterItems),
               };
+              field.hasEncryptionScheme = field?.encryptionScheme && field?.encryptionScheme !== 'None';
+              field.isPicklist = field?.type === 'Picklist';
+              field.isSummary = field?.type === 'Summary';
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+              return field;
             });
         }
         // objectMeta.hasValidations = !!objectMeta.validationRules;
@@ -752,6 +771,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
         // const sharingCriteriaRules = sharingRules?.sharingCriteriaRules;
         // const sharingOwnerRules = sharingRules?.sharingOwnerRules;
         // const hasSharingRules = !!sharingCriteriaRules || !!sharingOwnerRules;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return {
           ...o,
           ...objectMeta,

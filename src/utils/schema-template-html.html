@@ -96,11 +96,10 @@
   </head>
   <body>
     <div class="cover">
-      <div class="coverLogo"></div>
       <h1>{{document.title}}</h1>
       <h2>{{document.subtitle}}</h2>
     </div>
-    <div class="documentProp">
+    <div class="documentProp" style="page-break-after: always">
       <h2 id="DocumentProperty">Document Properties</h2>
       <table class="table object-table">
         <tr>
@@ -150,7 +149,8 @@
         </tr>
       </table>
     </div>
-    <div id="TableOfContent" class="documentProp">
+    <!-- 
+    <div id="TableOfContent" class="documentProp" style="page-break-after: always">
       <h2>Table of Contents</h2>
       <ol>
         <li>
@@ -165,7 +165,7 @@
         <li>
           <a href="#StandardObjects">Standard Objects</a>
           <ol>
-            {{#each std_objects}}
+            {{#each standardObjects}}
             <li>
               <a href="#{{this.QualifiedApiName}}">{{this.Label}}</a>
             </li>
@@ -175,7 +175,7 @@
         <li>
           <a href="#CustomObjects">Custom Objects</a>
           <ol>
-            {{#each cust_objects}}
+            {{#each customObjects}}
             <li>
               <a href="#{{this.QualifiedApiName}}">{{this.Label}}</a>
             </li>
@@ -183,7 +183,8 @@
           </ol>
         </li>
       </ol>
-    </div>
+    </div> 
+    -->
     <div class="documentContent" style="page-break-after: always">
       <h2 id="DocumentOverview">Document Overview & Description</h2>
       <p>
@@ -224,7 +225,7 @@
           Audit log configurations.
         </li>
       </ul>
-      {{#ifCond diagrams '!==' undefined}}
+      {{#if diagrams}}
       <h2>High-Level Data Model</h2>
       <p>
         The following high-level data model defines the underlying data structure for the Implementation application.
@@ -232,45 +233,44 @@
         data dictionary. In addition, the following data model does not include standard objects that are not being used
         by the Implementation prototype application. Please refer to the Salesforce ERD document.
       </p>
-      {{#ifCond diagrams.standard '!==' undefined}}
+      {{#if diagrams.standard}}
       <h3>{{diagrams.standard.title}}</h3>
       <div class="diagram">
         <img src="{{diagrams.standard.src}}" />
       </div>
-      {{/ifCond}} {{#ifCond diagrams.custom '!==' undefined}}
+      {{/if}} {{#if diagrams.custom}}
       <h3>{{diagrams.custom.title}}</h3>
       <div class="diagram">
         <img src="{{diagrams.custom.src}}" />
       </div>
-      {{/ifCond}} {{/ifCond}}
+      {{/if}} {{/if}}
       <h2>Objects</h2>
       <h3 id="StandardObjects">Standard Objects</h3>
-      {{#each std_objects}}
-      <h4 id="{{this.QualifiedApiName}}">{{this.Label}}</h4>
+      {{#each standardObjects}}
+      <h4 id="{{this.QualifiedApiName}}">{{Label}}</h4>
       <h5>Object Details</h5>
       <table class="table object-table">
         <tr>
           <th class="text-bg-primary" scope="row" style="width: 20%">Label</th>
-          <td class="text-start">{{this.Label}}</td>
+          <td class="text-start">{{Label}}</td>
         </tr>
         <tr>
           <th class="text-bg-primary" scope="row">API Name</th>
-          <td class="text-start">{{this.QualifiedApiName}}</td>
+          <td class="text-start">{{QualifiedApiName}}</td>
         </tr>
         <tr>
           <th class="text-bg-primary" scope="row">Key Prefix</th>
-          <td class="text-start">{{this.KeyPrefix}}</td>
+          <td class="text-start">{{KeyPrefix}}</td>
         </tr>
         <!-- <tr>
             <th class="text-bg-primary" scope="row">Enable History</th>
             <td class="text-start">
               <span class="symbol">
-              {{#ifCond this.enableHistory '===' true}}
+              {{#if this.enableHistory}}
               <span class="symbol">✓</span>
-              {{/ifCond}}
-              {{#ifCond this.enableHistory '===' false}}
+              {{else}}
               <span class="symbol">✓</span>
-              {{/ifCond}}
+              {{/if}}
             </span>
             </td>
           </tr>
@@ -278,29 +278,29 @@
             <th class="text-bg-primary" scope="row">Enable Feed</th>
             <td class="text-start">
               <span class="symbol">
-              {{#ifCond this.enableFeeds '===' true}}
+              {{#if this.enableFeeds}}
               <span class="symbol">✓</span>
-              {{/ifCond}}
-              {{#ifCond this.enableFeeds '===' false}}
+              {{else}}
               <span class="symbol">✓</span>
-              {{/ifCond}}
+              {{/if}}
             </span>
             </td>
           </tr> -->
         <tr>
           <th class="text-bg-primary" scope="row">Description</th>
-          <td>{{this.description}}</td>
+          <td>{{description}}</td>
         </tr>
         <tr>
           <th class="text-bg-primary" scope="row">Internal Sharing Model</th>
-          <td class="text-start">{{this.InternalSharingModel}}</td>
+          <td class="text-start">{{InternalSharingModel}}</td>
         </tr>
         <tr>
           <th class="text-bg-primary" scope="row">External Sharing Model</th>
-          <td class="text-start">{{this.ExternalSharingModel}}</td>
+          <td class="text-start">{{ExternalSharingModel}}</td>
         </tr>
       </table>
-      {{#ifCond this.recordTypes '!==' undefined}}
+      <!--RECORDTYPES-->
+      {{#if recordTypes}}
       <h5>Record Type Details</h5>
       <p>
         A record type is a way to differentiate different kinds of records within an object. It allows users to
@@ -315,15 +315,17 @@
             <th class="bg-primary text-start" scope="col">Description</th>
           </tr>
         </thead>
-        {{#each this.recordTypes}}
+        {{#each recordTypes}}
         <tr>
-          <td>{{this.label}}</td>
-          <td>{{this.fullName}}</td>
-          <td>{{this.description}}</td>
+          <td>{{label}}</td>
+          <td>{{fullName}}</td>
+          <td>{{description}}</td>
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{#ifCond this.fields '!==' undefined}}
+      {{/if}} 
+      <!--FIELDS-->
+      {{#if fields}}
       <h5>Field Details</h5>
       <table class="table">
         <thead>
@@ -336,37 +338,39 @@
             <th class="bg-primary text-start" scope="col">Info</th>
           </tr>
         </thead>
-        {{#each this.fields}}
+        {{#each fields}}
         <tr>
-          <td style="width: 150px; word-break: break-all">{{this.Label}}&nbsp;({{this.QualifiedApiName}})</td>
+          <td style="width: 150px; word-break: break-all">{{Label}}&nbsp;({{QualifiedApiName}})</td>
           <td class="text-start" style="width: 150px; word-break: break-all">
-            {{this.DataType}} {{#ifCond this.required '===' true}} &nbsp;* {{/ifCond}}
+            {{DataType}} {{#if required}} &nbsp;* {{/if}}
           </td>
           <td style="width: 20px">
-            {{#ifCond this.IsIndexed '===' true}}
+            {{#if IsIndexed}}
             <span class="symbol">✓</span>
-            {{/ifCond}}
+            {{/if}}
           </td>
           <td style="width: 20px">
-            {{#ifCond this.IsFieldHistoryTracked '===' true}}
+            {{#if IsFieldHistoryTracked}}
             <span class="symbol">✓</span>
-            {{/ifCond}}
+            {{/if}}
           </td>
-          <td class="text-start" style="width: 100px; word-break: break-all">{{this.Description}}</td>
+          <td class="text-start" style="width: 100px; word-break: break-all">{{Description}}</td>
           <td class="text-start" style="word-break: break-all">
-            {{#ifCond this.encryptionScheme '!==' undefined}} {{#ifCond this.encryptionScheme '!==' 'None'}}
+            {{#if hasEncryptionScheme}}
             <strong>Encyrption Scheme</strong>
-            <p>{{this.encryptionScheme}}</p>
-            {{/ifCond}} {{/ifCond}} {{#ifCond this.formula '!==' undefined}}
+            <p>{{encryptionScheme}}</p>
+            {{/if}}
+            {{#if formula}}
             <strong>Formula</strong>
             <p>{{this.formula}}</p>
-            {{/ifCond}} {{#ifCond this.type '===' 'Picklist'}} {{#ifCond this.valueSet '!==' undefined}}
+            {{/if}} {{#if this.isPicklist}} {{#if this.valueSet}}
             <strong>Picklist Values</strong>
             <p>{{#each this.valueSet.valueSetDefinition.value}} {{this.label}}; {{/each}}</p>
-            {{/ifCond}} {{/ifCond}} {{#ifCond this.type '===' 'Summary'}}
+            {{/if}} {{/if}} 
+            {{#if this.isSummary}}
             <strong>Aggregate Key</strong>:{{this.summaryForeignKey}}<br />
             <strong>Aggregate Function</strong>:{{this.summaryOperation}}<br />
-            {{#ifCond this.summaryFilterItems '!==' undefined}}
+            {{#if this.summaryFilterItems}}
             <strong>Filters</strong>:
             <ul>
               {{#each this.summaryFilterItems}}
@@ -377,12 +381,13 @@
               </li>
               {{/each}}
             </ul>
-            {{/ifCond}} {{/ifCond}}
+            {{/if}} {{/if}}
           </td>
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{#ifCond this.validationRules '!==' undefined}}
+      {{/if}} 
+      {{#if this.validationRules}}
       <h5>Validation Rule Details</h5>
       <p>
         Validation rules are used in Salesforce to ensure that the data entered into a record meets the standards set by
@@ -409,7 +414,8 @@
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{#ifCond this.listViews '!==' undefined}}
+      {{/if}} 
+      {{#if this.listViews}}
       <h5>List View Details</h5>
       <p>
         In order to view list of records satisfying certain criteria separately create a list view for each of them.
@@ -429,7 +435,7 @@
           <td style="width: 50px">{{this.label}}</td>
           <td class="text-start" style="width: 50px">{{this.filterScope}}</td>
           <td class="text-start" style="width: 300px; word-break: break-all">
-            {{#ifCond this.hasFilters '===' true}}
+            {{#if this.hasFilters}}
             <ul>
               {{#each this.filters}}
               <li>
@@ -439,21 +445,22 @@
               </li>
               {{/each}}
             </ul>
-            {{/ifCond}}
+            {{/if}}
           </td>
           <td class="text-start" style="word-break: break-all">
-            {{#ifCond this.hasShareTo '===' true}}
+            {{#if this.hasShareTo}}
             <ul>
               {{#each this.sharedTo}}
               <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
               {{/each}}
             </ul>
-            {{/ifCond}}
+            {{/if}}
           </td>
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{#ifCond this.hasSharingRules '===' true}}
+      {{/if}} 
+      {{#if this.hasSharingRules}}
       <h5>Sharing Rules</h5>
       <p>
         Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each
@@ -461,7 +468,7 @@
         some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings
         for selected sets of users.
       </p>
-      {{#ifCond this.sharingOwnerRules '!==' undefined}}
+      {{#if this.sharingOwnerRules}}
       <h6>Owner-Based Sharing</h6>
       <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
       <table class="table">
@@ -494,7 +501,7 @@
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{#ifCond this.sharingCriteriaRules '!==' undefined}}
+      {{/if}} {{#if this.sharingCriteriaRule}}
       <h6>Criteria-Based Sharing</h6>
       <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
       <table class="table">
@@ -531,7 +538,8 @@
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{/ifCond}} {{#ifCond this.hasAutoFlows '===' true}}
+      {{/if}} {{/if}} 
+      {{#if this.hasAutoFlows}}
       <h5>Autolaunched Flows</h5>
       <table class="table">
         <thead>
@@ -557,7 +565,8 @@
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{#ifCond this.triggers '!==' undefined}}
+      {{/if}} 
+      {{#if this.triggers}}
       <h5>Apex Triggers</h5>
       <table class="table">
         <thead>
@@ -583,7 +592,7 @@
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{/each}}
+      {{/if}} {{/each}}
       <!--CUSTOM OBJECT-->
       <h3 id="CustomObjects">Custom Objects</h3>
       <p>
@@ -593,7 +602,7 @@
         user interface, or by using the metadata WSDL with a client application or using VS Code. This section will
         provide details for each custom object that is included in the solution.
       </p>
-      {{#each cust_objects}}
+      {{#each customObjects}}
       <h4>{{this.Label}}</h4>
       <h5>Object Details</h5>
       <table class="table object-table">
@@ -622,283 +631,300 @@
           <td class="text-start">{{this.ExternalSharingModel}}</td>
         </tr>
       </table>
-      {{#ifCond this.recordTypes '!==' undefined}}
-      <h5>Record Type Details</h5>
-      <p>
-        A record type is a way to differentiate different kinds of records within an object. It allows users to
-        customize the fields, page layouts, and other features related to a specific record type. This helps to create a
-        more organized and streamlined user experience.
-      </p>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col" style="width: 5%">Label</th>
-            <th class="bg-primary" scope="col" style="width: 5%">Developer Name</th>
-            <th class="bg-primary text-start" scope="col">Description</th>
-          </tr>
-        </thead>
-        {{#each this.recordTypes}}
+    <!--RECORDTYPES-->
+    {{#if recordTypes}}
+    <h5>Record Type Details</h5>
+    <p>
+      A record type is a way to differentiate different kinds of records within an object. It allows users to
+      customize the fields, page layouts, and other features related to a specific record type. This helps to create a
+      more organized and streamlined user experience.
+    </p>
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{this.label}}</td>
-          <td>{{this.fullName}}</td>
-          <td>{{this.description}}</td>
+          <th class="bg-primary" scope="col" style="width: 5%">Label</th>
+          <th class="bg-primary" scope="col" style="width: 5%">Developer Name</th>
+          <th class="bg-primary text-start" scope="col">Description</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{#ifCond this.fields '!==' undefined}}
-      <h5>Field Details</h5>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col">Name</th>
-            <th class="bg-primary text-start" scope="col">Type</th>
-            <th scope="col">Indexed</th>
-            <th scope="col">Tracked</th>
-            <th class="bg-primary text-start" scope="col">Description</th>
-            <th class="bg-primary text-start" scope="col">Info</th>
-          </tr>
-        </thead>
-        {{#each this.fields}}
+      </thead>
+      {{#each recordTypes}}
+      <tr>
+        <td>{{label}}</td>
+        <td>{{fullName}}</td>
+        <td>{{description}}</td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} 
+    <!--FIELDS-->
+    {{#if fields}}
+    <h5>Field Details</h5>
+    <table class="table">
+      <thead>
         <tr>
-          <td style="width: 150px; word-break: break-all">{{this.Label}}&nbsp;({{this.QualifiedApiName}})</td>
-          <td class="text-start text-truncate" style="width: 150px; word-break: break-all">
-            {{this.DataType}} {{#ifCond this.required '===' true}} &nbsp;* {{/ifCond}}
-          </td>
-          <td style="width: 20px">
-            {{#ifCond this.IsIndexed '===' true}}
-            <span class="symbol">✓</span>
-            {{/ifCond}}
-          </td>
-          <td style="width: 20px">
-            {{#ifCond this.IsFieldHistoryTracked '===' true}}
-            <span class="symbol">✓</span>
-            {{/ifCond}}
-          </td>
-          <td class="text-start" style="width: 100px; word-break: break-all">{{this.Description}}</td>
-          <td class="text-start" style="word-break: break-all">
-            {{#ifCond this.encryptionScheme '!==' undefined}} {{#ifCond this.encryptionScheme '!==' 'None'}}
-            <strong>Encyrption Scheme</strong>
-            <p>{{this.encryptionScheme}}</p>
-            {{/ifCond}} {{/ifCond}} {{#ifCond this.formula '!==' undefined}}
-            <strong>Formula</strong>
-            <p>{{this.formula}}</p>
-            {{/ifCond}} {{#ifCond this.type '===' 'Picklist'}} {{#ifCond this.valueSet '!==' undefined}}
-            <strong>Picklist Values</strong>
-            <p>{{#each this.valueSet.valueSetDefinition.value}} {{this.label}}; {{/each}}</p>
-            {{/ifCond}} {{/ifCond}} {{#ifCond this.type '===' 'Summary'}}
-            <strong>Aggregate Key</strong>:{{this.summaryForeignKey}}<br />
-            <strong>Aggregate Function</strong>:{{this.summaryOperation}}<br />
-            {{#ifCond this.summaryFilterItems '!==' undefined}}
-            <strong>Filters</strong>:
-            <ul>
-              {{#each this.summaryFilterItems}}
-              <li>
-                {{this.field}}<strong style="margin-left: 10px; font-style: bold; margin-right: 10px"
-                  >{{this.operation}}</strong
-                >{{this.value}}
-              </li>
-              {{/each}}
-            </ul>
-            {{/ifCond}} {{/ifCond}}
-          </td>
+          <th class="bg-primary" scope="col">Name</th>
+          <th class="bg-primary text-start" scope="col">Type</th>
+          <th scope="col">Indexed</th>
+          <th scope="col">Tracked</th>
+          <th class="bg-primary text-start" scope="col">Description</th>
+          <th class="bg-primary text-start" scope="col">Info</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{#ifCond this.validationRules '!==' undefined}}
-      <h5>Validation Rule Details</h5>
-      <p>
-        Validation rules are used in Salesforce to ensure that the data entered into a record meets the standards set by
-        the organization. Validation rules can be used to prevent users from entering incorrect data, or to ensure that
-        certain fields are populated with accurate data. Validation rules can be set up to check for specific criteria
-        and display an error message when a record does not meet the criteria. Validation rules can also be used to
-        enforce data integrity and to ensure data is entered correctly.
-      </p>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col" style="width: 50px">Name</th>
-            <th class="bg-primary text-start" scope="col" style="width: 150px">Description</th>
-            <th class="bg-primary text-start" scope="col" style="width: 300px; word-break: break-all">Error Formula</th>
-            <th class="bg-primary text-start" scope="col" style="width: 200px">Error Message</th>
-          </tr>
-        </thead>
-        {{#each this.validationRules}}
+      </thead>
+      {{#each fields}}
+      <tr>
+        <td style="width: 150px; word-break: break-all">{{Label}}&nbsp;({{QualifiedApiName}})</td>
+        <td class="text-start" style="width: 150px; word-break: break-all">
+          {{DataType}} {{#if required}} &nbsp;* {{/if}}
+        </td>
+        <td style="width: 20px">
+          {{#if IsIndexed}}
+          <span class="symbol">✓</span>
+          {{/if}}
+        </td>
+        <td style="width: 20px">
+          {{#if IsFieldHistoryTracked}}
+          <span class="symbol">✓</span>
+          {{/if}}
+        </td>
+        <td class="text-start" style="width: 100px; word-break: break-all">{{Description}}</td>
+        <td class="text-start" style="word-break: break-all">
+          {{#if hasEncryptionScheme}}
+          <strong>Encyrption Scheme</strong>
+          <p>{{encryptionScheme}}</p>
+          {{/if}}
+          {{#if formula}}
+          <strong>Formula</strong>
+          <p>{{this.formula}}</p>
+          {{/if}} {{#if this.isPicklist}} {{#if this.valueSet}}
+          <strong>Picklist Values</strong>
+          <p>{{#each this.valueSet.valueSetDefinition.value}} {{this.label}}; {{/each}}</p>
+          {{/if}} {{/if}} 
+          {{#if this.isSummary}}
+          <strong>Aggregate Key</strong>:{{this.summaryForeignKey}}<br />
+          <strong>Aggregate Function</strong>:{{this.summaryOperation}}<br />
+          {{#if this.summaryFilterItems}}
+          <strong>Filters</strong>:
+          <ul>
+            {{#each this.summaryFilterItems}}
+            <li>
+              {{this.field}}<strong style="margin-left: 10px; font-style: bold; margin-right: 10px"
+                >{{this.operation}}</strong
+              >{{this.value}}
+            </li>
+            {{/each}}
+          </ul>
+          {{/if}} {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} 
+    {{#if this.validationRules}}
+    <h5>Validation Rule Details</h5>
+    <p>
+      Validation rules are used in Salesforce to ensure that the data entered into a record meets the standards set by
+      the organization. Validation rules can be used to prevent users from entering incorrect data, or to ensure that
+      certain fields are populated with accurate data. Validation rules can be set up to check for specific criteria
+      and display an error message when a record does not meet the criteria. Validation rules can also be used to
+      enforce data integrity and to ensure data is entered correctly.
+    </p>
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{this.fullName}}</td>
-          <td class="text-start">{{this.description}}</td>
-          <td class="text-start">{{this.errorConditionFormula}}</td>
-          <td class="text-start">{{this.errorMessage}}</td>
+          <th class="bg-primary" scope="col" style="width: 50px">Name</th>
+          <th class="bg-primary text-start" scope="col" style="width: 150px">Description</th>
+          <th class="bg-primary text-start" scope="col" style="width: 300px; word-break: break-all">Error Formula</th>
+          <th class="bg-primary text-start" scope="col" style="width: 200px">Error Message</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{#ifCond this.listViews '!==' undefined}}
-      <h5>List View Details</h5>
-      <p>
-        In order to view list of records satisfying certain criteria separately create a list view for each of them.
-      </p>
-      <p>The users can update these views to further filter down to specific types of records as needed.</p>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col">Name</th>
-            <th class="bg-primary text-start" scope="col">Filter Scope</th>
-            <th class="bg-primary text-start" scope="col">Filters</th>
-            <th class="bg-primary text-start" scope="col">Share To</th>
-          </tr>
-        </thead>
-        {{#each this.listViews}}
+      </thead>
+      {{#each this.validationRules}}
+      <tr>
+        <td>{{this.fullName}}</td>
+        <td class="text-start">{{this.description}}</td>
+        <td class="text-start">{{this.errorConditionFormula}}</td>
+        <td class="text-start">{{this.errorMessage}}</td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} 
+    {{#if this.listViews}}
+    <h5>List View Details</h5>
+    <p>
+      In order to view list of records satisfying certain criteria separately create a list view for each of them.
+    </p>
+    <p>The users can update these views to further filter down to specific types of records as needed.</p>
+    <table class="table">
+      <thead>
         <tr>
-          <td style="width: 50px">{{this.label}}</td>
-          <td class="text-start" style="width: 50px">{{this.filterScope}}</td>
-          <td class="text-start" style="width: 300px; word-break: break-all">
-            {{#ifCond this.hasFilters '===' true}}
-            <ul>
-              {{#each this.filters}}
-              <li>
-                {{this.field}}<strong style="margin-left: 10px; font-style: bold; margin-right: 10px"
-                  >{{this.operation}}</strong
-                >{{this.value}}
-              </li>
-              {{/each}}
-            </ul>
-            {{/ifCond}}
-          </td>
-          <td class="text-start" style="word-break: break-all">
-            {{#ifCond this.hasShareTo '===' true}}
-            <ul>
-              {{#each this.sharedTo}}
-              <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
-              {{/each}}
-            </ul>
-            {{/ifCond}}
-          </td>
+          <th class="bg-primary" scope="col">Name</th>
+          <th class="bg-primary text-start" scope="col">Filter Scope</th>
+          <th class="bg-primary text-start" scope="col">Filters</th>
+          <th class="bg-primary text-start" scope="col">Share To</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{#ifCond this.hasSharingRules '===' true}}
-      <h5>Sharing Rules</h5>
-      <p>
-        Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each
-        object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for
-        some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings
-        for selected sets of users.
-      </p>
-      {{#ifCond this.hasOwnerSharingRules '===' true}}
-      <h6>Owner-Based Sharing</h6>
-      <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col">Name</th>
-            <th class="bg-primary text-start" scope="col">Access</th>
-            <th class="bg-primary text-start" scope="col">Shared From</th>
-            <th class="bg-primary text-start" scope="col">Shared To</th>
-          </tr>
-        </thead>
-        {{#each this.sharingOwnerRules}}
+      </thead>
+      {{#each this.listViews}}
+      <tr>
+        <td style="width: 50px">{{this.label}}</td>
+        <td class="text-start" style="width: 50px">{{this.filterScope}}</td>
+        <td class="text-start" style="width: 300px; word-break: break-all">
+          {{#if this.hasFilters}}
+          <ul>
+            {{#each this.filters}}
+            <li>
+              {{this.field}}<strong style="margin-left: 10px; font-style: bold; margin-right: 10px"
+                >{{this.operation}}</strong
+              >{{this.value}}
+            </li>
+            {{/each}}
+          </ul>
+          {{/if}}
+        </td>
+        <td class="text-start" style="word-break: break-all">
+          {{#if this.hasShareTo}}
+          <ul>
+            {{#each this.sharedTo}}
+            <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} 
+    {{#if this.hasSharingRules}}
+    <h5>Sharing Rules</h5>
+    <p>
+      Your org-wide default sharing settings give you a (relatively restrictive) baseline level of access for each
+      object. If you have org-wide sharing defaults of Public Read only or private, you can open access back up for
+      some users with sharing rules. This enables you to make automatic exceptions to your org-wide sharing settings
+      for selected sets of users.
+    </p>
+    {{#if this.sharingOwnerRules}}
+    <h6>Owner-Based Sharing</h6>
+    <p>Owner-based sharing allows users to control access to data records based on the record's ownership.</p>
+    <table class="table">
+      <thead>
         <tr>
-          <td style="width: 100px; word-break: break-all">{{this.label}}</td>
-          <td style="width: 50px">{{this.accessLevel}}</td>
-          <td class="text-start" style="width: 200px; word-break: break-all">
-            <ul>
-              {{#each this.sharedFrom}}
-              <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
-              {{/each}}
-            </ul>
-          </td>
-          <td class="text-start" style="width: 200px; word-break: break-all">
-            <ul>
-              {{#each this.sharedTo}}
-              <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
-              {{/each}}
-            </ul>
-          </td>
+          <th class="bg-primary" scope="col">Name</th>
+          <th class="bg-primary text-start" scope="col">Access</th>
+          <th class="bg-primary text-start" scope="col">Shared From</th>
+          <th class="bg-primary text-start" scope="col">Shared To</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{#ifCond this.hasCriteriaSharingRules '===' true}}
-      <h6>Criteria-Based Sharing</h6>
-      <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col">Name</th>
-            <th class="bg-primary text-start" scope="col">Access</th>
-            <th class="bg-primary text-start" scope="col">Criteria</th>
-            <th class="bg-primary text-start" scope="col">Shared To</th>
-          </tr>
-        </thead>
-        {{#each this.sharingCriteriaRules}}
+      </thead>
+      {{#each this.sharingOwnerRules}}
+      <tr>
+        <td style="width: 100px; word-break: break-all">{{this.label}}</td>
+        <td style="width: 50px">{{this.accessLevel}}</td>
+        <td class="text-start" style="width: 200px; word-break: break-all">
+          <ul>
+            {{#each this.sharedFrom}}
+            <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
+            {{/each}}
+          </ul>
+        </td>
+        <td class="text-start" style="width: 200px; word-break: break-all">
+          <ul>
+            {{#each this.sharedTo}}
+            <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
+            {{/each}}
+          </ul>
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} {{#if this.sharingCriteriaRule}}
+    <h6>Criteria-Based Sharing</h6>
+    <p>Criteria-based sharing rules determine what records to share based on field values other than ownership.</p>
+    <table class="table">
+      <thead>
         <tr>
-          <td style="width: 100px; word-break: break-all">{{this.label}}</td>
-          <td style="width: 50px">{{this.accessLevel}}</td>
-          <td class="text-start" style="width: 200px; word-break: break-all">
-            <ul>
-              {{#each this.criteriaItems}}
-              <li>
-                {{this.field}}<strong style="margin-left: 10px; font-style: bold; margin-right: 10px"
-                  >{{this.operation}}</strong
-                >{{this.value}}
-              </li>
-              {{/each}}
-            </ul>
-          </td>
-          <td class="text-start" style="width: 200px; word-break: break-all">
-            <ul>
-              {{#each this.sharedTo}}
-              <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
-              {{/each}}
-            </ul>
-          </td>
+          <th class="bg-primary" scope="col">Name</th>
+          <th class="bg-primary text-start" scope="col">Access</th>
+          <th class="bg-primary text-start" scope="col">Criteria</th>
+          <th class="bg-primary text-start" scope="col">Shared To</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{/ifCond}} {{#ifCond this.hasAutoFlows '===' true}}
-      <h5>Autolaunched Flows</h5>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col">Name</th>
-            <th class="bg-primary" scope="col">Description</th>
-            <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
-          </tr>
-        </thead>
-        {{#each this.autoflows}}
+      </thead>
+      {{#each this.sharingCriteriaRules}}
+      <tr>
+        <td style="width: 100px; word-break: break-all">{{this.label}}</td>
+        <td style="width: 50px">{{this.accessLevel}}</td>
+        <td class="text-start" style="width: 200px; word-break: break-all">
+          <ul>
+            {{#each this.criteriaItems}}
+            <li>
+              {{this.field}}<strong style="margin-left: 10px; font-style: bold; margin-right: 10px"
+                >{{this.operation}}</strong
+              >{{this.value}}
+            </li>
+            {{/each}}
+          </ul>
+        </td>
+        <td class="text-start" style="width: 200px; word-break: break-all">
+          <ul>
+            {{#each this.sharedTo}}
+            <li><strong style="margin-right: 10px">{{this.label}}:</strong>{{this.value}}</li>
+            {{/each}}
+          </ul>
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} {{/if}} 
+    {{#if this.hasAutoFlows}}
+    <h5>Autolaunched Flows</h5>
+    <table class="table">
+      <thead>
         <tr>
-          <td style="width: 100px; word-break: break-all">{{this.label}}</td>
-          <td style="width: 100px; word-break: break-all">{{this.interviewLabel}}</td>
-          <td style="width: 100px">{{this.start.triggerType}}-{{this.start.recordTriggerType}}</td>
+          <th class="bg-primary" scope="col">Name</th>
+          <th class="bg-primary" scope="col">Description</th>
+          <th class="bg-primary text-start" scope="col">Record Trigger Type</th>
+          <th class="bg-primary text-start" scope="col">Subflows Dependencies</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{#ifCond this.triggers '!==' undefined}}
-      <h5>Apex Triggers</h5>
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="bg-primary" scope="col">Name</th>
-            <th class="bg-primary text-start" scope="col">Status</th>
-            <th class="bg-primary text-start" scope="col">API Version</th>
-            <th class="bg-primary text-start" scope="col">Operations</th>
-          </tr>
-        </thead>
-        {{#each this.triggers}}
+      </thead>
+      {{#each this.autoflows}}
+      <tr>
+        <td style="width: 100px; word-break: break-all">{{this.label}}</td>
+        <td style="width: 100px; word-break: break-all">{{this.interviewLabel}}</td>
+        <td style="width: 50px">{{this.start.triggerType}}({{this.start.recordTriggerType}})</td>
+        <td class="text-start" style="width: 200px; word-break: break-all">
+          <ul>
+            {{#each this.subflows}}
+            <li>{{this.label}}</li>
+            {{/each}}
+          </ul>
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} 
+    {{#if this.triggers}}
+    <h5>Apex Triggers</h5>
+    <table class="table">
+      <thead>
         <tr>
-          <td style="width: 50px">{{this.Name}}</td>
-          <td class="text-start" style="width: 50px">{{this.Status}}</td>
-          <td class="text-start" style="width: 50px">{{this.ApiVersion}}</td>
-          <td class="text-start" style="width: 50px">
-            <ul>
-              {{#each this.operation}}
-              <li>{{this.name}}</li>
-              {{/each}}
-            </ul>
-          </td>
+          <th class="bg-primary" scope="col">Name</th>
+          <th class="bg-primary text-start" scope="col">Status</th>
+          <th class="bg-primary text-start" scope="col">API Version</th>
+          <th class="bg-primary text-start" scope="col">Operations</th>
         </tr>
-        {{/each}}
-      </table>
-      {{/ifCond}} {{/each}}
-    </div>
+      </thead>
+      {{#each this.triggers}}
+      <tr>
+        <td style="width: 50px">{{this.Name}}</td>
+        <td class="text-start" style="width: 50px">{{this.Status}}</td>
+        <td class="text-start" style="width: 50px">{{this.ApiVersion}}</td>
+        <td class="text-start" style="width: 50px">
+          <ul>
+            {{#each this.operation}}
+            <li>{{this.name}}</li>
+            {{/each}}
+          </ul>
+        </td>
+      </tr>
+      {{/each}}
+    </table>
+    {{/if}} {{/each}}
     <div class="documentContent" style="page-break-after: always">
       <h2>Flows</h2>
       <p>
@@ -928,13 +954,13 @@
           </td>
           <td class="text-start" style="width: 200px; word-break: break-all">
             <ul>
-              {{#ifCond this.recordLookupCount ">" 0}}
+              {{#if this.recordLookupCount}}
               <li><strong style="margin-right: 10px">Total Record Lookup:</strong>{{this.recordLookupCount}}</li>
-              {{/ifCond}} {{#ifCond this.recordCreateCount ">" 0}}
+              {{/if}} {{#if this.recordCreateCount}}
               <li><strong style="margin-right: 10px">Total Record Creation:</strong>{{this.recordCreateCount}}</li>
-              {{/ifCond}} {{#ifCond this.recordUpdateCount ">" 0}}
+              {{/if}} {{#if this.recordUpdateCount}}
               <li><strong style="margin-right: 10px">Total Record Update:</strong>{{this.recordUpdateCount}}</li>
-              {{/ifCond}}
+              {{/if}}
             </ul>
           </td>
         </tr>
@@ -960,7 +986,7 @@
         </tr>
         {{/each}}
       </table>
-      {{#ifCond this.apexRestResource '!==' undefined}}
+      {{#if this.apexRestResource}}
       <h2>Apex Rest Resources</h2>
       <p>
         an Apex REST resource is a class in Apex that is annotated with the <strong>@RestResource</strong> annotation.
@@ -991,7 +1017,8 @@
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}} {{#ifCond this.apexTestClasses '!==' undefined}}
+      {{/if}} 
+      {{#if this.apexTestClasses}}
       <h2>Apex Test Classes</h2>
       <table class="table">
         <thead>
@@ -1011,7 +1038,7 @@
         </tr>
         {{/each}}
       </table>
-      {{/ifCond}}
+      {{/if}}
       <h2>Integrations</h2>
       <p>
         A typical enterprise uses many applications, many or most of which are not designed to work with one another out
@@ -1039,6 +1066,7 @@
         Integrating applications at the data layer is a common scenario. For example, multiple apps written in different
         programming languages can all use an open API and manage related data in one shared database.
       </p>
+      {{#if ssoSettings}}
       <h3>Single Sign-On</h3>
       <p>
         Single Sign-On (SSO) is an authentication process that allows users to access multiple applications such as
@@ -1080,6 +1108,8 @@
         </tr>
       </table>
       {{/each}}
+      {{/if}}
+      {{#if namedCredentials}}
       <h3>Named Credentials</h3>
       <p>
         A Named Credential is a record that stores authentication information that can be referenced when making
@@ -1107,6 +1137,8 @@
         </tr>
         {{/each}}
       </table>
+      {{/if}}
+      {{#if connectedApps}}
       <h3>Connected Applications</h3>
       <p>
         A connected app is an application that connects with Salesforce using APIs and standard protocols to
@@ -1127,14 +1159,15 @@
         <tr>
           <td style="width: 50px">{{this.Name}}</td>
           <td class="text-start" style="width: 50px">
-            {{#ifCond this.OptionsAllowAdminApprovedUsersOnly '===' true}} Admin approved users are pre-authorized
-            {{/ifCond}} {{#ifCond this.OptionsAllowAdminApprovedUsersOnly '===' false}} All users may self-authorize
-            {{/ifCond}}
+            {{#if this.OptionsAllowAdminApprovedUsersOnly}} Admin approved users are pre-authorized
+            {{else}} All users may self-authorize
+            {{/if}}
           </td>
           <td scope="col">{{this.usage}}</td>
         </tr>
         {{/each}}
       </table>
+      {{/if}}
     </div>
   </body>
 </html>

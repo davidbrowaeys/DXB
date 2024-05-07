@@ -281,7 +281,6 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     standardObjects = this.getTriggerForSObject(standardObjects, apexTriggers);
     customObjects = this.getTriggerForSObject(customObjects, apexTriggers);
 
-    this.log('Find Apex Rest Resource');
     const apexRestResource: ApexRestResource[] | undefined = !apexClasses
       ? undefined
       : apexClasses

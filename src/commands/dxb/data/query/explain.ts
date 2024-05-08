@@ -46,7 +46,7 @@ export default class DataQueryExplain extends SfCommand<DataQueryExplainResult> 
     if (!accessToken || !instanceUrl) {
       throw messages.createError('error.queryNotValid');
     }
-
+    this.log(messages.getMessage('log.overview'));
     const result = await this.queryPlan(query, accessToken, instanceUrl);
     return { result };
   }
@@ -60,7 +60,6 @@ export default class DataQueryExplain extends SfCommand<DataQueryExplainResult> 
       head: ['Description', 'Fields', 'TableEnumOrId'],
       colWidths: [70, 30, 30],
     });
-
     for (const plan of body.plans) {
       table.push([
         plan.cardinality,

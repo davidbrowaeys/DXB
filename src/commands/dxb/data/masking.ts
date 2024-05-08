@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra';
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
-import * as csvp from 'csv-parser';
+import * as csvpModule from 'csv-parser';
+const csvp = csvpModule.default;
 import { createObjectCsvWriter as createCsvWriter } from 'csv-writer';
 import { Messages } from '@salesforce/core';
 import { isString } from '@salesforce/ts-types';

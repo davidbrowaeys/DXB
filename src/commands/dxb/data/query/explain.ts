@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
 import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
 import { QueryExplainResult } from 'jsforce';
-import * as Table from 'cli-table3';
+import * as TableModule from 'cli-table3';
+const Table = TableModule.default;
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'data.query.explain');
@@ -9,32 +12,6 @@ const messages = Messages.loadMessages('dxb', 'data.query.explain');
 export type DataQueryExplainResult = {
   result: string | QueryExplainResult;
 };
-
-function displayAsTable(body: QueryExplainResult): string {
-  const table = new Table({
-    head: ['Cardinality', 'Fields', 'Leading \nOperation Type', 'Relative Cost', 'Object Cardinality', 'Object Type'],
-    colWidths: [20, 50, 20, 20, 20, 20],
-  });
-  const noteTable = new Table({
-    head: ['Description', 'Fields', 'TableEnumOrId'],
-    colWidths: [70, 30, 30],
-  });
-  for (const plan of body.plans) {
-    table.push([
-      plan.cardinality,
-      plan.fields.toString(),
-      plan.leadingOperationType,
-      plan.relativeCost,
-      plan.sobjectCardinality,
-      plan.sobjectType,
-    ]);
-
-    for (const note of plan.notes) {
-      noteTable.push([note.description, note.fields.toString(), note.tableEnumOrId]);
-    }
-  }
-  return `${table.toString()}\n=== Notes\n${noteTable.toString()}`;
-}
 
 export default class DataQueryExplain extends SfCommand<DataQueryExplainResult> {
   public static readonly summary = messages.getMessage('summary');
@@ -70,15 +47,38 @@ export default class DataQueryExplain extends SfCommand<DataQueryExplainResult> 
       throw messages.createError('error.queryNotValid');
     }
 
-    if (!this.isJsonOnly) {
-      this.log(messages.getMessage('log.connected', [instanceUrl, accessToken]));
-    }
-
     const result = await this.queryPlan(query, accessToken, instanceUrl);
     return { result };
   }
 
-  public async queryPlan(query: string, accessToken: string, instanceUrl: string): Promise<any> {
+  public displayAsTable(body: QueryExplainResult): void{
+    const table = new Table({
+      head: ['Cardinality', 'Fields', 'Leading \nOperation Type', 'Relative Cost', 'Object Cardinality', 'Object Type'],
+      colWidths: [20, 50, 20, 20, 20, 20],
+    });
+    const noteTable = new Table({
+      head: ['Description', 'Fields', 'TableEnumOrId'],
+      colWidths: [70, 30, 30],
+    });
+
+    for (const plan of body.plans) {
+      table.push([
+        plan.cardinality,
+        plan.fields.toString(),
+        plan.leadingOperationType,
+        plan.relativeCost,
+        plan.sobjectCardinality,
+        plan.sobjectType,
+      ]);
+
+      for (const note of plan.notes) {
+        noteTable.push([note.description, note.fields.toString(), note.tableEnumOrId]);
+      }
+    }
+    this.log(`${table.toString()}\n=== Notes\n${noteTable.toString()}`);
+  }
+
+  public async queryPlan(query: string, accessToken: string, instanceUrl: string): Promise<QueryExplainResult> {
     const url = `${instanceUrl}/services/data/v57.0/query/?explain=${encodeURIComponent(query)}`;
     const headers = new Headers();
     headers.append('Authorization', 'Bearer ' + accessToken);
@@ -94,13 +94,11 @@ export default class DataQueryExplain extends SfCommand<DataQueryExplainResult> 
       const body: QueryExplainResult = (await response.json()) as QueryExplainResult;
       if (!body.plans || body.plans.length === 0) {
         this.log(messages.getMessage('log.noExplanation'));
-        return;
+        this.log(JSON.stringify(body));
+      }else{
+        this.displayAsTable(body);
       }
-      if (this.isJsonOnly) {
-        return body;
-      }
-
-      return displayAsTable(body);
+      return body;
     } catch (error) {
       const e = error as Error;
       throw messages.createError('error.unexpected', undefined, undefined, e, e);

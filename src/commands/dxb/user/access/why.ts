@@ -1,7 +1,8 @@
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
 import { Messages } from '@salesforce/core';
 import { QueryResult, Connection } from 'jsforce';
-import * as Table from 'cli-table3';
+import * as TableModule from 'cli-table3';
+const Table = TableModule.default;
 import { PermissionSet } from 'jsforce/lib/api/metadata';
 import * as colors from '@colors/colors';
 export type UserFindAccessResult = {

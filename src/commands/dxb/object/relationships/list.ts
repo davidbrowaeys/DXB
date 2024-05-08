@@ -1,6 +1,7 @@
 import { execSync as exec } from 'child_process';
 import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
-import * as Table from 'cli-table3';
+import * as TableModule from 'cli-table3';
+const Table = TableModule.default;
 import { Messages } from '@salesforce/core';
 
 Messages.importMessagesDirectory(__dirname);

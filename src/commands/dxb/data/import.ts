@@ -3,7 +3,8 @@ import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import { Connection } from 'jsforce';
 import { Messages } from '@salesforce/core';
 import * as fs from 'fs-extra';
-import * as csv from 'csv-parser';
+import * as CsvModule from 'csv-parser';
+const csv = CsvModule.default;
 import { createObjectCsvWriter as createCsvWriter } from 'csv-writer';
 import { BulkIngestBatchResult } from 'jsforce/lib/api/bulk';
 // eslint-disable-next-line @typescript-eslint/no-var-requires

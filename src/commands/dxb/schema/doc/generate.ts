@@ -183,6 +183,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       char: 'r',
       summary: messages.getMessage('flags.format.summary'),
       default: 'pdf',
+      options: ['pdf', 'html', 'docx'],
     }),
   };
 
@@ -240,7 +241,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
     standardObjects = await this.getObjectDefinition(standardObjects, 'CustomObject', documentMeta.metadata.stdobjects);
     standardObjects = standardObjects.filter((sobject: any) => !!sobject);
     this.spinner.stop(messages.getMessage('spinner.stop.done'));
-    
+
     // custom objects
     this.spinner.start(messages.getMessage('spinner.start.retrieveCustom'));
     let customObjects: any = await this.query(CUSTOMQUERY);
@@ -292,7 +293,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
           .filter((cls) => !!cls.urlMappingValue);
     apexClasses = apexClasses?.filter((cls) => !cls.Body.includes('@RestResource'));
     this.spinner.stop(messages.getMessage('spinner.stop.found', [apexClasses.length]));
-    
+
     // retrieve aura cmp
     this.spinner.start(messages.getMessage('spinner.start.retrieveAura'));
     const auracmps = await this.query(AURAQUERY);
@@ -322,7 +323,7 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
       cssPath,
       pdfPath,
       htmlPath,
-      flows
+      flows,
     });
     return { success: true };
   }
@@ -645,13 +646,13 @@ export default class SchemaDocGenerate extends SfCommand<SchemaDocGenerateResult
    * @returns {Promise<Array>} - An array of SSO setting metadata
    */
   private async getSSOSettingMetadata(apiVersion: string): Promise<SamlSsoConfig[]> {
-    try{
+    try {
       const types = [{ type: 'SamlSsoConfig', folder: null }];
       const list: FileProperties[] = this.toArray(await this.connection?.metadata.list(types, apiVersion));
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       const fullNameList = list.map((e) => e.fullName);
       return this.toArray(await this.connection?.metadata.read('SamlSsoConfig', fullNameList)) as SamlSsoConfig[];
-    }catch(err){
+    } catch (err) {
       return [];
     }
   }

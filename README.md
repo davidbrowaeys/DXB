@@ -1,4 +1,5 @@
 # DXB-CLI
+
 <div class="content">
       <img src="docs\dxb_icon.png" width="200" alt="DXB icon" style="float:right">
       <p>
@@ -23,67 +24,72 @@
 2. Install [SDFX CLI](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm)
 
 # Install DXB-CLI
-To gte started, you can install it by using salesforce command, open your terminal and type: 
+
+To get started, you can install it by using salesforce command, open your terminal and type:
+
 ```shell
-sfdx plugins install dxb@latest
+sf plugins install dxb@latest
 ```
 
 # Commands
-* sf dxb apex scan
-* sf dxb apex trigger
-* sf dxb apex coverage check
-* sf dxb apex coverage cleanup
-* sf dxb apex scan query
-* sf dxb apex trigger create
-* sf dxb api align   
-* sf dxb community publish
-* sf dxb data backup
-* sf dxb data bulk
-* sf dxb data export
-* sf dxb data file
-* sf dxb data import
-* sf dxb data masking
-* sf dxb data query
-* sf dxb data restore
-* sf dxb data transform
-* sf dxb data bulk query
-* sf dxb data file export
-* sf dxb data query explain
-* sf dxb graphql convert 
-* sf dxb install
-* sf dxb junit check   
-* sf dxb lwc test
-* sf dxb lwc test run
-* sf dxb mdapi convert
-* sf dxb object create
-* sf dxb object fields
-* sf dxb object fieldset
-* sf dxb object prefix
-* sf dxb object relationships
-* sf dxb object vr
-* sf dxb object fields list
-* sf dxb object relationships list
-* sf dxb object vr create
-* sf dxb org create
-* sf dxb org data
-* sf dxb org setdefault
-* sf dxb package dependencies install
-* sf dxb permissionset clean
-* sf dxb permissionset create
-* sf dxb profile build
-* sf dxb profile convert
-* sf dxb profile passwordpolicies
-* sf dxb profile passwordpolicies fix
-* sf dxb schema doc generate
-* sf dxb source delta
-* sf dxb source fetchtest
-* sf dxb source scanner
-* sf dxb static create
-* sf dxb user access
-* sf dxb user access why
+
+- sf dxb apex scan
+- sf dxb apex trigger
+- sf dxb apex coverage check
+- sf dxb apex coverage cleanup
+- sf dxb apex scan query
+- sf dxb apex trigger create
+- sf dxb api align
+- sf dxb community publish
+- sf dxb data backup
+- sf dxb data bulk
+- sf dxb data export
+- sf dxb data file
+- sf dxb data import
+- sf dxb data masking
+- sf dxb data query
+- sf dxb data restore
+- sf dxb data transform
+- sf dxb data bulk query
+- sf dxb data file export
+- sf dxb data query explain
+- sf dxb graphql convert
+- sf dxb install
+- sf dxb junit check
+- sf dxb lwc test
+- sf dxb lwc test run
+- sf dxb mdapi convert
+- sf dxb object create
+- sf dxb object fields
+- sf dxb object fieldset
+- sf dxb object prefix
+- sf dxb object relationships
+- sf dxb object vr
+- sf dxb object fields list
+- sf dxb object relationships list
+- sf dxb object vr create
+- sf dxb org create
+- sf dxb org data
+- sf dxb org setdefault
+- sf dxb package dependencies install
+- sf dxb permissionset clean
+- sf dxb permissionset create
+- sf dxb profile build
+- sf dxb profile convert
+- sf dxb profile passwordpolicies
+- sf dxb profile passwordpolicies fix
+- sf dxb schema doc generate
+- sf dxb source delta
+- sf dxb source fetchtest
+- sf dxb source scanner
+- sf dxb static create
+- sf dxb user access
+- sf dxb user access why
 
 # Documentation
-Please see our [Wiki](https://github.com/davidbrowaeys/DXB/wiki) to get started. 
+
+Please see our [Wiki](https://github.com/davidbrowaeys/DXB/wiki) to get started.
 
 # License
+
 MIT © David Browaeys

@@ -22,7 +22,7 @@ export default class ProfileConvert extends SfCommand<ProfileConvertResult> {
       deprecateAliases: true,
     }),
     'source-dir': Flags.directory({
-      char: 'r',
+      char: 'd',
       summary: messages.getMessage('flags.source-dir.summary'),
       default: 'force-app/main/default/profiles',
       exists: true,

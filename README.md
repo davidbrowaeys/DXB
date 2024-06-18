@@ -1,6 +1,6 @@
 # DXB-CLI
 <div class="content">
-      <img src="docs\dxb_icon.png" width="200" alt="Descriptive text" style="float:right">
+      <img src="docs\dxb_icon.png" width="200" alt="DXB icon" style="float:right">
       <p>
           Welcome to the future of Salesforce development and automation! Meet DXB., the revolutionary Salesforce CLI plugin that simplifies your workflow. This powerful toolkit bridges the gap between development and deployment, turning tedious tasks into smooth processes.
       </p>

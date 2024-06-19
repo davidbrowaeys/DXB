@@ -227,7 +227,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     // eslint-disable-next-line prefer-const
     let { metadataType, fName, fSuffix } = this.getMetadataTypeAndName(base);
     if (
-      (metadataType && fSuffix !== 'site' && fSuffix !== 'md') ??
+      (metadataType && fSuffix !== 'site' && fSuffix !== 'md') ||
       (metadataType && fSuffix === 'md' && base.endsWith('-meta.xml'))
     ) {
       const tp = this.initMetadataTypeInPackage(metadataType.name);

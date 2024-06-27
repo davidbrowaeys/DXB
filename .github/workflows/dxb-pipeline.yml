@@ -4,14 +4,16 @@ on:
   push:
     branches:
       - master
+      - 'release/**'
     paths:
       - 'src/**'
       - 'package.json'
   pull_request:
-      types: [assigned, opened, synchronize, reopened, edited]
-      branches:
-        - master
-      paths:
+    types: [assigned, opened, synchronize, reopened, edited]
+    branches:
+      - master
+      - 'release/**'
+    paths:
       - 'src/**'
       - 'package.json'
 
@@ -20,43 +22,66 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 14.x
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
 
-    - name: Install dependencies
-      run: npm i --ignore-scripts
+      - name: Setup Yarn and install dependencies
+        uses: bahmutov/npm-install@v1.6.0
+        with:
+          useLockFile: false
+      - run: yarn install --ignore-scripts
 
-    - name: Build
-      run: npm run prepack
+      - name: Build
+        run: yarn build
 
     # - name: Audit packages
-    #   run: npm audit --audit-level=low 
-
-  publish:
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '14.x'
-      - name: Authenticate with private NPM package
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-      - name: NPM Install
-        run: npm install
-      - name: Upgrade Package version"
-        run: node dxbpackagecalc.js
-      - name: NPM Publish DXB
-        run: npm publish
-      - name: Commit report
-        run: |
-          git config --global user.name 'David Browaeys'
-          git config --global user.email 'david.browaeys@gmail.com'
-          git add 'package.json'
-          git commit -am "DXB Auto Update package version"
-          git push
+    #   run: npm audit --audit-level=low
+  # publish_beta:
+  #   if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/heads/release/')
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: '16.x'
+  #     - name: Authenticate with private NPM package
+  #       run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.yarnrc
+  #     - name: Yarn Install
+  #       uses: bahmutov/npm-install@v1.6.0
+  #     - run: yarn install --ignore-scripts
+  #     - name: Upgrade Package version"
+  #       run: node dxbpackagecalc.js ${{ github.ref }} beta
+  #     - name: Yarn Publish DXB
+  #       run: yarn publish --tag beta
+  #     - name: Commit report
+  #       run: |
+  #         cat package.json
+  # publish_prod:
+  #   if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: '16.x'
+  #     - name: Authenticate with private NPM package
+  #       run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.yarnrc
+  #     - name: Yarn Install
+  #       uses: bahmutov/npm-install@v1.6.0
+  #     - run: yarn install --ignore-scripts
+  #     - name: Upgrade Package version"
+  #       run: node dxbpackagecalc.js master
+  #     - name: Yarn Publish DXB
+  #       run: yarn publish
+  #     - name: Commit report
+  #       run: |
+  #         git config --global user.name 'David Browaeys'
+  #         git config --global user.email 'david.browaeys@gmail.com'
+  #         git add 'package.json'
+  #         git commit -am "DXB Auto Update package version"
+  #         git push

@@ -1,82 +1,99 @@
-import { flags, SfdxCommand } from '@salesforce/command';
-import { SfdxError, SfdxProject } from '@salesforce/core';
-import * as fs from 'fs-extra';
 import * as path from 'path';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import * as fs from 'fs-extra';
+import { Messages } from '@salesforce/core';
 
-export default class DXBScanner extends SfdxCommand {
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'source.scanner');
+type Violation = {
+  category: string;
+  column: string;
+  line: string;
+  message: string;
+  ruleName: string;
+  severity: string;
+};
+export type SourceScannerResult = {
+  result: boolean;
+};
 
-  public static description = 'This command extend scanner-code plugin and throw error if severity 1 rule are met.';
+export default class SourceScanner extends SfCommand<SourceScannerResult> {
+  public static readonly summary = messages.getMessage('summary');
 
-  public static examples = [
-    `$ sfdx dxb:source:scanner -f apex_pmd_results.json`
-  ];
+  public static readonly examples = messages.getMessages('examples');
 
-  public static args = [{ name: 'file' }];
-
-  protected static flagsConfig = {
-    file: flags.string({ char: 'f', description: 'file path of code scanner results'}),
-    excludedfiles: flags.string({ char: 'e', description: 'file path of classes to exclude'}), 
-    severity: flags.number({ char: 's', description: 'severity threshold, if set to 3 it will throw an error for all violations where severity is 3 and lower', default: 1}), 
-    highseverityrules: flags.string({ char: 'r', description: 'Name of the rules you want to mark a high severity'})
+  public static readonly flags = {
+    'target-org': Flags.requiredOrg(),
+    file: Flags.file({ char: 'f', summary: messages.getMessage('flags.file.summary'), exists: true, required: true }),
+    'excluded-files': Flags.string({
+      char: 'e',
+      summary: messages.getMessage('flags.excluded-files.summary'),
+      aliases: ['excludedfiles'],
+      deprecateAliases: true,
+    }),
+    severity: Flags.integer({ char: 's', summary: messages.getMessage('flags.severity.summary'), default: 1 }),
+    'high-severity-rules': Flags.string({
+      char: 'r',
+      summary: messages.getMessage('flags.high-severity-rules.summary'),
+      multiple: true,
+      aliases: ['highseverityrules'],
+      deprecateAliases: true,
+    }),
   };
 
-  // Comment this out if your command does not require an org username
-  protected static requiresUsername = false;
+  public static readonly requiresProject = true;
 
-  // Comment this out if your command does not support a hub org username
-  protected static supportsDevhubUsername = false;
+  public async run(): Promise<SourceScannerResult> {
+    const { flags } = await this.parse(SourceScanner);
+    const config: any = await this.project.resolveProjectConfig();
 
-  // Set this to true if your command requires a project workspace; 'requiresProject' is false by default
-  protected static requiresProject = false;
+    const filepath = flags.file;
+    const excludedFilesPath = flags['excluded-files'];
+    const highseverityrules = flags['high-severity-rules'];
 
-  private getExcludedFiles(excludedFilesPath){
-  	var excludedFiles = [];
-  	try{
-		excludedFiles = JSON.parse(fs.readFileSync(excludedFilesPath).toString());
-  	}catch(err){
-  		console.log('No excluded files found\n');
-  	}
-  	return excludedFiles;
+    const severity = flags.severity;
+
+    this.log(messages.getMessage('log.calculating'));
+    const results = JSON.parse(fs.readFileSync(filepath).toString());
+    const excludedFiles = this.getExcludedFiles(excludedFilesPath);
+    let throwError = false;
+    results.forEach((elem: { fileName: string; violations: Violation[] }) => {
+      let content = '';
+      const fileJson: path.ParsedPath = path.parse(elem.fileName);
+      if (elem.violations && !excludedFiles.includes(fileJson.name)) {
+        elem.violations.forEach((v) => {
+          if (
+            parseInt(v.severity, 10) <= severity ||
+            (highseverityrules?.includes(v.ruleName) ??
+              config?.dxb?.highseverityrules?.highseverityrules.includes(v.ruleName))
+          ) {
+            content += `${fileJson.name}[${v.line} - ${v.column}] - ${v.ruleName}(${v.category}) - Severity(${v.severity}) ${v.message}\n`;
+            throwError = true;
+          }
+        });
+      }
+      if (content !== '') {
+        this.log(content);
+      }
+    });
+    if (throwError) {
+      throw messages.createError('error.violations');
+    }
+    return { result: true };
   }
 
-  public async run() {
-  	const project = await SfdxProject.resolve();
-    var config: any = await project.resolveProjectConfig();
-
-    let filepath = this.flags.file;
-    let excludedFilesPath = this.flags.excludedfiles;
-    let highseverityrules = this.flags.highseverityrules;
-
-    let severity = this.flags.severity;
-    if (!fs.existsSync(filepath)) {
-    	throw new SfdxError("PMD JSON Report file results does not exist!");
+  // eslint-disable-next-line class-methods-use-this
+  private getExcludedFiles(excludedFilesPath: string | undefined): string[] {
+    let excludedFiles: string[] = [];
+    try {
+      if (!excludedFilesPath && fs.existsSync(excludedFilesPath!)) {
+        excludedFiles = JSON.parse(fs.readFileSync(excludedFilesPath!).toString());
+      } else {
+        throw new Error('No files found');
+      }
+    } catch (err) {
+      this.log(messages.getMessage('log.noExcludedFiles'));
     }
-    if (highseverityrules){
-    	highseverityrules = highseverityrules.split(',');
-    }
-
-    this.ux.log('Calculating quality gate...\n');
-    let results = JSON.parse(fs.readFileSync(filepath).toString());
-    let excludedFiles = this.getExcludedFiles(excludedFilesPath);
-    let throwError = false;
-    results.forEach(elem => {
-    	let content = '';
-    	let fileJson: any = path.parse(elem.fileName);
-    	if (elem.violations && !excludedFiles.includes(fileJson.name)){
-    		elem.violations.forEach( v => {
-    			if (parseInt(v.severity) <= severity || (highseverityrules && highseverityrules.includes(v.ruleName)) || (config && config.dxb && config.dxb.highseverityrules && config.dxb.highseverityrules.highseverityrules.includes(v.ruleName))) {
-    				content += `${fileJson.name}[${v.line} - ${v.column}] - ${v.ruleName}(${v.category}) - Severity(${v.severity}) ${v.message}\n`;
-    				throwError = true;
-    			}
-    		});
-    	}	
-    	if (content !== '') {
-    		this.ux.log(content);
-    	}
-    });
-    if (throwError){
-    	throw new SfdxError("We have detected some very bad violations in your code. Run sfdx scanner locally.");	
-    }
-
+    return excludedFiles;
   }
 }

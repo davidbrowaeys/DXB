@@ -1,171 +1,160 @@
-import { flags, SfdxCommand } from '@salesforce/command';
 import * as path from 'path';
-import * as fs from 'fs';
-var js2xmlparser = require('js2xmlparser');
-var sourcepath;
+import * as fs from 'fs-extra';
+import { Flags, SfCommand } from '@salesforce/sf-plugins-core';
+import js2xmlparser = require('js2xmlparser');
+import { Messages } from '@salesforce/core';
 
-function buildProfile(profilename){
-    console.log(profilename);
-    var profilepath = path.join(sourcepath,profilename);
-    //profile
-    var profilesetting = JSON.parse(fs.readFileSync(profilepath+'/'+profilename+'.json').toString());
+const sortObjKeysAlphabetically = (obj: object): { [k: string]: any } => Object.fromEntries(Object.entries(obj).sort());
+const generalSort = (a: any, b: any): number => (b.isDir - a.isDir || a.name > b.name ? -1 : 1);
 
-    var profile:any = {
-        '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' }
+export type ProfileBuildResult = {
+  result: string[];
+};
+Messages.importMessagesDirectory(__dirname);
+const messages = Messages.loadMessages('dxb', 'profile.build');
+export default class ProfileBuild extends SfCommand<ProfileBuildResult> {
+  public static readonly summary = messages.getMessage('summary');
+
+  public static readonly examples = messages.getMessages('examples');
+
+  public static readonly flags = {
+    'profile-name': Flags.string({
+      char: 'p',
+      summary: messages.getMessage('flags.profile-name.summary'),
+      aliases: ['profilename'],
+      deprecateAliases: true,
+    }),
+    'source-dir': Flags.directory({
+      char: 'd',
+      summary: messages.getMessage('flags.source-dir.summary'),
+      default: 'force-app/main/default/profiles',
+      aliases: ['sourcepath'],
+      deprecateAliases: true,
+    }),
+  };
+
+  private sourcepath!: string;
+
+  public async run(): Promise<ProfileBuildResult> {
+    const { flags } = await this.parse(ProfileBuild);
+    let profilename = flags['profile-name'];
+    this.sourcepath = flags['source-dir'];
+    if (profilename) {
+      return { result: [this.buildProfile(profilename)] };
+    } else {
+      return {
+        result: fs
+          .readdirSync(this.sourcepath)
+          .sort(generalSort)
+          .filter((f: string) => f.includes('profile-meta.xml'))
+          .map((file) => {
+            profilename = file.split('.')[0];
+            return this.buildProfile(profilename);
+          }),
+      };
+    }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private mapPermissions(profilePath: string, permissionName: string, fileName?: string): any[] {
+    if (!fileName && fs.existsSync(`${profilePath}/${permissionName}`)) {
+      return (
+        fs
+          .readdirSync(`${profilePath}/${permissionName}`)
+          .sort(generalSort)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          .map((file) => JSON.parse(fs.readFileSync(`${profilePath}/${permissionName}/${file}`).toString()))
+      );
+    } else if (fileName && fs.existsSync(`${profilePath}/${permissionName}/${fileName}`)) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return [JSON.parse(fs.readFileSync(`${profilePath}/${permissionName}/${fileName}`).toString())];
+    } else {
+      return [];
+    }
+  }
+
+  private buildProfile(profilename: string): string {
+    this.log(profilename);
+    const profilepath = path.join(this.sourcepath, profilename);
+    // profile
+    const profilesetting = JSON.parse(fs.readFileSync(profilepath + '/' + profilename + '.json').toString());
+
+    let profile: any = {
+      '@': { xmlns: 'http://soap.sforce.com/2006/04/metadata' },
     };
-    if (profilesetting.custom){
-        profile["custom"] = profilesetting.custom;
+    if (profilesetting.custom) {
+      profile['custom'] = profilesetting.custom;
     }
-    if (profilesetting.userLicense){
-        profile["userLicense"] = profilesetting.userLicense;
+    if (profilesetting.userLicense) {
+      profile['userLicense'] = profilesetting.userLicense;
     }
-    if (profilesetting.loginHours){
-        profile["loginHours"] = profilesetting.loginHours;
+    if (profilesetting.loginHours) {
+      profile['loginHours'] = profilesetting.loginHours;
     }
-    if (profilesetting.loginIpRanges){
-        profile["loginIpRanges"] = profilesetting.loginIpRanges;
+    if (profilesetting.loginIpRanges) {
+      profile['loginIpRanges'] = profilesetting.loginIpRanges;
     }
-    //applicationVisibilities
-    profile.applicationVisibilities = [];
-    if (fs.existsSync(profilepath+'/applicationVisibilities')) {
-        fs.readdirSync(profilepath+'/applicationVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.applicationVisibilities.push(JSON.parse(fs.readFileSync(profilepath+'/applicationVisibilities/'+file).toString()));
-        });
-    }
-    //classAccess
-    profile.classAccesses = [];
-    if (fs.existsSync(profilepath+'/classAccesses')) {
-        fs.readdirSync(profilepath+'/classAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.classAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/classAccesses/'+file).toString()));
-        });
-    }
-    //customSettingAccesses
-    profile.customSettingAccesses = [];
-    if (fs.existsSync(profilepath+'/customSettingAccesses')) {
-        fs.readdirSync(profilepath+'/customSettingAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.customSettingAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/customSettingAccesses/'+file).toString()));
-        });
-    }
-    //externalDataSourceAccesses
-    profile.externalDataSourceAccesses = [];
-    if (fs.existsSync(profilepath+'/externalDataSourceAccesses')) {
-        fs.readdirSync(profilepath+'/externalDataSourceAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.externalDataSourceAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/externalDataSourceAccesses/'+file).toString()));
-        });
-    }
-    //flowAccesses
-    profile.flowAccesses = [];
-    if (fs.existsSync(profilepath+'/flowAccesses')) {
-        fs.readdirSync(profilepath+'/flowAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.flowAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/flowAccesses/'+file).toString()));
-        });
-    }
-    //categoryGroupVisibilities
-    profile.categoryGroupVisibilities = [];
-    if (fs.existsSync(profilepath+'/categoryGroupVisibilities')) {
-        fs.readdirSync(profilepath+'/categoryGroupVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.categoryGroupVisibilities.push(JSON.parse(fs.readFileSync(profilepath+'/categoryGroupVisibilities/'+file).toString()));
-        });
-    }
-    //customMetadataTypeAccesses
-    profile.customMetadataTypeAccesses = [];
-    if (fs.existsSync(profilepath+'/customMetadataTypeAccesses')) {
-        fs.readdirSync(profilepath+'/customMetadataTypeAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.customMetadataTypeAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/customMetadataTypeAccesses/'+file).toString()));
-        });
-    }
-    //customPermissions
-    profile.customPermissions = [];
-    if (fs.existsSync(profilepath+'/customPermissions')) {
-        fs.readdirSync(profilepath+'/customPermissions').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.customPermissions.push(JSON.parse(fs.readFileSync(profilepath+'/customPermissions/'+file).toString()));
-        });
-    }
-    //objects
+    // applicationVisibilities
+    profile.applicationVisibilities = this.mapPermissions(profilepath, 'applicationVisibilities');
+
+    // classAccess
+    profile.classAccesses = this.mapPermissions(profilepath, 'classAccesses');
+
+    // customSettingAccesses
+    profile.customSettingAccesses = this.mapPermissions(profilepath, 'customSettingAccesses');
+
+    // externalDataSourceAccesses
+    profile.externalDataSourceAccesses = this.mapPermissions(profilepath, 'externalDataSourceAccesses');
+
+    // flowAccesses
+    profile.flowAccesses = this.mapPermissions(profilepath, 'flowAccesses');
+
+    // categoryGroupVisibilities
+    profile.categoryGroupVisibilities = this.mapPermissions(profilepath, 'categoryGroupVisibilities');
+
+    // customMetadataTypeAccesses
+    profile.customMetadataTypeAccesses = this.mapPermissions(profilepath, 'customMetadataTypeAccesses');
+
+    // customPermissions
+    profile.customPermissions = this.mapPermissions(profilepath, 'customPermissions');
+
+    // objects
     profile.objectPermissions = [];
     profile.fieldPermissions = [];
     profile.recordTypeVisibilities = [];
-    if (fs.existsSync(profilepath+'/objectPermissions')) {
-        fs.readdirSync(profilepath+'/objectPermissions').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            var objectpath = profilepath+'/objectPermissions/'+file;
-            //objectPermissions
-            if (fs.existsSync(objectpath+'/'+file+'.json')){
-                profile.objectPermissions.push(JSON.parse(fs.readFileSync(objectpath+'/'+file+'.json').toString()));
-            }
-            //fieldPermissions
-            if (fs.existsSync(objectpath+'/fieldPermissions')){
-                fs.readdirSync(objectpath+'/fieldPermissions').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-                    profile.fieldPermissions.push(JSON.parse(fs.readFileSync(objectpath+'/fieldPermissions/'+file).toString()));
-                });
-            }
-            //recordTypeVisibilities
-            if (fs.existsSync(objectpath+'/recordTypeVisibilities')){
-                fs.readdirSync(objectpath+'/recordTypeVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-                    profile.recordTypeVisibilities.push(JSON.parse(fs.readFileSync(objectpath+'/recordTypeVisibilities/'+file).toString()));
-                });
-            }
+    if (fs.existsSync(profilepath + '/objectPermissions')) {
+      fs.readdirSync(profilepath + '/objectPermissions')
+        .sort(generalSort)
+        .forEach((file) => {
+          const objectpath = profilepath + '/objectPermissions/' + file;
+          // objectPermissions
+          profile.objectPermissions = this.mapPermissions(objectpath, 'objectPermissions', `${file}.json`);
+
+          // fieldPermissions
+          profile.fieldPermissions = this.mapPermissions(objectpath, 'fieldPermissions');
+
+          // recordTypeVisibilities
+          profile.recordTypeVisibilities = this.mapPermissions(objectpath, 'recordTypeVisibilities');
         });
     }
-    //layoutAssignments
-    profile.layoutAssignments = [];
-    if (fs.existsSync(profilepath+'/layoutAssignments')) {
-        fs.readdirSync(profilepath+'/layoutAssignments').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.layoutAssignments.push(JSON.parse(fs.readFileSync(profilepath+'/layoutAssignments/'+file).toString()));
-        });
+    // layoutAssignments
+    profile.layoutAssignments = this.mapPermissions(profilepath, 'layoutAssignments');
+
+    // pageAccesses
+    profile.pageAccesses = this.mapPermissions(profilepath, 'pageAccesses');
+
+    // tabVisibilities
+    profile.tabVisibilities = this.mapPermissions(profilepath, 'tabVisibilities');
+
+    // user permissions
+    if (profilesetting.userPermissions) {
+      profile['userPermissions'] = profilesetting.userPermissions;
     }
-    //pageAccesses
-    profile.pageAccesses = [];
-    if (fs.existsSync(profilepath+'/pageAccesses')) {
-        fs.readdirSync(profilepath+'/pageAccesses').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.pageAccesses.push(JSON.parse(fs.readFileSync(profilepath+'/pageAccesses/'+file).toString()));
-        });
-    }
-    //tabVisibilities
-    profile.tabVisibilities = [];
-    if (fs.existsSync(profilepath+'/tabVisibilities')) {
-        fs.readdirSync(profilepath+'/tabVisibilities').sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-            profile.tabVisibilities.push(JSON.parse(fs.readFileSync(profilepath+'/tabVisibilities/'+file).toString()));
-        });
-    }
-    //user permissions
-    if (profilesetting.userPermissions){
-        profile["userPermissions"] = profilesetting.userPermissions;
-    }
-    //sort profile attributes
+    // sort profile attributes
     profile = sortObjKeysAlphabetically(profile);
-    var xml = js2xmlparser.parse("Profile", profile, { declaration: { encoding: 'UTF-8' }});
-    fs.writeFileSync(sourcepath+'/'+profilename+'.profile-meta.xml', xml);
-}
-
-const sortObjKeysAlphabetically = (obj) => Object.fromEntries(Object.entries(obj).sort());
-export default class ProfileBuild extends SfdxCommand {
-
-    public static description = 'Convert profile xml into small chunks of json files';
-  
-    public static examples = [
-        `$ sfdx dxb:profile:build`,
-        `$ sfdx dxb:profile:build -p Admin -r src/profiles`
-    ];
-  
-    public static args = [{name: 'file'}];
-  
-    protected static flagsConfig = {
-        profilename : flags.string({char:'p',description:'Profile name to be converted'}),
-        sourcepath: flags.string({ char: 'r', description: 'Path to profile files', default: 'force-app/main/default/profiles' })
-    };
-  
-    public async run() {
-        var profilename = this.flags.profilename;
-        sourcepath = this.flags.sourcepath;
-        if (profilename){
-            buildProfile(profilename);    
-        }else{
-            fs.readdirSync(sourcepath).sort((a:any, b:any) => b.isDir - a.isDir || a.name > b.name ? -1 : 1).forEach(file => {
-                if (file.indexOf('profile-meta.xml') >= 0){
-                    profilename = file.split('.')[0];
-                    buildProfile(profilename);
-                }
-            });
-        }
-    }
+    const xml = js2xmlparser.parse('Profile', profile, { declaration: { encoding: 'UTF-8' } });
+    const fullPath = `${this.sourcepath}/${profilename}.profile-meta.xml`;
+    fs.writeFileSync(fullPath, xml);
+    return fullPath;
+  }
 }

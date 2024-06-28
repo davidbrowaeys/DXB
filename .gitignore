@@ -1,32 +1,52 @@
-*-debug.log
-*-error.log
-/.nyc_output
-/dist
-/lib
-/package-lock.json
-/yarn.lock
-/oclif.manifest.json
-/tmp
+# -- CLEAN
+tmp/
+# use yarn by default, so ignore npm
+package-lock.json
+
+# never checkin npm config
+.npmrc
+
+# debug logs
+npm-error.log
+yarn-error.log
+
+
+# compile source
+lib
+
+# test artifacts
+*xunit.xml
+*checkstyle.xml
+*unitcoverage
+.nyc_output
+test_session*
+
+# generated docs
+docs
+
+# ignore sfdx-trust files
+*.tgz
+*.sig
+package.json.bak.
+
+# -- CLEAN ALL
+*.tsbuildinfo
+.eslintcache
+.wireit
 node_modules
-git push -u origin master
-/.sonarlint
-/messages
-.vscode/*
-backup/cycle-1/delta/1/Account.csv
-backup/cycle-1/delta/1/Contact.csv
-backup/cycle-1/delta/1/log.json
-backup/cycle-1/delta/1/Opportunity.csv
-backup/cycle-1/full/Account.csv
-backup/cycle-1/full/Contact.csv
-backup/cycle-1/full/log.json
-backup/cycle-1/full/Opportunity.csv
-bulk_output/ACCOUNT.csv
-.sfdx/tools/apex.db
-.vim-force.com/session.properties
-config/data-def.json
-.pmdCache
-CHEATSHEET
-create_class.js
-create_trigger.js
-hello
-log
+
+# --
+# put files here you don't want cleaned with sf-clean
+
+# os specific files
+.DS_Store
+.idea
+
+oclif.manifest.json
+.sfdx/
+force-app/
+force-ui/
+manifest/
+.sf/
+oclif.lock
+.forceignore

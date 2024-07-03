@@ -44,7 +44,7 @@ export default class ApexCoverageCleanup extends SfCommand<ApexCoverageCleanupRe
       const classname = classnameString.split('filename="no-map/').join('').slice(0, -1);
       if(classname){
         const classpath = this.allClasses.find((e: string) => this.isPathEndingWith(e,classname));
-        fileContent = fileContent.split(`no-map/${classname}`).join(classpath);
+        fileContent = fileContent.split(`no-map/${classname}"`).join(`${classpath}"`);
       }
     });
     writeFileSync(originFile, fileContent);

@@ -5,7 +5,7 @@
   "dependencies": {
     "@colors/colors": "^1.6.0",
     "@oclif/core": "^2.15.0",
-    "@salesforce/core": "^5.2.10",
+    "@salesforce/core": "^5.3.20",
     "@salesforce/kit": "^3.1.6",
     "@salesforce/sf-plugins-core": "^3.1.24",
     "@salesforce/source-deploy-retrieve": "^9.7.28",

@@ -9,7 +9,7 @@
     "@salesforce/kit": "^3.1.6",
     "@salesforce/sf-plugins-core": "^3.1.24",
     "@salesforce/source-deploy-retrieve": "^9.7.28",
-    "@salesforce/ts-types": "^2.0.9",
+    "@salesforce/ts-types": "^2.0.12",
     "cli-table3": "^0.6.5",
     "csv-parser": "^3.0.0",
     "csv-split-stream": "^1.0.2",

@@ -74,7 +74,7 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
     } else {
       result = this.processFromArgument(sourcepath!, metadatatypes);
     }
-    this.log(result.join(','));
+    result?.forEach(this.printResult);
     return { result };
   }
 
@@ -165,5 +165,9 @@ export default class SourceFetchtest extends SfCommand<SourceFetchtestResult> {
         return [];
       }
     });
+  }
+
+  private printResult = (result: string): void => {
+    this.log(result);
   }
 }

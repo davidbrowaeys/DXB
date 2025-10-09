@@ -93,6 +93,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
   protected packageDirectories: PackageDir[] = [];
   protected basedir = '';
   public async run(): Promise<SourceDeltaResult> {
+    console.log('>>>>> Start');
     const { flags } = await this.parse(SourceDelta);
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     const mode: 'tags' | 'branch' | 'commitid' | string = flags.mode;
@@ -236,13 +237,27 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
       if (metadataType.strictDirectoryName) {
         this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] ? metadataDir[metadataTypIndex + 1] : fName);
       } else {
+        console.log(metadataType.folderType, metadataDir);
         if (metadataType.folderType && metadataDir[metadataTypIndex + 1] !== 'unfiled$public') {
-          this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1]);
+          // --- START: MODIFICATION FOR NESTED FOLDERS (Second location) ---
+          const folderParts = metadataDir.slice(metadataTypIndex + 1);
+
+          // 1. Add all ancestor folders (e.g., DocumentFolder members)
+          this.addFolderAncestorsToPackage(
+            metadataType.folderType,
+            folderParts
+          );
+
+          // 2. Add the file itself, prefixed by its full folder path.
+          const fullMemberName = [...folderParts, fName].join('/');
+          this.addMemberToPackage(tp, fullMemberName);
+          // --- END: MODIFICATION FOR NESTED FOLDERS (Second location) ---
+        } else {
+          this.addMemberToPackage(
+            tp,
+            `${metadataType.folderType ? metadataDir[metadataTypIndex + 1] + '/' : ''}${fName}`
+          );
         }
-        this.addMemberToPackage(
-          tp,
-          `${metadataType.folderType ? metadataDir[metadataTypIndex + 1] + '/' : ''}${fName}`
-        );
       }
     } else if (metadataDir) {
       // suffix is not good enough to identify metadata let's try to find parent metadata folder. This is usually the case for cmp such as lwc, static resource,  aura, etc.
@@ -260,9 +275,12 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
         } else {
           const tp = this.initMetadataTypeInPackage(metadataType.name);
           if (metadataType.strictDirectoryName) {
+            console.log('>>>>Report1');
             this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] ? metadataDir[metadataTypIndex + 1] : fName);
           } else {
+            console.log('>>>>Report2');
             if (metadataType.folderType && metadataDir[metadataTypIndex + 1] !== 'unfiled$public') {
+              console.log('>>>>Report3');
               this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1]);
             }
             this.addMemberToPackage(
@@ -274,6 +292,36 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
       }
     }
   }
+
+  /**
+   * Adds all ancestor folders for a given folder type (e.g., ReportFolder) to packageJson.
+   *
+   * @param folderTypeName Name of the folder metadata type (e.g., 'ReportFolder')
+   * @param folderParts Array of folder names from the file path (e.g., ['Folder1', 'Folder2'])
+   */
+  private addFolderAncestorsToPackage(folderTypeName: string, folderParts: string[]): void {
+    if (folderTypeName && folderParts.length > 0) {
+      const folderType = this.initMetadataTypeInPackage(folderTypeName);
+      let currentFolderPath = '';
+      
+      // The last element of folderParts is the immediate folder containing the file, 
+      // so we only iterate up to that point. The last element of folderParts 
+      // is the *folder name*, not the filename itself, based on the slice above.
+      // If the file is in 'reports/Folder1/Folder2/ReportName.report-meta.xml', 
+      // and folderParts is ['Folder1', 'Folder2'], we want both 'Folder1' and 'Folder1/Folder2'.
+      
+      for (const part of folderParts) {
+        if (part === 'unfiled$public') {
+          // Skip 'unfiled$public' as it's not a deployable folder member
+          continue;
+        }
+        // Build the path: Folder1, then Folder1/Folder2, etc.
+        currentFolderPath = currentFolderPath ? `${currentFolderPath}/${part}` : part;
+        this.addMemberToPackage(folderType, currentFolderPath);
+      }
+    }
+  }
+
   /**
    * Initialise new metadata type in package json object
    *

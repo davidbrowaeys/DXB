@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import { execSync as exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -93,7 +94,6 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
   protected packageDirectories: PackageDir[] = [];
   protected basedir = '';
   public async run(): Promise<SourceDeltaResult> {
-    console.log('>>>>> Start');
     const { flags } = await this.parse(SourceDelta);
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     const mode: 'tags' | 'branch' | 'commitid' | string = flags.mode;
@@ -236,9 +236,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
       // add member to packageJson, if inFolder, then need to add also the parent, if strictDirectory then add parent only
       if (metadataType.strictDirectoryName) {
         this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] ? metadataDir[metadataTypIndex + 1] : fName);
-      } else {
-        console.log(metadataType.folderType, metadataDir);
-        if (metadataType.folderType && metadataDir[metadataTypIndex + 1] !== 'unfiled$public') {
+      } else if (metadataType.folderType && metadataDir[metadataTypIndex + 1] !== 'unfiled$public') {
           // --- START: MODIFICATION FOR NESTED FOLDERS (Second location) ---
           const folderParts = metadataDir.slice(metadataTypIndex + 1);
 
@@ -258,7 +256,6 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
             `${metadataType.folderType ? metadataDir[metadataTypIndex + 1] + '/' : ''}${fName}`
           );
         }
-      }
     } else if (metadataDir) {
       // suffix is not good enough to identify metadata let's try to find parent metadata folder. This is usually the case for cmp such as lwc, static resource,  aura, etc.
       const metadataTypIndex = metadataDir.findIndex(
@@ -275,12 +272,9 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
         } else {
           const tp = this.initMetadataTypeInPackage(metadataType.name);
           if (metadataType.strictDirectoryName) {
-            console.log('>>>>Report1');
             this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1] ? metadataDir[metadataTypIndex + 1] : fName);
           } else {
-            console.log('>>>>Report2');
             if (metadataType.folderType && metadataDir[metadataTypIndex + 1] !== 'unfiled$public') {
-              console.log('>>>>Report3');
               this.addMemberToPackage(tp, metadataDir[metadataTypIndex + 1]);
             }
             this.addMemberToPackage(

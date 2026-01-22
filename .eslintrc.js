@@ -22,7 +22,9 @@ module.exports = {
     '@typescript-eslint/no-unsafe-argument': 'off',
     '@typescript-eslint/no-unsafe-call': 'off',
     'jsdoc/check-indentation': 'off',
-    ' @typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/no-inferrable-types':'off',
+    '@typescript-eslint/prefer-for-of':'off',
     'no-console': 'off' // Allows console.log statements
   },
 };

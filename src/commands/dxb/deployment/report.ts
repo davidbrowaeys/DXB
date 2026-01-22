@@ -41,6 +41,7 @@ interface CodeAnalyzerViolation {
   startLine: number;
   message: string;
   resources: string;
+  codeSnippet?: string;
 }
 
 interface RunTestResult {
@@ -101,6 +102,17 @@ interface CoberturaClass {
   linesCovered: number;
 }
 
+interface PackageType {
+  name: string;
+  members: string[];
+}
+
+interface PackageXmlData {
+  version: string;
+  types: PackageType[];
+  totalMembers: number;
+}
+
 interface ReportData {
   title: string;
   gen: string;
@@ -144,6 +156,8 @@ interface ReportData {
   hcnt: number;
   mcnt: number;
   lcnt: number;
+  pkg?: PackageXmlData;
+  hpkg: boolean;
 }
 
 Messages.importMessagesDirectory(__dirname);
@@ -331,6 +345,106 @@ async function parseCoberturaFile(fp: string): Promise<CoberturaClass[]> {
   }
 }
 
+async function parsePackageXmlFile(fp: string): Promise<PackageXmlData | undefined> {
+  if (!fs.existsSync(fp)) {
+    return undefined;
+  }
+  try {
+    const parser = new xml2js.Parser({ explicitArray: false, mergeAttrs: true });
+    const content = fs.readFileSync(fp, 'utf-8');
+    const result = await parser.parseStringPromise(content);
+    const pkg = result.Package;
+    if (!pkg) return undefined;
+
+    const version = pkg.version ?? '';
+    let types = pkg.types;
+    if (!types) return { version, types: [], totalMembers: 0 };
+    if (!Array.isArray(types)) types = [types];
+
+    const packageTypes: PackageType[] = [];
+    let totalMembers = 0;
+
+    for (const t of types) {
+      const name = t.name ?? '';
+      let members = t.members;
+      if (!members) members = [];
+      if (!Array.isArray(members)) members = [members];
+      
+      packageTypes.push({
+        name,
+        members: members.map((m: string) => String(m)),
+      });
+      totalMembers += members.length;
+    }
+
+    return {
+      version,
+      types: packageTypes.sort((a, b) => a.name.localeCompare(b.name)),
+      totalMembers,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function getCodeSnippet(filePath: string, lineNumber: number, contextLines: number = 2): string | undefined {
+  try {
+    // Try to find the file - it might be relative or absolute
+    let resolvedPath = filePath;
+    
+    // If the path doesn't exist as-is, try to find it relative to cwd
+    if (!fs.existsSync(resolvedPath)) {
+      // Try common Salesforce project paths
+      const possiblePaths = [
+        filePath,
+        path.join(process.cwd(), filePath),
+        // Handle paths that might start with force-app or similar
+        filePath.replace(/^.*?(force-app)/, '$1'),
+        path.join(process.cwd(), filePath.replace(/^.*?(force-app)/, '$1')),
+      ];
+      
+      for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+          resolvedPath = p;
+          break;
+        }
+      }
+    }
+    
+    if (!fs.existsSync(resolvedPath)) {
+      return undefined;
+    }
+    
+    const content = fs.readFileSync(resolvedPath, 'utf-8');
+    const lines = content.split('\n');
+    
+    if (lineNumber < 1 || lineNumber > lines.length) {
+      return undefined;
+    }
+    
+    // Get lines around the error (with context)
+    const startLine = Math.max(1, lineNumber - contextLines);
+    const endLine = Math.min(lines.length, lineNumber + contextLines);
+    
+    const snippetLines: string[] = [];
+    for (let i = startLine; i <= endLine; i++) {
+      const lineContent = lines[i - 1];
+      const isErrorLine = i === lineNumber;
+      const lineNum = String(i).padStart(4, ' ');
+      
+      if (isErrorLine) {
+        snippetLines.push(`→ ${lineNum} │ ${lineContent}`);
+      } else {
+        snippetLines.push(`  ${lineNum} │ ${lineContent}`);
+      }
+    }
+    
+    return snippetLines.join('\n');
+  } catch {
+    return undefined;
+  }
+}
+
 function parseCodeAnalyzerFile(fp: string): CodeAnalyzerViolation[] {
   if (!fs.existsSync(fp)) {
     throw messages.createError('error.fileNotFound', [fp]);
@@ -355,14 +469,21 @@ function parseCodeAnalyzerFile(fp: string): CodeAnalyzerViolation[] {
       const vals = parseCsvLine(lines[i]);
       if (vals.length < headers.length) continue;
 
+      const filePath = fileIdx >= 0 ? vals[fileIdx] : '';
+      const startLine = lineIdx >= 0 ? parseInt(vals[lineIdx], 10) || 0 : 0;
+      
+      // Try to read the code snippet from the source file
+      const codeSnippet = filePath && startLine > 0 ? getCodeSnippet(filePath, startLine) : undefined;
+
       violations.push({
         rule: ruleIdx >= 0 ? vals[ruleIdx] : '',
         engine: engineIdx >= 0 ? vals[engineIdx] : '',
         severity: severityIdx >= 0 ? parseInt(vals[severityIdx], 10) || 5 : 5,
-        file: fileIdx >= 0 ? vals[fileIdx] : '',
-        startLine: lineIdx >= 0 ? parseInt(vals[lineIdx], 10) || 0 : 0,
+        file: filePath,
+        startLine,
         message: messageIdx >= 0 ? vals[messageIdx] : '',
         resources: resourcesIdx >= 0 ? vals[resourcesIdx] : '',
+        codeSnippet,
       });
     }
     return violations;
@@ -611,7 +732,7 @@ function formatDuration(ms: number): string {
   return `${Math.floor(ms / 60000)}m ${((ms % 60000) / 1000).toFixed(0)}s`;
 }
 
-function prepareReportData(r: DeploymentResult, title: string, incCov: boolean): ReportData {
+function prepareReportData(r: DeploymentResult, title: string, incCov: boolean, pkgData?: PackageXmlData): ReportData {
   const tr = r.details?.runTestResult;
   const cov = tr?.codeCoverage ?? [];
   const sortedCov = [...cov].sort((a, b) => a.coveragePercent - b.coveragePercent);
@@ -673,15 +794,23 @@ function prepareReportData(r: DeploymentResult, title: string, incCov: boolean):
     hcnt: highViolations.length,
     mcnt: mediumViolations.length,
     lcnt: lowViolations.length,
+    pkg: pkgData,
+    hpkg: !!pkgData && pkgData.types.length > 0,
   };
 }
 
 function getHtmlCss(): string {
-  return ':root{--s:#28a745;--f:#dc3545;--w:#ffc107;--p:#007bff;--bg:#f8f9fa;--b:#dee2e6;--cr:#7b1fa2;--hi:#dc3545;--me:#ff9800;--lo:#2196f3}*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;line-height:1.5;color:#333;background:var(--bg);padding:20px}.c{max-width:1200px;margin:0 auto;background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.1);overflow:hidden}.h{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:25px}.h h1{font-size:22px;margin-bottom:8px}.st{display:inline-block;padding:6px 14px;border-radius:20px;font-weight:700;margin-top:12px}.st.success{background:var(--s)}.st.failure{background:var(--f)}.su{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:15px;background:#f1f3f4}.sc{background:#fff;padding:10px;border-radius:6px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.1)}.sc .v{font-size:20px;font-weight:700;color:var(--p)}.sc .l{color:#666;font-size:9px;margin-top:3px}.sc.success .v{color:var(--s)}.sc.failure .v{color:var(--f)}.sc.warning .v{color:var(--w)}.se{padding:15px;border-bottom:1px solid var(--b)}.se h2{font-size:16px;margin-bottom:12px;color:#444}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:6px;text-align:left;border-bottom:1px solid var(--b)}th{background:#f8f9fa;font-weight:600;color:#555}.bd{display:inline-block;padding:2px 5px;border-radius:3px;font-size:9px;font-weight:500}.bd-s{background:#d4edda;color:#155724}.bd-f{background:#f8d7da;color:#721c24}.bd-w{background:#fff3cd;color:#856404}.bd-cr{background:#e1bee7;color:#4a148c}.bd-hi{background:#ffcdd2;color:#b71c1c}.bd-me{background:#ffe0b2;color:#e65100}.bd-lo{background:#bbdefb;color:#0d47a1}.eb{background:#f8d7da;border:1px solid #f5c6cb;border-radius:6px;padding:10px;margin:6px 0}.eb .m{color:#721c24;font-family:monospace;font-size:10px;white-space:pre-wrap;max-height:100px;overflow-y:auto}.pb{height:6px;background:#e9ecef;border-radius:3px;overflow:hidden}.pb .fl{height:100%}.pb .fl.success{background:var(--s)}.pb .fl.warning{background:var(--w)}.pb .fl.failure{background:var(--f)}.cb{display:flex;align-items:center;gap:5px}.cb .br{flex:1;height:12px;background:#e9ecef;border-radius:3px;overflow:hidden}.cb .br .fl{height:100%}.cb .pc{min-width:35px;text-align:right;font-weight:700;font-size:10px}.ft{padding:15px;text-align:center;color:#666;font-size:11px;background:#f8f9fa}.tc{max-height:400px;overflow-y:auto}.fb{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center}.fb label{font-size:11px;color:#555}.fb select,.fb input{font-size:11px;padding:4px 8px;border:1px solid var(--b);border-radius:4px}.fb input[type=text]{width:180px}.fb .btn{padding:4px 10px;font-size:10px;border:none;border-radius:4px;cursor:pointer;font-weight:600}.fb .btn.active{color:#fff}.fb .btn-cr{background:#f3e5f5;color:#7b1fa2;border:1px solid #ce93d8}.fb .btn-cr.active{background:#7b1fa2}.fb .btn-hi{background:#ffebee;color:#c62828;border:1px solid #ef9a9a}.fb .btn-hi.active{background:#c62828}.fb .btn-me{background:#fff3e0;color:#e65100;border:1px solid #ffcc80}.fb .btn-me.active{background:#e65100}.fb .btn-lo{background:#e3f2fd;color:#1565c0;border:1px solid #90caf9}.fb .btn-lo.active{background:#1565c0}.fb .btn-s{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}.fb .btn-s.active{background:#2e7d32}.fb .btn-f{background:#ffebee;color:#c62828;border:1px solid #ef9a9a}.fb .btn-f.active{background:#c62828}.vcard{background:#fff;border-radius:6px;margin-bottom:8px;border-left:4px solid #ccc;box-shadow:0 1px 3px rgba(0,0,0,.08)}.vcard.sev-1{border-left-color:#7b1fa2;background:linear-gradient(90deg,#fce4ec 0%,#fff 5%)}.vcard.sev-2{border-left-color:#c62828;background:linear-gradient(90deg,#ffebee 0%,#fff 5%)}.vcard.sev-3{border-left-color:#e65100;background:linear-gradient(90deg,#fff3e0 0%,#fff 5%)}.vcard.sev-4,.vcard.sev-5{border-left-color:#1565c0;background:linear-gradient(90deg,#e3f2fd 0%,#fff 5%)}.vcard-h{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid #eee}.vcard-h .rule{font-weight:700;font-size:12px;color:#333}.vcard-h .eng{font-size:10px;color:#888;background:#f5f5f5;padding:2px 6px;border-radius:3px}.vcard-b{padding:10px 12px}.vcard-b .msg{font-size:11px;color:#444;margin-bottom:6px;line-height:1.4}.vcard-b .loc{font-size:10px;color:#666;display:flex;gap:12px;flex-wrap:wrap}.vcard-b .loc span{display:flex;align-items:center;gap:3px}.vcard-b .loc svg{width:12px;height:12px;fill:#888}.vcard-b .res{margin-top:6px}.vcard-b .res a{font-size:10px;color:#1976d2;text-decoration:none}.cnt{font-size:10px;color:#666;margin-left:8px}';
+  return ':root{--s:#28a745;--f:#dc3545;--w:#ffc107;--p:#007bff;--bg:#f8f9fa;--b:#dee2e6;--cr:#7b1fa2;--hi:#dc3545;--me:#ff9800;--lo:#2196f3}*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;line-height:1.5;color:#333;background:var(--bg);padding:20px}.c{max-width:1200px;margin:0 auto;background:#fff;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.1);overflow:hidden}.h{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:25px}.h h1{font-size:22px;margin-bottom:8px}.st{display:inline-block;padding:6px 14px;border-radius:20px;font-weight:700;margin-top:12px}.st.success{background:var(--s)}.st.failure{background:var(--f)}.su{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:15px;background:#f1f3f4}.sc{background:#fff;padding:10px;border-radius:6px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.1)}.sc .v{font-size:20px;font-weight:700;color:var(--p)}.sc .l{color:#666;font-size:9px;margin-top:3px}.sc.success .v{color:var(--s)}.sc.failure .v{color:var(--f)}.sc.warning .v{color:var(--w)}.se{padding:15px;border-bottom:1px solid var(--b)}.se h2{font-size:16px;margin-bottom:12px;color:#444}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:6px;text-align:left;border-bottom:1px solid var(--b)}th{background:#f8f9fa;font-weight:600;color:#555}.bd{display:inline-block;padding:2px 5px;border-radius:3px;font-size:9px;font-weight:500}.bd-s{background:#d4edda;color:#155724}.bd-f{background:#f8d7da;color:#721c24}.bd-w{background:#fff3cd;color:#856404}.bd-cr{background:#e1bee7;color:#4a148c}.bd-hi{background:#ffcdd2;color:#b71c1c}.bd-me{background:#ffe0b2;color:#e65100}.bd-lo{background:#bbdefb;color:#0d47a1}.eb{background:#f8d7da;border:1px solid #f5c6cb;border-radius:6px;padding:10px;margin:6px 0}.eb .m{color:#721c24;font-family:monospace;font-size:10px;white-space:pre-wrap;max-height:100px;overflow-y:auto}.pb{height:6px;background:#e9ecef;border-radius:3px;overflow:hidden}.pb .fl{height:100%}.pb .fl.success{background:var(--s)}.pb .fl.warning{background:var(--w)}.pb .fl.failure{background:var(--f)}.cb{display:flex;align-items:center;gap:5px}.cb .br{flex:1;height:12px;background:#e9ecef;border-radius:3px;overflow:hidden}.cb .br .fl{height:100%}.cb .pc{min-width:35px;text-align:right;font-weight:700;font-size:10px}.ft{padding:15px;text-align:center;color:#666;font-size:11px;background:#f8f9fa}.tc{max-height:400px;overflow-y:auto}.fb{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center}.fb label{font-size:11px;color:#555}.fb select,.fb input{font-size:11px;padding:4px 8px;border:1px solid var(--b);border-radius:4px}.fb input[type=text]{width:180px}.cnt{font-size:10px;color:#666;margin-left:8px}.ca-su{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:15px}.ca-card{padding:12px;border-radius:6px;text-align:center;cursor:pointer;transition:all .2s;border:2px solid transparent}.ca-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15)}.ca-card.active{border-color:#333}.ca-card .ca-v{font-size:24px;font-weight:700}.ca-card .ca-l{font-size:10px;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}.ca-card.cr{background:linear-gradient(135deg,#f3e5f5,#e1bee7)}.ca-card.cr .ca-v{color:#7b1fa2}.ca-card.cr .ca-l{color:#7b1fa2}.ca-card.hi{background:linear-gradient(135deg,#ffebee,#ffcdd2)}.ca-card.hi .ca-v{color:#c62828}.ca-card.hi .ca-l{color:#c62828}.ca-card.me{background:linear-gradient(135deg,#fff3e0,#ffe0b2)}.ca-card.me .ca-v{color:#e65100}.ca-card.me .ca-l{color:#e65100}.ca-card.lo{background:linear-gradient(135deg,#e3f2fd,#bbdefb)}.ca-card.lo .ca-v{color:#1565c0}.ca-card.lo .ca-l{color:#1565c0}.ca-row{border-left:4px solid #ccc}.ca-row.sev-1{border-left-color:#7b1fa2;background:#fce4ec}.ca-row.sev-2{border-left-color:#c62828;background:#ffebee}.ca-row.sev-3{border-left-color:#e65100;background:#fff3e0}.ca-row.sev-4,.ca-row.sev-5{border-left-color:#1565c0;background:#e3f2fd}.ca-msg{font-size:10px;color:#555;margin-top:4px;font-style:italic}.ca-code{background:#2d2d2d;color:#f8f8f2;padding:8px 12px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:11px;margin-top:6px;overflow-x:auto;white-space:pre}.ca-code .ln{color:#6272a4;margin-right:12px;user-select:none}.ca-code .hl{background:#44475a;display:block;margin:0 -12px;padding:0 12px}.ca-search{margin-bottom:12px}.ca-search input{width:100%;padding:8px 12px;border:1px solid var(--b);border-radius:4px;font-size:12px}';
 }
 
 function getHtmlJs(): string {
-  return 'function filterCov(){var f=document.getElementById("covFilter").value;document.querySelectorAll("#covTable tr").forEach(function(r){if(r.dataset.cov){var c=parseFloat(r.dataset.cov);r.style.display=(f==="all"||(f==="75"&&c>=75)||(f==="50"&&c>=50&&c<75)||(f==="0"&&c<50))?"":"none"}})}function filterCA(){var s=Array.from(document.querySelectorAll(".sev-btn.active")).map(function(b){return b.dataset.sev});var q=document.getElementById("caSearch").value.toLowerCase();document.querySelectorAll(".vcard").forEach(function(c){var sev=c.dataset.sev;var txt=c.textContent.toLowerCase();var sevMatch=s.length===0||s.includes(sev);var txtMatch=!q||txt.includes(q);c.style.display=(sevMatch&&txtMatch)?"":"none"});updateCounts()}function toggleSev(btn){btn.classList.toggle("active");filterCA()}function updateCounts(){var visible=document.querySelectorAll(".vcard:not([style*=\\"display: none\\"])").length;document.getElementById("caCount").textContent=visible}';
+  return `function filterCov(){var f=document.getElementById("covFilter").value;document.querySelectorAll("#covTable tr").forEach(function(r){if(r.dataset.cov){var c=parseFloat(r.dataset.cov);r.style.display=(f==="all"||(f==="75"&&c>=75)||(f==="50"&&c>=50&&c<75)||(f==="0"&&c<50))?"":"none"}})}
+function filterCA(){var active=document.querySelectorAll(".ca-card.active");var sevs=[];active.forEach(function(c){sevs.push(c.dataset.sev)});var q=(document.getElementById("caSearch")?document.getElementById("caSearch").value:"").toLowerCase();document.querySelectorAll("#caTable tr[data-sev]").forEach(function(r){var sev=r.dataset.sev;var txt=r.textContent.toLowerCase();var sevMatch=sevs.length===0||sevs.includes(sev);var txtMatch=!q||txt.includes(q);r.style.display=(sevMatch&&txtMatch)?"":"none"});updateCACount()}
+function toggleCACard(el){el.classList.toggle("active");filterCA()}
+function updateCACount(){var visible=document.querySelectorAll("#caTable tr[data-sev]:not([style*='display: none'])").length;var cnt=document.getElementById("caCount");if(cnt)cnt.textContent=visible}
+function expandRow(btn){var row=btn.closest("tr");var detail=row.nextElementSibling;if(detail&&detail.classList.contains("ca-detail")){detail.style.display=detail.style.display==="none"?"table-row":"none";btn.textContent=detail.style.display==="none"?"+":"-"}}
+function expandPkg(btn){var row=btn.closest("tr");var detail=row.nextElementSibling;if(detail&&detail.classList.contains("pkg-detail")){detail.style.display=detail.style.display==="none"?"table-row":"none";btn.textContent=detail.style.display==="none"?"+":"-"}}
+function expandAllPkg(expand){document.querySelectorAll(".pkg-detail").forEach(function(d){d.style.display=expand?"table-row":"none"});document.querySelectorAll(".pkg-expand-btn").forEach(function(b){b.textContent=expand?"-":"+"})}`;
 }
 
 function generateHtmlReport(d: ReportData): string {
@@ -733,6 +862,37 @@ function generateHtmlReport(d: ReportData): string {
     h += '</tbody></table></div></div>';
   }
 
+  if (d.hpkg && d.pkg) {
+    h += `<div class="se"><h2>📦 Components <span class="cnt">(${String(d.pkg.totalMembers)} members, ${String(d.pkg.types.length)} types, API v${d.pkg.version})</span></h2>`;
+    
+    // Expand/Collapse all buttons
+    h += '<div style="margin-bottom:10px;display:flex;gap:8px">';
+    h += '<button onclick="expandAllPkg(true)" style="border:1px solid #ddd;background:#f8f9fa;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px">📂 Expand All</button>';
+    h += '<button onclick="expandAllPkg(false)" style="border:1px solid #ddd;background:#f8f9fa;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px">📁 Collapse All</button>';
+    h += '</div>';
+    
+    h += '<div class="tc"><table id="pkgTable"><thead><tr><th style="width:30px"></th><th>Metadata Type</th><th style="text-align:right">Count</th></tr></thead><tbody>';
+    
+    for (const t of d.pkg.types) {
+      // Main row - metadata type with count
+      h += '<tr style="background:#f8f9fa;cursor:pointer" onclick="expandPkg(this.querySelector(\'button\'))">';
+      h += `<td><button class="pkg-expand-btn" onclick="event.stopPropagation();expandPkg(this)" style="border:none;background:#e9ecef;border-radius:3px;width:20px;height:20px;cursor:pointer;font-weight:bold">+</button></td>`;
+      h += `<td><span class="bd bd-s" style="font-size:10px">${t.name}</span></td>`;
+      h += `<td style="text-align:right;font-weight:600">${String(t.members.length)}</td>`;
+      h += '</tr>';
+      
+      // Detail row - list of members (hidden by default)
+      h += '<tr class="pkg-detail" style="display:none"><td colspan="3" style="background:#fff;padding:8px 12px 8px 40px">';
+      h += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+      for (const member of t.members) {
+        h += `<span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:3px;font-size:10px;font-family:monospace">${member}</span>`;
+      }
+      h += '</div></td></tr>';
+    }
+    
+    h += '</tbody></table></div></div>';
+  }
+
   if (d.ic && d.hc) {
     h += `<div class="se"><h2>📊 Code Coverage</h2><div style="margin-bottom:10px"><strong>Overall: ${d.cp}%</strong><div class="pb" style="margin-top:5px"><div class="fl ${d.cc}" style="width:${d.cp}%"></div></div></div>`;
     h += '<div class="tc"><table><thead><tr><th>Class</th><th>Type</th><th>Coverage</th><th>Lines</th></tr></thead><tbody id="covTable">';
@@ -746,14 +906,62 @@ function generateHtmlReport(d: ReportData): string {
 
   if (d.hca) {
     const allViolations = [...d.cv, ...d.hv, ...d.mv, ...d.lv].sort((a, b) => a.severity - b.severity);
-    h += `<div class="se"><h2>🔍 Code Analyzer<span class="cnt">(<span id="caCount">${String(d.tv)}</span> issues)</span></h2><div class="tc">`;
-    for (const v of allViolations) {
+    h += `<div class="se"><h2>🔍 Code Analyzer<span class="cnt">(<span id="caCount">${String(d.tv)}</span> issues)</span></h2>`;
+    
+    // Summary cards - clickable for filtering
+    h += '<div class="ca-su">';
+    h += `<div class="ca-card cr" data-sev="1" onclick="toggleCACard(this)"><div class="ca-v">${String(d.ccnt)}</div><div class="ca-l">🟣 Critical</div></div>`;
+    h += `<div class="ca-card hi" data-sev="2" onclick="toggleCACard(this)"><div class="ca-v">${String(d.hcnt)}</div><div class="ca-l">🔴 High</div></div>`;
+    h += `<div class="ca-card me" data-sev="3" onclick="toggleCACard(this)"><div class="ca-v">${String(d.mcnt)}</div><div class="ca-l">🟠 Medium</div></div>`;
+    h += `<div class="ca-card lo" data-sev="4" onclick="toggleCACard(this)"><div class="ca-v">${String(d.lcnt)}</div><div class="ca-l">🔵 Low</div></div>`;
+    h += '</div>';
+    
+    // Search box
+    h += '<div class="ca-search"><input type="text" id="caSearch" placeholder="🔍 Search by rule, file, or message..." onkeyup="filterCA()"></div>';
+    
+    // Table-based list
+    h += '<div class="tc"><table id="caTable"><thead><tr><th style="width:30px"></th><th>Severity</th><th>Rule</th><th>File</th><th>Line</th><th>Engine</th><th>Message</th></tr></thead><tbody>';
+    
+    for (let i = 0; i < allViolations.length; i++) {
+      const v = allViolations[i];
       const sevLabel = v.severity === 1 ? 'Critical' : v.severity === 2 ? 'High' : v.severity === 3 ? 'Medium' : 'Low';
       const sevBadge = v.severity === 1 ? 'bd-cr' : v.severity === 2 ? 'bd-hi' : v.severity === 3 ? 'bd-me' : 'bd-lo';
       const fileName = v.file.split(/[/\\]/).pop() ?? '';
-      h += `<div class="vcard sev-${String(v.severity)}" data-sev="${String(v.severity)}"><div class="vcard-h"><span class="rule">${v.rule}</span><span class="eng">${v.engine}</span></div><div class="vcard-b"><div class="msg">${v.message}</div><div class="loc"><span>${fileName}:${String(v.startLine)}</span><span class="bd ${sevBadge}">${sevLabel}</span></div>${v.resources ? `<div class="res"><a href="${v.resources}" target="_blank">📖 Documentation</a></div>` : ''}</div></div>`;
+      const shortMsg = v.message.length > 60 ? v.message.substring(0, 60) + '...' : v.message;
+      
+      // Main row
+      h += `<tr class="ca-row sev-${String(v.severity)}" data-sev="${String(v.severity)}">`;
+      h += `<td><button onclick="expandRow(this)" style="border:none;background:#eee;border-radius:3px;width:20px;height:20px;cursor:pointer;font-weight:bold">+</button></td>`;
+      h += `<td><span class="bd ${sevBadge}">${sevLabel}</span></td>`;
+      h += `<td style="font-weight:600">${v.rule}</td>`;
+      h += `<td>${fileName}</td>`;
+      h += `<td>${String(v.startLine)}</td>`;
+      h += `<td><span style="font-size:9px;color:#888;background:#f5f5f5;padding:2px 6px;border-radius:3px">${v.engine}</span></td>`;
+      h += `<td>${shortMsg}</td>`;
+      h += '</tr>';
+      
+      // Detail row (hidden by default)
+      h += `<tr class="ca-detail" style="display:none"><td colspan="7" style="background:#f8f9fa;padding:12px">`;
+      h += `<div style="margin-bottom:8px"><strong>Full Message:</strong><div style="margin-top:4px;color:#555">${v.message}</div></div>`;
+      
+      // Code snippet if available
+      if (v.codeSnippet) {
+        const escapedSnippet = v.codeSnippet
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/→/g, '<span style="color:#ff79c6;font-weight:bold">→</span>');
+        h += `<div style="margin-bottom:8px"><strong>📝 Code:</strong><div class="ca-code">${escapedSnippet}</div></div>`;
+      }
+      
+      h += `<div style="margin-bottom:8px"><strong>File Path:</strong><div style="margin-top:4px;font-family:monospace;font-size:10px;color:#666">${v.file}</div></div>`;
+      if (v.resources) {
+        h += `<div><a href="${v.resources}" target="_blank" style="color:#1976d2;text-decoration:none;font-size:11px">📖 View Documentation</a></div>`;
+      }
+      h += '</td></tr>';
     }
-    h += '</div></div>';
+    
+    h += '</tbody></table></div></div>';
   }
 
   h += `<div class="ft">Generated by DXB CLI</div></div><script>${js}</script></body></html>`;
@@ -809,6 +1017,16 @@ function generateMdReport(d: ReportData): string {
     }
   }
 
+  if (d.hpkg && d.pkg) {
+    m += `\n---\n\n## 📦 Package.xml Contents\n\n**API Version:** ${d.pkg.version}\n**Total Members:** ${String(d.pkg.totalMembers)}\n**Metadata Types:** ${String(d.pkg.types.length)}\n\n| Metadata Type | Count | Members |\n|---------------|-------|----------|\n`;
+    for (const t of d.pkg.types) {
+      const membersList = t.members.length <= 5 
+        ? t.members.join(', ') 
+        : t.members.slice(0, 5).join(', ') + ` ... (+${String(t.members.length - 5)} more)`;
+      m += `| ${t.name} | ${String(t.members.length)} | ${membersList} |\n`;
+    }
+  }
+
   m += '\n---\n\n*Generated by DXB CLI*\n';
   return m;
 }
@@ -823,6 +1041,7 @@ export default class DeploymentReport extends SfCommand<DeploymentReportResult> 
     'junit-file': Flags.file({ char: 'j', summary: messages.getMessage('flags.junit-file.summary') }),
     'cobertura-file': Flags.file({ char: 'b', summary: messages.getMessage('flags.cobertura-file.summary') }),
     'code-analyzer-file': Flags.file({ char: 'a', summary: messages.getMessage('flags.code-analyzer-file.summary') }),
+    'package-xml': Flags.file({ char: 'p', summary: 'Path to package.xml file to include deployed components list' }),
     format: Flags.string({ char: 'r', summary: messages.getMessage('flags.format.summary'), options: ['html', 'markdown'], default: 'html' }),
     'output-dir': Flags.directory({ char: 'd', summary: messages.getMessage('flags.output-dir.summary') }),
     'target-org': Flags.string({ char: 'u', summary: messages.getMessage('flags.target-org.summary') }),
@@ -834,7 +1053,7 @@ export default class DeploymentReport extends SfCommand<DeploymentReportResult> 
   public async run(): Promise<DeploymentReportResult> {
     const { flags } = await this.parse(DeploymentReport);
 
-    if (!flags['job-id'] && !flags['json-file'] && !flags['junit-file'] && !flags['cobertura-file'] && !flags['code-analyzer-file']) {
+    if (!flags['job-id'] && !flags['json-file']) {
       throw messages.createError('error.noInput');
     }
     if (flags['job-id'] && !flags['target-org']) {
@@ -850,21 +1069,26 @@ export default class DeploymentReport extends SfCommand<DeploymentReportResult> 
       result = createEmptyResult();
     }
 
-    if (flags['junit-file']) {
+    if (flags['junit-file'] && fs.existsSync(flags['junit-file'])) {
       result = mergeJUnitResults(result, await parseJUnitFile(flags['junit-file']));
     }
-    if (flags['cobertura-file']) {
+    if (flags['cobertura-file'] && fs.existsSync(flags['cobertura-file'])) {
       result = mergeCoberturaResults(result, await parseCoberturaFile(flags['cobertura-file']));
     }
-    if (flags['code-analyzer-file']) {
+    if (flags['code-analyzer-file'] && fs.existsSync(flags['code-analyzer-file'])) {
       result = mergeCodeAnalyzerResults(result, parseCodeAnalyzerFile(flags['code-analyzer-file']));
     }
 
-    const report = this.generateReport(result, flags.format, flags.title, flags['include-coverage']);
+    let pkgData: PackageXmlData | undefined;
+    if (flags['package-xml'] && fs.existsSync(flags['package-xml'])) {
+      pkgData = await parsePackageXmlFile(flags['package-xml']);
+    }
+
+    const report = this.generateReport(result, flags.format, flags.title, flags['include-coverage'], pkgData);
 
     if (flags['output-dir']) {
       const ext = flags.format === 'html' ? 'html' : 'md';
-      const reportPath = path.join(flags['output-dir'], `deployment-report-${result.id}-${String(Date.now())}.${ext}`);
+      const reportPath = path.join(flags['output-dir'], `deployment-report.${ext}`);
       fs.ensureDirSync(flags['output-dir']);
       fs.writeFileSync(reportPath, report);
       this.log(`Report: ${reportPath}`);
@@ -886,8 +1110,8 @@ export default class DeploymentReport extends SfCommand<DeploymentReportResult> 
     }
   }
 
-  private generateReport(r: DeploymentResult, fmt: string, title: string, incCov: boolean): string {
-    const data = prepareReportData(r, title, incCov);
+  private generateReport(r: DeploymentResult, fmt: string, title: string, incCov: boolean, pkgData?: PackageXmlData): string {
+    const data = prepareReportData(r, title, incCov, pkgData);
     return fmt === 'html' ? generateHtmlReport(data) : generateMdReport(data);
   }
 }

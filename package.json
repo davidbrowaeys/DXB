@@ -1,7 +1,7 @@
 {
   "name": "dxb",
   "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "dependencies": {
     "@colors/colors": "^1.6.0",
     "@oclif/core": "^2.15.0",
@@ -197,6 +197,15 @@
                 "description": "Perform LWC tests"
               }
             }
+          },
+          "deployment": {
+            "description": "A set of commands for deployment reporting and management"
+          },
+          "security": {
+            "description": "A set of commands for security auditing and compliance"
+          },
+          "flow": {
+            "description": "A set of commands to work with Salesforce Flows"
           }
         }
       }

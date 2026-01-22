@@ -121,9 +121,14 @@ export default class DataImport extends SfCommand<DataImportResult> {
     config['importfile'] = importfile;
     config['filepath'] = filepath;
     this.log(messages.getMessage('log.preparing'));
-    const results = this.initFile(config);
+
+    // 💥 CHANGE: Await the result of initFile to get the final config object 
+    const finalConfig = this.initFile(config);
+
     this.log(messages.getMessage('log.importData'));
-    return this.splitByChunks(results.objectName, results.importfile, results.externalField);
+
+    // Use the properties from the awaited finalConfig
+    return this.splitByChunks(finalConfig.objectName, finalConfig.importfile, finalConfig.externalField);
   }
 
   /**
@@ -182,28 +187,37 @@ export default class DataImport extends SfCommand<DataImportResult> {
     // start data masking
     let isHeader = true;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return fs
-      .createReadStream(config.filepath) // read data source
-      .pipe(csv(rowHeaders))
-      .on('data', (row) => {
-        const rec: GenericObject = {};
-        rowHeaders.forEach((f) => {
-          if (f === 'recordtype.developername') {
-            const rt = row[f]; // get developer name of the RT
-            if (!isHeader) rec['recordtypeid'] = this.objectdescribes[config.objectName].recordTypes[rt];
-            // set with RT id  with target env
-            // because first line is the header.
-            else rec['recordtypeid'] = 'recordtypeid';
-          } else {
-            rec[f] = row[f];
+    return new Promise((resolve, reject) => { // Assuming you wrapped it in a Promise
+      fs.createReadStream(config.filepath)
+        .pipe(csv(rowHeaders))
+        .on('data', (row) => {
+          const rec: GenericObject = {}; // <-- 1. 'rec' is defined here (inside the 'data' listener)
+          rowHeaders.forEach((f) => {
+            if (f === 'recordtype.developername') {
+              const rt = row[f];
+              if (!isHeader) rec['recordtypeid'] = this.objectdescribes[config.objectName].recordTypes[rt];
+              else rec['recordtypeid'] = 'recordtypeid';
+            } else {
+              rec[f] = row[f];
+            }
+          });
+
+          // 2. You are using 'rec' here:
+          void csvWriter.writeRecords([rec]); // <--- Line 197 based on the error
+
+          if (isHeader) {
+            isHeader = false;
           }
+        })
+        // Resolve the promise on the 'end' event, returning the config object
+        .on('end', () => {
+          resolve(config);
+        })
+        // Reject the promise on an 'error' event
+        .on('error', (err) => {
+          reject(err);
         });
-        void csvWriter.writeRecords([rec]);
-        if (isHeader) {
-          isHeader = false;
-        }
-      })
-      .on('end', () => config);
+    });
   }
 
   private async splitByChunks(objectName: string, filename: string, externalIdField = 'Id'): Promise<void> {

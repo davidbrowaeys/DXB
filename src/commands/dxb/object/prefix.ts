@@ -7,7 +7,8 @@ Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('dxb', 'object.prefix');
 
 export type ObjectPrefixResult = {
-  result: string;
+  objectName?: string;
+  keyPrefix?: string;
 };
 
 export default class ObjectPrefix extends SfCommand<ObjectPrefixResult> {
@@ -36,15 +37,19 @@ export default class ObjectPrefix extends SfCommand<ObjectPrefixResult> {
   public async run(): Promise<ObjectPrefixResult> {
     const { flags } = await this.parse(ObjectPrefix);
     this.connection = flags['target-org']?.getConnection();
-    const sobject = flags.objectname;
+    const sobject = flags['object-name'];
     const prefix = flags.prefix;
     if (!sobject && !prefix) {
       throw messages.createError('error.invalidArguments');
     }
     if (sobject) {
       const orgname = flags['target-org']?.getUsername();
-      const keyPrefix = (await this.retrievesobjectfields(orgname!, sobject))?.keyPrefix;
-      return { result: messages.getMessage('log.result.prefix', [keyPrefix]) };
+      const objectDescribeResult = await this.retrievesobjectfields(orgname!, sobject);
+      const keyPrefix = objectDescribeResult?.keyPrefix ?? undefined;
+      if (!this.jsonEnabled()) {
+        this.log(messages.getMessage('log.result.prefix', [keyPrefix]));
+      }
+      return { objectName: sobject, keyPrefix };
     } else if (prefix) {
       const accessToken = flags['target-org']?.getConnection()?.accessToken;
       const instanceUrl = flags['target-org']?.getConnection()?.instanceUrl;
@@ -62,7 +67,10 @@ export default class ObjectPrefix extends SfCommand<ObjectPrefixResult> {
         }
       }
       if (objectName) {
-        return { result: messages.getMessage('log.result.objectname', [objectName]) };
+        if (!this.jsonEnabled()) {
+          this.log(messages.getMessage('log.result.objectname', [objectName]));
+        }
+        return { objectName, keyPrefix: prefix };
       } else {
         throw messages.createError('error.prefixNotFound');
       }
@@ -72,12 +80,16 @@ export default class ObjectPrefix extends SfCommand<ObjectPrefixResult> {
   }
 
   private async retrievesobjectfields(orgname: string, sobject: string): Promise<DescribeSObjectResult | undefined> {
-    this.log(messages.getMessage('log.getFields', [sobject, orgname]));
+    if (!this.jsonEnabled()) {
+      this.log(messages.getMessage('log.getFields', [sobject, orgname]));
+    }
     return this.connection?.describeSObject(sobject);
   }
 
   private async retrieveGlobalSchema(): Promise<DescribeGlobalSObjectResult[] | undefined> {
-    this.log(messages.getMessage('log.globalSchema'));
+    if (!this.jsonEnabled()) {
+      this.log(messages.getMessage('log.globalSchema'));
+    }
     return (await this.connection?.describeGlobal())?.sobjects;
   }
 }

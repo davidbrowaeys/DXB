@@ -50,3 +50,4 @@ manifest/
 .sf/
 oclif.lock
 .forceignore
+.backup/

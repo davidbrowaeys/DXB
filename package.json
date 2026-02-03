@@ -1,7 +1,7 @@
 {
   "name": "dxb",
   "description": "A cli plugin for the Salesforce CLI built by David Browaeys containing a lot of helpful commands.",
-  "version": "3.2.2",
+  "version": "3.2.4",
   "dependencies": {
     "@colors/colors": "^1.6.0",
     "@oclif/core": "^2.15.0",

@@ -25,7 +25,7 @@ This command analyzes your Salesforce org for security risks and compliance issu
 Target org alias or username to audit.
 
 # flags.categories.summary
-Comma-separated list of audit categories to run (profiles, permissions, fields, sharing, session, password, apex, remote-sites, connected-apps).
+Comma-separated list of audit categories to run (profiles, permissions, fields, sharing, guest-user, session, password, apex, remote-sites, connected-apps, trusted-urls, monitoring).
 
 # flags.format.summary
 Output format for the report (html, markdown, json).
@@ -40,13 +40,13 @@ Minimum severity level to report (critical, high, medium, low). Exit with error 
 Include remediation recommendations in the report.
 
 # flags.source-path.summary
-Path to local source for Apex security analysis (defaults to force-app/main/default).
+Path to local source for Apex security analysis. If not specified, reads package directories from sfdx-project.json and scans all classes directories found within them.
 
 # error.noOrg
 You must specify a target org using --target-org.
 
 # error.invalidCategory
-Invalid audit category: %s. Valid categories are: profiles, permissions, fields, sharing, session, password, apex, remote-sites, connected-apps.
+Invalid audit category: %s. Valid categories are: profiles, permissions, fields, sharing, guest-user, session, password, apex, remote-sites, connected-apps, trusted-urls, monitoring.
 
 # error.queryFailed
 Failed to query org data: %s

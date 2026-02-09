@@ -4,7 +4,9 @@
     "**/.svn": true,
     "**/.hg": true,
     "**/CVS": true,
-    "**/.DS_Store": true
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    ".mule": true
   },
   "search.exclude": {
     "**/lib": true,

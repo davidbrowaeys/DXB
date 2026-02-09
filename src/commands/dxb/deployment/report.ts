@@ -819,6 +819,9 @@ function generateHtmlReport(d: ReportData): string {
 
   let h = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">';
   h += `<title>${d.title}</title><style>${css}</style></head><body><div class="c">`;
+  // ============================================
+  // SECTION 1: HEADER & SUMMARY
+  // ============================================
   h += `<div class="h"><h1>${d.title}</h1>`;
   h += `<div style="opacity:.9;font-size:12px"><div>ID: ${d.id}</div><div>Generated: ${d.gen}</div></div>`;
   h += `<div class="st ${d.sc}">${d.sb} ${d.status}</div></div>`;
@@ -842,28 +845,11 @@ function generateHtmlReport(d: ReportData): string {
   }
   h += '</div>';
 
-  if (d.he) {
-    h += `<div class="se"><h2>❌ Error</h2><div class="eb"><div class="m">${d.err ?? ''}</div></div></div>`;
-  }
-
-  if (d.hcf) {
-    h += `<div class="se"><h2>❌ Component Failures (${String(d.cf.length)})</h2><div class="tc"><table><thead><tr><th>Type</th><th>Name</th><th>Problem</th><th>Line</th></tr></thead><tbody>`;
-    for (const c of d.cf) {
-      h += `<tr><td><span class="bd bd-f">${c.componentType}</span></td><td>${c.fullName}</td><td>${c.problem ?? ''}</td><td>${c.lineNumber !== undefined ? String(c.lineNumber) : '-'}</td></tr>`;
-    }
-    h += '</tbody></table></div></div>';
-  }
-
-  if (d.htf) {
-    h += `<div class="se"><h2>❌ Failed Tests (${String(d.tf.length)})</h2><div class="tc"><table><thead><tr><th>Class</th><th>Method</th><th>Message</th></tr></thead><tbody>`;
-    for (const t of d.tf) {
-      h += `<tr><td>${t.name}</td><td>${t.methodName}</td><td><div class="eb" style="margin:0;padding:5px"><div class="m">${t.message ?? ''}</div></div></td></tr>`;
-    }
-    h += '</tbody></table></div></div>';
-  }
-
+  // ============================================
+  // SECTION 2: DELTA PACKAGE.XML
+  // ============================================
   if (d.hpkg && d.pkg) {
-    h += `<div class="se"><h2>📦 Components <span class="cnt">(${String(d.pkg.totalMembers)} members, ${String(d.pkg.types.length)} types, API v${d.pkg.version})</span></h2>`;
+    h += `<div class="se"><h2>📦 Delta Package <span class="cnt">(${String(d.pkg.totalMembers)} members, ${String(d.pkg.types.length)} types, API v${d.pkg.version})</span></h2>`;
     
     // Expand/Collapse all buttons
     h += '<div style="margin-bottom:10px;display:flex;gap:8px">';
@@ -893,8 +879,38 @@ function generateHtmlReport(d: ReportData): string {
     h += '</tbody></table></div></div>';
   }
 
+  // ============================================
+  // SECTION 3: DEPLOYMENT RESULTS (Errors & Failures)
+  // ============================================
+  if (d.he) {
+    h += `<div class="se"><h2>❌ Deployment Error</h2><div class="eb"><div class="m">${d.err ?? ''}</div></div></div>`;
+  }
+
+  if (d.hcf) {
+    h += `<div class="se"><h2>❌ Component Failures (${String(d.cf.length)})</h2><div class="tc"><table><thead><tr><th>Type</th><th>Name</th><th>Problem</th><th>Line</th></tr></thead><tbody>`;
+    for (const c of d.cf) {
+      h += `<tr><td><span class="bd bd-f">${c.componentType}</span></td><td>${c.fullName}</td><td>${c.problem ?? ''}</td><td>${c.lineNumber !== undefined ? String(c.lineNumber) : '-'}</td></tr>`;
+    }
+    h += '</tbody></table></div></div>';
+  }
+
+  // Show successful components if no failures (deployment succeeded)
+  if (!d.hcf && d.cs.length > 0) {
+    h += `<div class="se"><h2>✅ Deployed Components (${String(d.cs.length)})</h2><div class="tc" style="max-height:300px"><table><thead><tr><th>Type</th><th>Name</th><th>Action</th></tr></thead><tbody>`;
+    for (const c of d.cs) {
+      const action = c.created ? 'Created' : c.changed ? 'Changed' : c.deleted ? 'Deleted' : 'Deployed';
+      const actionBadge = c.created ? 'bd-s' : c.changed ? 'bd-w' : c.deleted ? 'bd-f' : 'bd-s';
+      h += `<tr><td><span class="bd bd-s">${c.componentType}</span></td><td>${c.fullName}</td><td><span class="bd ${actionBadge}">${action}</span></td></tr>`;
+    }
+    h += '</tbody></table></div></div>';
+  }
+
+  // ============================================
+  // SECTION 4: CODE COVERAGE
+  // ============================================
   if (d.ic && d.hc) {
     h += `<div class="se"><h2>📊 Code Coverage</h2><div style="margin-bottom:10px"><strong>Overall: ${d.cp}%</strong><div class="pb" style="margin-top:5px"><div class="fl ${d.cc}" style="width:${d.cp}%"></div></div></div>`;
+    h += `<div style="margin-bottom:10px;font-size:11px;color:#666">🟢 ≥75%: ${String(d.c75)} | 🟡 50-74%: ${String(d.c50)} | 🔴 <50%: ${String(d.c0)}</div>`;
     h += '<div class="tc"><table><thead><tr><th>Class</th><th>Type</th><th>Coverage</th><th>Lines</th></tr></thead><tbody id="covTable">';
     for (const c of d.cov) {
       const badge = c.coveragePercent >= 75 ? 'bd-s' : c.coveragePercent >= 50 ? 'bd-w' : 'bd-f';
@@ -904,6 +920,43 @@ function generateHtmlReport(d: ReportData): string {
     h += '</tbody></table></div></div>';
   }
 
+  // ============================================
+  // SECTION 5: TEST RESULTS (JUnit)
+  // ============================================
+  if (d.ht) {
+    const testStatus = d.ft === 0 ? '✅' : '❌';
+    const testStatusClass = d.ft === 0 ? 'success' : 'failure';
+    h += `<div class="se"><h2>🧪 Test Results <span class="cnt">(${String(d.pt)} passed, ${String(d.ft)} failed)</span></h2>`;
+    
+    // Test summary bar
+    const passRate = d.tt > 0 ? (d.pt / d.tt) * 100 : 0;
+    h += `<div style="margin-bottom:10px"><strong>${testStatus} Pass Rate: ${d.tsr}%</strong><div class="pb" style="margin-top:5px"><div class="fl ${testStatusClass}" style="width:${String(passRate)}%"></div></div></div>`;
+
+    // Failed tests first (if any)
+    if (d.htf) {
+      h += `<h3 style="font-size:13px;margin:15px 0 10px;color:#dc3545">❌ Failed Tests (${String(d.tf.length)})</h3>`;
+      h += '<div class="tc"><table><thead><tr><th>Class</th><th>Method</th><th>Message</th></tr></thead><tbody>';
+      for (const t of d.tf) {
+        h += `<tr><td>${t.name}</td><td>${t.methodName}</td><td><div class="eb" style="margin:0;padding:5px"><div class="m">${t.message ?? ''}</div></div></td></tr>`;
+      }
+      h += '</tbody></table></div>';
+    }
+
+    // Passed tests (collapsible)
+    if (d.ts.length > 0) {
+      h += `<h3 style="font-size:13px;margin:15px 0 10px;color:#28a745">✅ Passed Tests (${String(d.ts.length)})</h3>`;
+      h += '<div class="tc" style="max-height:200px"><table><thead><tr><th>Class</th><th>Method</th><th>Time</th></tr></thead><tbody>';
+      for (const t of d.ts) {
+        h += `<tr><td>${t.name}</td><td>${t.methodName}</td><td>${String((t.time / 1000).toFixed(2))}s</td></tr>`;
+      }
+      h += '</tbody></table></div>';
+    }
+    h += '</div>';
+  }
+
+  // ============================================
+  // SECTION 6: CODE ANALYZER
+  // ============================================
   if (d.hca) {
     const allViolations = [...d.cv, ...d.hv, ...d.mv, ...d.lv].sort((a, b) => a.severity - b.severity);
     h += `<div class="se"><h2>🔍 Code Analyzer<span class="cnt">(<span id="caCount">${String(d.tv)}</span> issues)</span></h2>`;
@@ -969,7 +1022,10 @@ function generateHtmlReport(d: ReportData): string {
 }
 
 function generateMdReport(d: ReportData): string {
-  let m = `# ${d.title}\n\n**ID:** ${d.id}\n**Generated:** ${d.gen}\n**Status:** ${d.sb} **${d.status}**\n\n---\n\n## Summary\n\n| Metric | Value |\n|--------|-------|\n| Components | ${String(d.tc)} |\n| Deployed | ${String(d.dc)} |\n| Failed | ${String(d.fc)} |\n| Duration | ${d.dur} |\n`;
+  // ============================================
+  // SECTION 1: HEADER & SUMMARY
+  // ============================================
+  let m = `# ${d.title}\n\n**ID:** ${d.id}\n**Generated:** ${d.gen}\n**Status:** ${d.sb} **${d.status}**\n\n---\n\n## 📋 Summary\n\n| Metric | Value |\n|--------|-------|\n| Components | ${String(d.tc)} |\n| Deployed | ${String(d.dc)} |\n| Failed | ${String(d.fc)} |\n| Duration | ${d.dur} |\n`;
 
   if (d.ht) {
     m += `| Tests | ${String(d.pt)}/${String(d.tt)} (${d.tsr}%) |\n`;
@@ -981,8 +1037,24 @@ function generateMdReport(d: ReportData): string {
     m += `| CA Issues | ${String(d.tv)} |\n`;
   }
 
+  // ============================================
+  // SECTION 2: DELTA PACKAGE.XML
+  // ============================================
+  if (d.hpkg && d.pkg) {
+    m += `\n---\n\n## 📦 Delta Package\n\n**API Version:** ${d.pkg.version}\n**Total Members:** ${String(d.pkg.totalMembers)}\n**Metadata Types:** ${String(d.pkg.types.length)}\n\n| Metadata Type | Count | Members |\n|---------------|-------|----------|\n`;
+    for (const t of d.pkg.types) {
+      const membersList = t.members.length <= 5 
+        ? t.members.join(', ') 
+        : t.members.slice(0, 5).join(', ') + ` ... (+${String(t.members.length - 5)} more)`;
+      m += `| ${t.name} | ${String(t.members.length)} | ${membersList} |\n`;
+    }
+  }
+
+  // ============================================
+  // SECTION 3: DEPLOYMENT RESULTS (Errors & Failures)
+  // ============================================
   if (d.he) {
-    m += `\n---\n\n## ❌ Error\n\n\`\`\`\n${d.err ?? ''}\n\`\`\`\n`;
+    m += `\n---\n\n## ❌ Deployment Error\n\n\`\`\`\n${d.err ?? ''}\n\`\`\`\n`;
   }
 
   if (d.hcf) {
@@ -992,38 +1064,62 @@ function generateMdReport(d: ReportData): string {
     }
   }
 
-  if (d.htf) {
-    m += `\n---\n\n## ❌ Failed Tests (${String(d.tf.length)})\n\n| Class | Method | Message |\n|-------|--------|----------|\n`;
-    for (const t of d.tf) {
-      m += `| ${t.name} | ${t.methodName} | ${t.message ?? '-'} |\n`;
+  // Show successful components if no failures
+  if (!d.hcf && d.cs.length > 0) {
+    m += `\n---\n\n## ✅ Deployed Components (${String(d.cs.length)})\n\n| Type | Name | Action |\n|------|------|--------|\n`;
+    for (const c of d.cs) {
+      const action = c.created ? 'Created' : c.changed ? 'Changed' : c.deleted ? 'Deleted' : 'Deployed';
+      m += `| ${c.componentType} | ${c.fullName} | ${action} |\n`;
     }
   }
 
+  // ============================================
+  // SECTION 4: CODE COVERAGE
+  // ============================================
   if (d.ic && d.hc) {
-    m += `\n---\n\n## 📊 Coverage\n\n**Overall:** ${d.cp}%\n\n- 🟢 ≥75%: ${String(d.c75)}\n- 🟡 50-74%: ${String(d.c50)}\n- 🔴 <50%: ${String(d.c0)}\n\n| Class | Type | Coverage | Lines |\n|-------|------|----------|-------|\n`;
+    m += `\n---\n\n## 📊 Code Coverage\n\n**Overall:** ${d.cp}%\n\n- 🟢 ≥75%: ${String(d.c75)}\n- 🟡 50-74%: ${String(d.c50)}\n- 🔴 <50%: ${String(d.c0)}\n\n| Class | Type | Coverage | Lines |\n|-------|------|----------|-------|\n`;
     for (const c of d.cov) {
       const badge = c.coveragePercent >= 75 ? '🟢' : c.coveragePercent >= 50 ? '🟡' : '🔴';
       m += `| ${c.name} | ${c.type} | ${badge} ${String(c.coveragePercent)}% | ${String(c.numLocations)} |\n`;
     }
   }
 
+  // ============================================
+  // SECTION 5: TEST RESULTS (JUnit)
+  // ============================================
+  if (d.ht) {
+    const testStatus = d.ft === 0 ? '✅' : '❌';
+    m += `\n---\n\n## 🧪 Test Results\n\n**${testStatus} Pass Rate:** ${d.tsr}% (${String(d.pt)} passed, ${String(d.ft)} failed)\n`;
+
+    // Failed tests first
+    if (d.htf) {
+      m += `\n### ❌ Failed Tests (${String(d.tf.length)})\n\n| Class | Method | Message |\n|-------|--------|----------|\n`;
+      for (const t of d.tf) {
+        const msg = t.message ? t.message.substring(0, 60).replace(/\n/g, ' ') + '...' : '-';
+        m += `| ${t.name} | ${t.methodName} | ${msg} |\n`;
+      }
+    }
+
+    // Passed tests
+    if (d.ts.length > 0) {
+      m += `\n### ✅ Passed Tests (${String(d.ts.length)})\n\n| Class | Method | Time |\n|-------|--------|------|\n`;
+      for (const t of d.ts) {
+        m += `| ${t.name} | ${t.methodName} | ${(t.time / 1000).toFixed(2)}s |\n`;
+      }
+    }
+  }
+
+  // ============================================
+  // SECTION 6: CODE ANALYZER
+  // ============================================
   if (d.hca) {
-    m += `\n---\n\n## 🔍 Code Analyzer (${String(d.tv)})\n\n- 🟣 Critical: ${String(d.ccnt)}\n- 🔴 High: ${String(d.hcnt)}\n- 🟠 Medium: ${String(d.mcnt)}\n- 🔵 Low: ${String(d.lcnt)}\n\n| Sev | Rule | File | Line | Message |\n|-----|------|------|------|----------|\n`;
+    m += `\n---\n\n## 🔍 Code Analyzer (${String(d.tv)} issues)\n\n- 🟣 Critical: ${String(d.ccnt)}\n- 🔴 High: ${String(d.hcnt)}\n- 🟠 Medium: ${String(d.mcnt)}\n- 🔵 Low: ${String(d.lcnt)}\n\n| Sev | Rule | File | Line | Message |\n|-----|------|------|------|----------|\n`;
     const allViolations = [...d.cv, ...d.hv, ...d.mv, ...d.lv].sort((a, b) => a.severity - b.severity);
     for (const v of allViolations) {
       const badge = v.severity === 1 ? '🟣' : v.severity === 2 ? '🔴' : v.severity === 3 ? '🟠' : '🔵';
       const fileName = v.file.split(/[/\\]/).pop() ?? '';
-      m += `| ${badge} | ${v.rule} | ${fileName} | ${String(v.startLine)} | ${v.message.substring(0, 50)}... |\n`;
-    }
-  }
-
-  if (d.hpkg && d.pkg) {
-    m += `\n---\n\n## 📦 Package.xml Contents\n\n**API Version:** ${d.pkg.version}\n**Total Members:** ${String(d.pkg.totalMembers)}\n**Metadata Types:** ${String(d.pkg.types.length)}\n\n| Metadata Type | Count | Members |\n|---------------|-------|----------|\n`;
-    for (const t of d.pkg.types) {
-      const membersList = t.members.length <= 5 
-        ? t.members.join(', ') 
-        : t.members.slice(0, 5).join(', ') + ` ... (+${String(t.members.length - 5)} more)`;
-      m += `| ${t.name} | ${String(t.members.length)} | ${membersList} |\n`;
+      const msg = v.message.length > 50 ? v.message.substring(0, 50) + '...' : v.message;
+      m += `| ${badge} | ${v.rule} | ${fileName} | ${String(v.startLine)} | ${msg} |\n`;
     }
   }
 

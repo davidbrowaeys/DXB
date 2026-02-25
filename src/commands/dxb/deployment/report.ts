@@ -1021,7 +1021,7 @@ function generateHtmlReport(d: ReportData): string {
   return h;
 }
 
-function generateMdReport(d: ReportData): string {
+function generateMdReport(d: ReportData, minSeverity?: number): string {
   // ============================================
   // SECTION 1: HEADER & SUMMARY
   // ============================================
@@ -1093,10 +1093,12 @@ function generateMdReport(d: ReportData): string {
 
     // Failed tests first
     if (d.htf) {
-      m += `\n### ❌ Failed Tests (${String(d.tf.length)})\n\n| Class | Method | Message |\n|-------|--------|----------|\n`;
+      m += `\n### ❌ Failed Tests (${String(d.tf.length)})\n\n`;
       for (const t of d.tf) {
-        const msg = t.message ? t.message.substring(0, 60).replace(/\n/g, ' ') + '...' : '-';
-        m += `| ${t.name} | ${t.methodName} | ${msg} |\n`;
+        m += `#### ${t.name}.${t.methodName}\n\n`;
+        if (t.message) {
+          m += `\`\`\`\n${t.message}\n\`\`\`\n\n`;
+        }
       }
     }
 
@@ -1113,13 +1115,33 @@ function generateMdReport(d: ReportData): string {
   // SECTION 6: CODE ANALYZER
   // ============================================
   if (d.hca) {
-    m += `\n---\n\n## 🔍 Code Analyzer (${String(d.tv)} issues)\n\n- 🟣 Critical: ${String(d.ccnt)}\n- 🔴 High: ${String(d.hcnt)}\n- 🟠 Medium: ${String(d.mcnt)}\n- 🔵 Low: ${String(d.lcnt)}\n\n| Sev | Rule | File | Line | Message |\n|-----|------|------|------|----------|\n`;
-    const allViolations = [...d.cv, ...d.hv, ...d.mv, ...d.lv].sort((a, b) => a.severity - b.severity);
-    for (const v of allViolations) {
-      const badge = v.severity === 1 ? '🟣' : v.severity === 2 ? '🔴' : v.severity === 3 ? '🟠' : '🔵';
-      const fileName = v.file.split(/[/\\]/).pop() ?? '';
-      const msg = v.message.length > 50 ? v.message.substring(0, 50) + '...' : v.message;
-      m += `| ${badge} | ${v.rule} | ${fileName} | ${String(v.startLine)} | ${msg} |\n`;
+    // Filter violations by minSeverity if specified (show violations with severity <= minSeverity)
+    let allViolations = [...d.cv, ...d.hv, ...d.mv, ...d.lv].sort((a, b) => a.severity - b.severity);
+    if (minSeverity !== undefined) {
+      allViolations = allViolations.filter((v) => v.severity <= minSeverity);
+    }
+    
+    const filteredCount = allViolations.length;
+    const filterNote = minSeverity !== undefined ? ` (filtered: severity ≤ ${minSeverity})` : '';
+    
+    m += `\n---\n\n## 🔍 Code Analyzer (${String(filteredCount)} issues${filterNote})\n\n`;
+    m += `- 🟣 Critical: ${String(d.ccnt)}\n- 🔴 High: ${String(d.hcnt)}\n- 🟠 Medium: ${String(d.mcnt)}\n- 🔵 Low: ${String(d.lcnt)}\n\n`;
+    
+    if (allViolations.length > 0) {
+      for (const v of allViolations) {
+        const badge = v.severity === 1 ? '🟣' : v.severity === 2 ? '🔴' : v.severity === 3 ? '🟠' : '🔵';
+        const sevLabel = v.severity === 1 ? 'Critical' : v.severity === 2 ? 'High' : v.severity === 3 ? 'Medium' : 'Low';
+        const fileName = v.file.split(/[/\\]/).pop() ?? '';
+        
+        m += `### ${badge} ${sevLabel}: ${v.rule}\n\n`;
+        m += `**File:** \`${fileName}\` (line ${String(v.startLine)})\n\n`;
+        m += `**Engine:** ${v.engine}\n\n`;
+        m += `**Message:**\n\n${v.message}\n\n`;
+        if (v.resources) {
+          m += `**Documentation:** ${v.resources}\n\n`;
+        }
+        m += `---\n\n`;
+      }
     }
   }
 
@@ -1144,6 +1166,7 @@ export default class DeploymentReport extends SfCommand<DeploymentReportResult> 
     'include-coverage': Flags.boolean({ char: 'c', summary: messages.getMessage('flags.include-coverage.summary'), default: true }),
     title: Flags.string({ char: 't', summary: messages.getMessage('flags.title.summary'), default: 'Salesforce Deployment Report' }),
     'api-version': Flags.orgApiVersion(),
+    'min-severity': Flags.integer({ char: 's', summary: messages.getMessage('flags.min-severity.summary'), min: 1, max: 4 }),
   };
 
   public async run(): Promise<DeploymentReportResult> {
@@ -1180,7 +1203,7 @@ export default class DeploymentReport extends SfCommand<DeploymentReportResult> 
       pkgData = await parsePackageXmlFile(flags['package-xml']);
     }
 
-    const report = this.generateReport(result, flags.format, flags.title, flags['include-coverage'], pkgData);
+    const report = this.generateReport(result, flags.format, flags.title, flags['include-coverage'], pkgData, flags['min-severity']);
 
     if (flags['output-dir']) {
       const ext = flags.format === 'html' ? 'html' : 'md';
@@ -1206,8 +1229,8 @@ export default class DeploymentReport extends SfCommand<DeploymentReportResult> 
     }
   }
 
-  private generateReport(r: DeploymentResult, fmt: string, title: string, incCov: boolean, pkgData?: PackageXmlData): string {
+  private generateReport(r: DeploymentResult, fmt: string, title: string, incCov: boolean, pkgData?: PackageXmlData, minSeverity?: number): string {
     const data = prepareReportData(r, title, incCov, pkgData);
-    return fmt === 'html' ? generateHtmlReport(data) : generateMdReport(data);
+    return fmt === 'html' ? generateHtmlReport(data) : generateMdReport(data, minSeverity);
   }
 }

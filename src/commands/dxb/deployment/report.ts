@@ -33,6 +33,13 @@ interface CodeCoverage {
   coveragePercent: number;
 }
 
+interface CodeCoverageWarning {
+  id: string;
+  name: string;
+  message: string;
+  namespace?: string | null;
+}
+
 interface CodeAnalyzerViolation {
   rule: string;
   engine: string;
@@ -51,6 +58,7 @@ interface RunTestResult {
   successes?: TestResult[];
   failures?: TestResult[];
   codeCoverage?: CodeCoverage[];
+  codeCoverageWarnings?: CodeCoverageWarning[];
 }
 
 interface DeploymentDetails {
@@ -144,6 +152,8 @@ interface ReportData {
   c75: number;
   c50: number;
   c0: number;
+  ccw: CodeCoverageWarning[];
+  hccw: boolean;
   err?: string;
   he: boolean;
   hca: boolean;
@@ -633,6 +643,24 @@ interface RawCoverage {
   coveragePercent?: number;
 }
 
+interface RawCoverageWarning {
+  id?: string;
+  name?: string;
+  message?: string;
+  namespace?: string | null;
+}
+
+function normalizeCoverageWarnings(warnings: unknown): CodeCoverageWarning[] {
+  if (!warnings) return [];
+  const arr = Array.isArray(warnings) ? warnings : [warnings];
+  return arr.map((w: RawCoverageWarning) => ({
+    id: w.id ?? '',
+    name: w.name ?? '',
+    message: w.message ?? '',
+    namespace: w.namespace,
+  }));
+}
+
 function normalizeResult(r: Record<string, unknown>): DeploymentResult {
   const d = (r.result as Record<string, unknown>) ?? r;
 
@@ -718,6 +746,7 @@ function normalizeResult(r: Record<string, unknown>): DeploymentResult {
             successes: testSuccesses,
             failures: testFailures,
             codeCoverage: cov,
+            codeCoverageWarnings: normalizeCoverageWarnings(rtr.codeCoverageWarnings),
           }
         : undefined,
       codeAnalyzerViolations: [],
@@ -782,6 +811,8 @@ function prepareReportData(r: DeploymentResult, title: string, incCov: boolean, 
     c75: sortedCov.filter((c) => c.coveragePercent >= 75).length,
     c50: sortedCov.filter((c) => c.coveragePercent >= 50 && c.coveragePercent < 75).length,
     c0: sortedCov.filter((c) => c.coveragePercent < 50).length,
+    ccw: tr?.codeCoverageWarnings ?? [],
+    hccw: (tr?.codeCoverageWarnings?.length ?? 0) > 0,
     err: r.errorMessage,
     he: !!r.errorMessage,
     hca: violations.length > 0,
@@ -916,6 +947,17 @@ function generateHtmlReport(d: ReportData): string {
       const badge = c.coveragePercent >= 75 ? 'bd-s' : c.coveragePercent >= 50 ? 'bd-w' : 'bd-f';
       const fill = c.coveragePercent >= 75 ? 'success' : c.coveragePercent >= 50 ? 'warning' : 'failure';
       h += `<tr data-cov="${String(c.coveragePercent)}"><td>${c.name}</td><td>${c.type}</td><td><div class="cb"><div class="br"><div class="fl ${fill}" style="width:${String(c.coveragePercent)}%"></div></div><span class="bd ${badge}">${String(c.coveragePercent)}%</span></div></td><td>${String(c.numLocations - c.numLocationsNotCovered)}/${String(c.numLocations)}</td></tr>`;
+    }
+    h += '</tbody></table></div></div>';
+  }
+
+  // Code Coverage Warnings (insufficient coverage)
+  if (d.hccw) {
+    h += `<div class="se"><h2>⚠️ Code Coverage Warnings (${String(d.ccw.length)})</h2>`;
+    h += '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px;margin-bottom:10px"><strong style="color:#856404">Deployment may fail:</strong> The following classes do not meet the 75% minimum code coverage requirement.</div>';
+    h += '<div class="tc"><table><thead><tr><th>Class Name</th><th>Message</th></tr></thead><tbody>';
+    for (const w of d.ccw) {
+      h += `<tr><td><span class="bd bd-f">${w.name}</span></td><td style="color:#721c24">${w.message}</td></tr>`;
     }
     h += '</tbody></table></div></div>';
   }
@@ -1081,6 +1123,16 @@ function generateMdReport(d: ReportData, minSeverity?: number): string {
     for (const c of d.cov) {
       const badge = c.coveragePercent >= 75 ? '🟢' : c.coveragePercent >= 50 ? '🟡' : '🔴';
       m += `| ${c.name} | ${c.type} | ${badge} ${String(c.coveragePercent)}% | ${String(c.numLocations)} |\n`;
+    }
+  }
+
+  // Code Coverage Warnings (insufficient coverage)
+  if (d.hccw) {
+    m += `\n---\n\n## ⚠️ Code Coverage Warnings (${String(d.ccw.length)})\n\n`;
+    m += `> **Warning:** The following classes do not meet the 75% minimum code coverage requirement. Deployment may fail.\n\n`;
+    m += `| Class Name | Message |\n|------------|----------|\n`;
+    for (const w of d.ccw) {
+      m += `| ${w.name} | ${w.message} |\n`;
     }
   }
 

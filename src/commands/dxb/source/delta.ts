@@ -7,6 +7,7 @@ import {
   registry,
   MetadataType,
   RegistryAccess,
+  ForceIgnore,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 } from '@salesforce/source-deploy-retrieve';
@@ -76,6 +77,11 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
       summary: messages.getMessage('flags.rollback.summary'),
       default: false,
     }),
+    'ignore-forceignore': Flags.boolean({
+      char: 'i',
+      summary: 'Ignore .forceignore file patterns (include all changed files)',
+      default: false,
+    }),
   };
 
   public static readonly requiresProject = true;
@@ -93,6 +99,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
   protected granularmode = false;
   protected packageDirectories: PackageDir[] = [];
   protected basedir = '';
+  protected forceIgnore: ForceIgnore | undefined;
   public async run(): Promise<SourceDeltaResult> {
     const { flags } = await this.parse(SourceDelta);
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -107,7 +114,16 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     this.projectConfig = await project.resolveProjectConfig();
     this.packageDirectories = this.projectConfig.packageDirectories as PackageDir[];
     this.granularmode = flags.granular;
-    this.basedir = fs.existsSync(flags['base-dir']) ? flags['base-dir'] : '';
+    // The base-dir flag is deprecated - always use package directories from sfdx-project.json
+    // This ensures all package directories are considered, not just force-app/main/default
+    this.basedir = '';
+    // Initialize ForceIgnore to respect .forceignore patterns (unless --ignore-forceignore is set)
+    if (!flags['ignore-forceignore']) {
+      const forceignorePath = path.join(project.getPath(), '.forceignore');
+      if (fs.existsSync(forceignorePath)) {
+        this.forceIgnore = ForceIgnore.findAndCreate(project.getPath());
+      }
+    }
     // flags
     let filter = 'AMRU';
     if (flags['destructive-changes']) {
@@ -214,6 +230,32 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     return { metadataType, fName, fSuffix };
   }
   /**
+   * Checks if a file path is within a DigitalExperienceBundle and extracts the bundle member name.
+   * DigitalExperienceBundle structure: digitalExperiences/<bundleType>/<bundleName>/...
+   * Member format: <bundleType>/<bundleName> (e.g., 'site/TECAN1', 'content/Space_Name')
+   *
+   * @param metadataDir The split path array from getMetadataDir
+   * @returns Object with isDigitalExperience flag and member name, or undefined if not applicable
+   */
+  private getDigitalExperienceBundleMember(metadataDir: string[]): { isDigitalExperience: boolean; member?: string } {
+    // Find index of 'digitalExperiences' directory
+    const digitalExpIdx = metadataDir.findIndex((x) => x === 'digitalExperiences');
+
+    if (digitalExpIdx >= 0 && metadataDir.length >= digitalExpIdx + 3) {
+      // Structure: digitalExperiences/<bundleType>/<bundleName>/...
+      const bundleType = metadataDir[digitalExpIdx + 1]; // e.g., 'site', 'content', 'marketing'
+      const bundleName = metadataDir[digitalExpIdx + 2]; // e.g., 'TECAN1', 'Capricorn_Coffee1'
+
+      return {
+        isDigitalExperience: true,
+        member: `${bundleType}/${bundleName}`,
+      };
+    }
+
+    return { isDigitalExperience: false };
+  }
+
+  /**
    * Processes a file and determines its metadata type and name. Adds it to the packageJson object
    *
    * @param {any} file - The file to be processed
@@ -224,6 +266,17 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
     const { dir, base } = path.parse(file);
     // split file directory path to find metadata type
     const metadataDir = this.getMetadataDir(dir);
+
+    // --- START: DigitalExperienceBundle handling ---
+    // Check for DigitalExperienceBundle before standard suffix-based detection
+    const digitalExpResult = this.getDigitalExperienceBundleMember(metadataDir);
+    if (digitalExpResult.isDigitalExperience && digitalExpResult.member) {
+      const tp = this.initMetadataTypeInPackage('DigitalExperienceBundle');
+      this.addMemberToPackage(tp, digitalExpResult.member);
+      return; // Early return - no further processing needed
+    }
+    // --- END: DigitalExperienceBundle handling ---
+
     // find metadata suffix and file name
     // eslint-disable-next-line prefer-const
     let { metadataType, fName, fSuffix } = this.getMetadataTypeAndName(base);
@@ -363,7 +416,7 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
       commitid: `git diff --name-only ${deltakey} --diff-filter=${filter}`,
     };
     const command: string = commandMap[mode] || commandMap.commitid;
-    const gitresult = exec(command).toString().split('\n'); // this only work with specific commit ids, how to get file that changed since last tag ?
+    const gitresult = exec(command).toString().split('\n');
     return this.filterUniqueForceAppFiles(gitresult);
   }
   /**
@@ -375,13 +428,18 @@ export default class SourceDelta extends SfCommand<SourceDeltaResult> {
    * @returns filtered array
    */
   private filterUniqueForceAppFiles(filePaths: string[]): string[] {
-    const filteredFiles = filePaths.filter(
+    let filteredFiles = filePaths.filter(
       (f) =>
         ((!!this.basedir && f.startsWith(this.basedir)) ||
           (!this.basedir && this.packageDirectories.some((p) => f.startsWith(p.path)))) &&
         !f.includes('lwc/jsconfig.json')
     );
-    const uniqueFiles = [...new Set(filteredFiles)];
-    return uniqueFiles;
+
+    // Apply .forceignore patterns to exclude ignored files
+    if (this.forceIgnore) {
+      filteredFiles = filteredFiles.filter((f) => !this.forceIgnore!.denies(f));
+    }
+
+    return [...new Set(filteredFiles)];
   }
 }
